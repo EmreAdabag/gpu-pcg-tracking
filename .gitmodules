@@ -1,0 +1,3 @@
+[submodule "GPU-PCG"]
+	path = GPU-PCG
+	url = git@github.com:A2R-Lab/GPU-PCG.git
