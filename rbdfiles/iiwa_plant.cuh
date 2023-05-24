@@ -1,5 +1,6 @@
 #pragma once
 #include "glass.cuh"
+#include "important_numbers.cuh"
 // // values assumed coming from an instance of grid
 // namespace grid{
 // 	//
@@ -127,6 +128,32 @@ namespace gato_plant{
 
 	__host__ __device__
 	constexpr unsigned forwardDynamicsAndGradient_TempMemSize_Shared(){return grid::FD_DU_MAX_SHARED_MEM_COUNT_new_version;}
+
+
+
+	template <typename T>
+	__device__
+	T trackingcost(T *s_xux, T *s_xux_traj, T *s_temp){
+		
+		const uint32_t state_size = important_numbers::state_size;
+		const uint32_t control_size = important_numbers::control_size;
+
+		const uint32_t threadsNeeded = state_size + control_size + (blockIdx.x == important_numbers::knot_points - 1) * state_size;
+		const T QandR = static_cast<T>(1);
+		T err, val;
+
+
+		for(int i = blockIdx.x; i < threadsNeeded; i += blockDim.x){
+			err = s_xu[i] - s_xu_traj[i];
+			val = QandR * err * err;
+			s_temp[i] = val;
+		}
+
+		g.sync();
+		glass::reduce<T>(threadsNeeded, s_temp, g);
+		g.sync();
+		return s_temp[0];
+	}
 
 
 	///TODO: costgradientandhessian could be much faster with no divergence

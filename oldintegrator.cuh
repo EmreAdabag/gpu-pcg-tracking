@@ -52,7 +52,7 @@ namespace oldintegrator{
             //         sum += abs(s_qkp1[i] - (s_q[i] + dt*s_qd[i]));
             //         sum += abs(s_qdkp1[i] - (s_qd[i] + dt*s_qdd[i]));
             //     }
-            //     printf("first block constriant violation: %f\n", sum);
+            //     printf("first block wnstriant violation: %f\n", sum);
             // }
             // block.sync();
 

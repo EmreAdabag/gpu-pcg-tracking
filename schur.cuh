@@ -7,6 +7,7 @@
 
 #include "oldschur.cuh"
 #include "oldintegrator.cuh"
+#include "oldmerit.cuh"
 
 template <typename T>
 __global__
