@@ -1,17 +1,24 @@
 #pragma once
 #include <cstdint>
-#include "glass.cuh"
 #include <cooperative_groups.h>
+#include "glass.cuh"
 
-namespace cgrps = cooperative_groups;
 
 template <typename T>
 __device__
-void store_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned col, unsigned BLOCKNO, int multiplier=1, cgrps::thread_group g = cgrps::this_thread_block()){
+void gato_memcpy(T *dst, T *src, unsigned size_Ts){
+    unsigned ind;
+    for(ind=threadIdx.x; ind < size_Ts; ind+=blockDim.x){
+        dst[ind] = src[ind];
+    }
+}
+
+
+template <typename T>
+__device__
+void store_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned col, unsigned BLOCKNO, int multiplier=1, cooperative_groups::thread_group g = cooperative_groups::this_thread_block()){
     
     unsigned block_row_offset, block_col_offset, ind;
-
-    assert(col<3);
 
 
     block_row_offset = BLOCKNO * (3 * b_dim * b_dim);
@@ -41,7 +48,7 @@ void store_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned col
 
 template <typename T>
 __device__
-void load_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned bcol, unsigned brow, bool transpose=false, cgrps::thread_group g = cgrps::this_thread_block()){
+void load_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned bcol, unsigned brow, bool transpose=false, cooperative_groups::thread_group g = cooperative_groups::this_thread_block()){
     
     // EMRE assert this
     if(bcol > 2 || brow > m_dim-1)
@@ -66,7 +73,7 @@ void load_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned bcol
 
         unsigned ind, transpose_col, transpose_row;
 
-        for(ind=GATO_THREAD_ID; ind<b_dim*b_dim; ind+=GATO_THREADS_PER_BLOCK){
+        for(ind=threadIdx.x; ind<b_dim*b_dim; ind+=blockDim.x){
             transpose_col = ind%b_dim * b_dim;
             transpose_row = ind/b_dim;
             dst[transpose_col + transpose_row] = src[block_row_offset + block_col_offset + ind];    

@@ -1,6 +1,4 @@
 #pragma once
-#include "glass.cuh"
-#include "important_numbers.cuh"
 // // values assumed coming from an instance of grid
 // namespace grid{
 // 	//
@@ -31,6 +29,8 @@
 #include <cooperative_groups.h>
 #include "iiwa_grid.cuh"
 
+#include "glass.cuh"
+
 // #include <random>
 // #define RANDOM_MEAN 0
 // #define RANDOM_STDEV 0.001
@@ -39,8 +39,6 @@
 
 namespace gato_plant{
 
-
-	namespace cgrps = cooperative_groups;
 
 	const unsigned SUGGESTED_THREADS = grid::SUGGESTED_THREADS;
 
@@ -81,29 +79,29 @@ namespace gato_plant{
 	template <typename T>
 	__host__
 	void loadInitialState(T *x){
-		T q[GATO_SIZE_q] = {PI<T>(),0.25*PI<T>(),0.167*PI<T>(),-0.167*PI<T>(),PI<T>(),0.167*PI<T>(),0.5*PI<T>()};
-		for (int i = 0; i < GATO_SIZE_q; i++){
-			x[i] = q[i]; x[i + GATO_SIZE_q] = 0;
+		T q[7] = {PI<T>(),0.25*PI<T>(),0.167*PI<T>(),-0.167*PI<T>(),PI<T>(),0.167*PI<T>(),0.5*PI<T>()};
+		for (int i = 0; i < 7; i++){
+			x[i] = q[i]; x[i + 7] = 0;
 		}
 	}
 
 	template <typename T>
 	__host__
-	void loadInitialControl(T *u){for (int i = 0; i < GATO_SIZE_u; i++){u[i] = 0;}}
+	void loadInitialControl(T *u){for (int i = 0; i < 7; i++){u[i] = 0;}}
 
 	// goal at q = [-0.5*PI,0.25*PI,0.167*PI,-0.167*PI,0.125*PI,0.167*PI,0.5*PI] with 0 for qd, u, lambda
 	template <typename T>
 	__host__
 	void loadGoalState(T *xg){
-		T q[GATO_SIZE_q] = {0,0,-0.25*PI<T>(),0,0.25*PI<T>(),0.5*PI<T>(),0};
-		for (int i = 0; i < GATO_SIZE_q; i++){
-			xg[i] = q[i]; xg[i + GATO_SIZE_q] = static_cast<T>(0);
+		T q[7] = {0,0,-0.25*PI<T>(),0,0.25*PI<T>(),0.5*PI<T>(),0};
+		for (int i = 0; i < 7; i++){
+			xg[i] = q[i]; xg[i + 7] = static_cast<T>(0);
 		}
 	}
 
 	template <typename T>
 	__device__
-	void forwardDynamics(T *s_qdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cgrps::thread_block block){
+	void forwardDynamics(T *s_qdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
 		grid::forward_dynamics_device(s_qdd,s_q,s_qd,s_u,s_temp,(grid::robotModel<T>*)d_dynMem_const,GRAVITY<T>());
 	}
 
@@ -112,7 +110,7 @@ namespace gato_plant{
 
 	template <typename T>
 	__device__
-	void forwardDynamicsGradient( T *s_dqdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cgrps::thread_block block){
+	void forwardDynamicsGradient( T *s_dqdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
 		grid::forward_dynamics_gradient_device<T,true>(s_dqdd, s_q, s_qd, s_u, s_temp, (grid::robotModel<T> *)d_dynMem_const,GRAVITY<T>());
 	}
 
@@ -121,7 +119,7 @@ namespace gato_plant{
 
 	template <typename T>
 	__device__
-    void forwardDynamicsAndGradient(T *s_dqdd, T *s_qdd, T *s_q, T *s_qd, T *s_u,  T *s_temp, void *d_dynMem_const, cgrps::thread_block block){
+    void forwardDynamicsAndGradient(T *s_dqdd, T *s_qdd, T *s_q, T *s_qd, T *s_u,  T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
         grid::forward_dynamics_and_gradient_device<T,true>(s_dqdd, s_qdd, s_q, s_qd, s_u, s_temp, (grid::robotModel<T> *)d_dynMem_const,GRAVITY<T>());
     }
 
@@ -130,22 +128,28 @@ namespace gato_plant{
 	constexpr unsigned forwardDynamicsAndGradient_TempMemSize_Shared(){return grid::FD_DU_MAX_SHARED_MEM_COUNT_new_version;}
 
 
-
+	///TODO: get rid of divergence
 	template <typename T>
 	__device__
-	T trackingcost(T *s_xux, T *s_xux_traj, T *s_temp){
+	T trackingcost(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *s_xux, T *s_xux_traj, T *s_temp, cooperative_groups::thread_group g = cooperative_groups::this_thread_block()){
 		
-		const uint32_t state_size = important_numbers::state_size;
-		const uint32_t control_size = important_numbers::control_size;
 
-		const uint32_t threadsNeeded = state_size + control_size + (blockIdx.x == important_numbers::knot_points - 1) * state_size;
-		const T QandR = static_cast<T>(1);
+		const uint32_t threadsNeeded = state_size + control_size * (blockIdx.x != knot_points - 1);
+		const T Q_cost = static_cast<T>(.1);
+		const T R_cost = static_cast<T>(0.0001);
+
 		T err, val;
 
 
 		for(int i = blockIdx.x; i < threadsNeeded; i += blockDim.x){
-			err = s_xu[i] - s_xu_traj[i];
-			val = QandR * err * err;
+			if(i < state_size){
+				err = s_xux[i] - s_xux_traj[i];
+				val = Q_cost * err * err;
+			}
+			else{
+				err = s_xux[state_size + i];
+				val = R_cost * err * err;
+			}
 			s_temp[i] = val;
 		}
 
@@ -169,34 +173,36 @@ namespace gato_plant{
 										T *s_Rk, 
 										T *s_rk,
 										uint32_t block_id, 
-										cgrps::thread_group g)
+										cooperative_groups::thread_group g)
 	{	
 		const uint32_t threadsNeeded = state_size + control_size;
-		const T QandR = static_cast<T>(1);
+		const T Q_cost = static_cast<T>(.1);
+		const T R_cost = static_cast<T>(0.0001);
 
-		uint32 offset;
+		uint32_t offset;
 		T err;
 
 		for (int i = g.thread_rank(); i < threadsNeeded; i += g.size()){
 
 			// EMRE->ORDER
-			err = s_xu[i] - s_xux_traj[i];
 			
 			if(i < state_size){
+				err = s_xu[i] - s_xu_traj[i];
 				//gradient
-				s_qk[i] = 2 * QandR * err;
+				s_qk[i] = 2 * Q_cost * err;
 				//hessian
 				for(int j = 0; j < state_size; j++){
-					s_Qk[i*state_size+j] = (i == j) ? QandR : static_cast<T>(0);
+					s_Qk[i*state_size+j] = (i == j) ? Q_cost : static_cast<T>(0);
 				}
 			}
 			else{
+				err = s_xu[i];
 				offset = i - state_size;
 				//gradient
-				s_rk[offset] = 2 * QandR * err;
+				s_rk[offset] = 2 * R_cost * err;
 				//hessian
 				for(int j = 0; j < control_size; j++){
-					s_Rk[offset*control_size+j] = (offset == j) ? QandR : static_cast<T>(0);
+					s_Rk[offset*control_size+j] = (offset == j) ? R_cost : static_cast<T>(0);
 				}
 			}
 		}
@@ -216,40 +222,44 @@ namespace gato_plant{
 							    				  T *s_Qkp1, 
 							    				  T *s_qkp1,
 							    				  uint32_t block_id, 
-							    				  cgrps::thread_group g)
+							    				  cooperative_groups::thread_group g)
 	{
 		unsigned threadsNeeded = 2*state_size + control_size;
-		const T QandR = static_cast<T>(1);
+		const T Q_cost = static_cast<T>(.1);
+		const T R_cost = static_cast<T>(0.0001);
+
 		T err;
 		uint32_t offset;
 
 		for (int i = g.thread_rank(); i < threadsNeeded; i += g.size()){
 
 			// EMRE->ORDER
-			err = s_xu[i] - s_xux_traj[i];
 
 
 			if (i < state_size){
-				s_qk[i] = 2 * QandR * err;
+				err = s_xux[i] - s_xux_traj[i];
+				s_qk[i] = 2 * Q_cost * err;
 				
 				for(int j = 0; j < state_size; j++){
-					s_Qk[i*state_size + j] = (i == j) ? QandR : static_cast<T>(0);
+					s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
 				}
 			}
 			else if(i < state_size + control_size){
+				err = s_xux[i];
 				offset = i - state_size;
-				s_rk[offset] = 2 * QandR * err;
+				s_rk[offset] = 2 * R_cost * err;
 
-				for(int j = 0; j < control_size, j++){
-					s_Rk[offset*control_size + j] = (offset == j) ? QandR : static_cast<T>(0);
+				for(int j = 0; j < control_size; j++){
+					s_Rk[offset*control_size + j] = (offset == j) ? R_cost : static_cast<T>(0);
 				}
 			}
 			else{
 				offset = i - state_size - control_size;
-				s_qkp1[offset] = 2 * QandR * err;
+				err = s_xux[i] - s_xux_traj[i];
+				s_qkp1[offset] = 2 * Q_cost * err;
 
 				for(int j = 0; j < state_size; j++){
-					s_Qkp1[offset*state_size+j] = (offset == j) ? QandR : static_cast<T>(0);
+					s_Qkp1[offset*state_size+j] = (offset == j) ? Q_cost : static_cast<T>(0);
 				}
 
 			}
@@ -259,3 +269,4 @@ namespace gato_plant{
 	__host__ __device__
 	constexpr unsigned costGradientAndHessian_TempMemSize_Shared(){return 0;}
 }
+

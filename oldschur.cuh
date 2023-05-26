@@ -11,24 +11,68 @@
 #define GATO_LAST_BLOCK (GATO_BLOCK_ID == GATO_NUM_BLOCKS - 1)
 
 
-#define STATES_SQ       (STATE_SIZE*STATE_SIZE)
-#define CONTROLS_SQ     (CONTROL_SIZE*CONTROL_SIZE)
-#define STATES_S_CONTROLS (STATE_SIZE+CONTROL_SIZE)
-#define STATES_P_CONTROLS (STATE_SIZE*CONTROL_SIZE)
+#define STATES_SQ       (state_size*state_size)
+#define CONTROLS_SQ     (control_size*control_size)
+#define STATES_S_CONTROLS (state_size+control_size)
+#define STATES_P_CONTROLS (state_size*control_size)
 
-#define KKT_G_DENSE_SIZE_BYTES   (((STATES_SQ+CONTROLS_SQ)*KNOT_POINTS-CONTROLS_SQ)*sizeof(float))
-#define KKT_C_DENSE_SIZE_BYTES   (((STATES_SQ+STATES_P_CONTROLS)*(KNOT_POINTS-1))*sizeof(float))
-#define KKT_g_SIZE_BYTES         ((STATES_S_CONTROLS*KNOT_POINTS-CONTROL_SIZE)*sizeof(float))
-#define KKT_c_SIZE_BYTES         ((STATE_SIZE*KNOT_POINTS)*sizeof(float))     
-
-#define LAMBDA_SIZE_BYTES        ((STATE_SIZE*KNOT_POINTS*sizeof(float)))
-#define DZ_SIZE_BYTES            ((STATES_S_CONTROLS*KNOT_POINTS-CONTROL_SIZE)*sizeof(float))
 
 
 namespace oldschur{
+    
     template <typename T>
+    size_t get_kkt_smem_size(uint32_t state_size, uint32_t control_size){
+        // const uint32_t states_p_controls = state_size * control_size;
+        const uint32_t states_sq = state_size * state_size;
+        const uint32_t controls_sq = control_size * control_size;
+        ///TODO: costGradientAndHessian_TempMemSize_Shared < costAndGradient_TempMemSize_Shared ? seems odd
+        // bad changed
+        // return sizeof(T)*(3*STATES_SQ + control_size*control_size + 6 * state_size + 2 * control_size + states_p_controls + (state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+        
+        // original 
+        // return sizeof(float)*(3*states_sq + controls_sq + 6 * state_size + 2 * control_size + state_size*control_size + max(gato_plant::costAndGradient_TempMemSize_Shared(), (state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared()));
+
+        // condensed
+        return sizeof(T)*(3*states_sq + controls_sq + 7 * state_size + 3 * control_size + state_size*control_size + (state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+        // same but not condensed
+        // return sizeof(T)*(5*state_size + 3*control_size + states_sq + controls_sq + 2 * states_sq + state_size*control_size + 2*state_size + (state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+    }
+
+
     __device__
-    void gato_memcpy(T *dst, T *src, unsigned size_Ts){
+    void gato_ATx(float *out, float *mat, float *vec, int m, int n){
+
+        float res;
+        int ind, thing;
+
+        for(ind=GATO_THREAD_ID; ind < n; ind +=GATO_THREADS_PER_BLOCK){
+
+            res = 0;
+            for(thing=0; thing<m; thing++){
+                res += mat[ind*m+thing] * vec[thing];
+            }
+
+            out[ind] = res;
+        }
+    }
+
+    __device__
+    void gato_vec_dif(float *out, float *vec1, float *vec2, int size){
+        for(int i = GATO_THREAD_ID; i < size; i+= GATO_THREADS_PER_BLOCK){
+            out[i] = vec1[i] - vec2[i];
+        }
+    }
+
+    __device__
+    void gato_vec_sum(float *out, float *vec1, float *vec2, int size){
+        for(int i = GATO_THREAD_ID; i < size; i+= GATO_THREADS_PER_BLOCK){
+            out[i] = vec1[i] + vec2[i];
+        }
+    }
+
+
+    __device__
+    void gato_memcpy(float *dst, float *src, unsigned size_Ts){
         unsigned ind;
         for(ind=GATO_THREAD_ID; ind < size_Ts; ind+=GATO_THREADS_PER_BLOCK){
             dst[ind] = src[ind];
@@ -36,18 +80,18 @@ namespace oldschur{
     }
 
     // just negates the val lol
-    template <typename T>
+    
     __device__
-    void gato_nmemcpy(T *dst, T *src, unsigned size_Ts){
+    void gato_nmemcpy(float *dst, float *src, unsigned size_Ts){
         unsigned ind;
         for(ind=GATO_THREAD_ID; ind < size_Ts; ind+=GATO_THREADS_PER_BLOCK){
             dst[ind] = -src[ind];
         }
     }
 
-    template <typename T>
+    
     __device__
-    void gato_memcpy_regularized(T *dst, T *src, unsigned size_Ts, int col, float rho){
+    void gato_memcpy_regularized(float *dst, float *src, unsigned size_Ts, int col, float rho){
         unsigned ind;
         for(ind=GATO_THREAD_ID; ind < size_Ts; ind+=GATO_THREADS_PER_BLOCK){
             dst[ind] = src[ind] + (ind==col)*rho;
@@ -55,12 +99,11 @@ namespace oldschur{
     }
 
 
-    template <typename T, unsigned MAT_ROWS, unsigned MAT_COLS>
     __device__
-    void mat_vec_prod(T *mat, T *vec, T *out){
+    void mat_vec_prod(unsigned MAT_ROWS, unsigned MAT_COLS, float *mat, float *vec, float *out){
         
         for(unsigned row=GATO_THREAD_ID; row<MAT_ROWS; row+=GATO_THREADS_PER_BLOCK){
-            T res = static_cast<T>(0);
+            float res = static_cast<float>(0);
             for (unsigned col = 0; col < MAT_COLS; col++){
                 res += mat[row + col*MAT_ROWS] * vec[col];
             }
@@ -68,38 +111,7 @@ namespace oldschur{
         }
     }
 
-    template <typename T, unsigned B_DIM, unsigned M_DIM>
-    __device__
-    void store_block_bd(T *src, T *dst, unsigned col, unsigned BLOCKNO, int multiplier=1){
-        
-        unsigned block_row_offset, block_col_offset, ind;
-
-        assert(col<3);
-
-
-        block_row_offset = BLOCKNO * (3 * B_DIM * B_DIM);
-        block_col_offset = col*B_DIM*B_DIM;
-
-
-        if(multiplier==1){
-
-            gato_memcpy<T>(
-                dst+block_row_offset+block_col_offset,
-                src,
-                B_DIM*B_DIM
-            );
-
-        }
-        else{
-            
-            for(ind=GATO_THREAD_ID; ind<B_DIM*B_DIM; ind+=GATO_THREADS_PER_BLOCK){
-                dst[block_row_offset + block_col_offset + ind] = src[ind] * multiplier;
-            }
-
-        }
-    }
-
-    template <typename T, unsigned m, unsigned n>
+    template <unsigned m, unsigned n>
     __device__
     void printMat(float *mat, int asdf){
         for(int i = 0; i < m; i++){
@@ -107,41 +119,6 @@ namespace oldschur{
                 printf("%f ", mat[j*m+i]);
             }
             printf("\n");
-        }
-    }
-
-    template <typename T, unsigned B_DIM, unsigned M_DIM>
-    __device__
-    void load_block_bd(T *src, T *dst, unsigned bcol, unsigned brow, bool transpose=false){
-        
-        // EMRE assert this
-        if(bcol > 2 || brow > M_DIM-1)
-            return;
-        
-
-        unsigned block_row_offset, block_col_offset;
-
-        block_row_offset = brow * (3 * B_DIM * B_DIM);
-        block_col_offset = bcol*B_DIM*B_DIM;
-
-        if(!transpose){
-
-            gato_memcpy<T>(
-                dst,
-                src+block_row_offset+block_col_offset,
-                B_DIM*B_DIM
-            );
-
-        }
-        else{
-
-            unsigned ind, transpose_col, transpose_row;
-
-            for(ind=GATO_THREAD_ID; ind<B_DIM*B_DIM; ind+=GATO_THREADS_PER_BLOCK){
-                transpose_col = ind%B_DIM * B_DIM;
-                transpose_row = ind/B_DIM;
-                dst[transpose_col + transpose_row] = src[block_row_offset + block_col_offset + ind];    
-            }
         }
     }
 
@@ -205,23 +182,21 @@ namespace oldschur{
 
 
     // load identity in so memory is [A | I]
-    template <typename T, unsigned DIM>
     __device__ __forceinline__
-    void loadIdentity(T *A){
+    void loadIdentity(uint32_t DIM, float *A){
         for (unsigned ind = GATO_THREAD_ID; ind < DIM*DIM; ind += GATO_THREADS_PER_BLOCK){
             unsigned r, c;
             r = ind % DIM; 
             c = ind / DIM;
-            A[ind] = static_cast<T>(r == c);
+            A[ind] = static_cast<float>(r == c);
         }
     }
 
     // load identity in so memory is [V | I]
-    template <typename T, unsigned DIMA, unsigned DIMB>
     __device__ __forceinline__
-    void loadIdentity(T *A, T *B){
+    void loadIdentity(uint32_t DIMA, uint32_t DIMB, float *A, float *B){
         for (unsigned ind = GATO_THREAD_ID; ind < DIMA*DIMA+DIMB*DIMB; ind += GATO_THREADS_PER_BLOCK){
-            unsigned r, c, indAdj; T *V;
+            unsigned r, c, indAdj; float *V;
             if (ind < DIMA*DIMA){
                 indAdj = ind;
                 r = indAdj % DIMA; c = indAdj/DIMA; V = A;
@@ -230,17 +205,16 @@ namespace oldschur{
                 indAdj = ind - DIMA*DIMA;
                 r = indAdj % DIMB; c = indAdj/DIMB; V = B;
             }
-            V[indAdj] = static_cast<T>(r == c);
+            V[indAdj] = static_cast<float>(r == c);
         }
     }
 
 
     // load identity in so memory is [V | I]
-    template <typename T, unsigned DIMA, unsigned DIMB, unsigned DIMC>
     __device__ __forceinline__
-    void loadIdentity(T *A, T *B, T *C){
+    void loadIdentity(unsigned DIMA, unsigned DIMB, unsigned DIMC, float *A, float *B, float *C){
         for (unsigned ind = GATO_THREAD_ID; ind < DIMA*DIMA+DIMB*DIMB+DIMC*DIMC; ind += GATO_THREADS_PER_BLOCK){
-            unsigned r, c, indAdj; T *V;
+            unsigned r, c, indAdj; float *V;
             if (ind < DIMA*DIMA){
                 indAdj = ind;
                 r = indAdj % DIMA; c = indAdj/DIMA; V = A;
@@ -253,14 +227,13 @@ namespace oldschur{
                 indAdj = ind - DIMA*DIMA - DIMB*DIMB;
                 r = indAdj % DIMC; c = indAdj/DIMC; V = C;
             }
-            V[indAdj] = static_cast<T>(r == c);
+            V[indAdj] = static_cast<float>(r == c);
         }
     }
 
 
-    template <typename T, unsigned DIM>
     __device__
-    void invertMatrix(T *A, T *s_temp){ 
+    void invertMatrix(uint32_t DIM, float *A, float *s_temp){ 
     // we are going to guassian elimination walking down the matrix (assuming no leading 0s)
     // we therefore use the columns in order as the pivot column for each pivot we need to rescale 
     // that row so that the pivot value (pv) is 1 THEN for all other row values (orv) we need to add a multiple 
@@ -269,7 +242,7 @@ namespace oldschur{
         for (unsigned pivRC = 0; pivRC < DIM; pivRC++){
             unsigned pivColOffset = pivRC*DIM;
             // save the pivot and pivot column and row
-            T pvInv = static_cast<T>(1)/A[pivRC + pivColOffset];
+            float pvInv = static_cast<float>(1)/A[pivRC + pivColOffset];
             for (unsigned ind = GATO_THREAD_ID; ind < 2*DIM+1; ind++){
                 unsigned AInd;
                 if (ind < DIM){AInd = ind + pivColOffset;}
@@ -289,16 +262,15 @@ namespace oldschur{
     }
 
 
-    template <typename T, unsigned DIMA, unsigned DIMB, unsigned MAX_DIM>
     __device__
-    void invertMatrix(T *A, T *B, T *s_temp){
+    void invertMatrix(unsigned DIMA, unsigned DIMB, unsigned MAX_DIM, float *A, float *B, float *s_temp){
 
         // now we are going to guassian elimination walking down the matrix (assuming no leading 0s)
         // we therefore use the columns in order as the pivot column for each pivot we need to rescale 
         // that row so that the pivot value (pv) is 1 THEN for all other row values (orv) we need to add a multiple 
         // of the NEW pivot row value (prv) such that we transorm the other row pivot column value (orpcv) to 0
         // pr *= 1/pv   orv -= orpcv*prv == orv -= orpcv*1/pv*prvOld
-        T *s_memA = s_temp; T *s_memB = &s_memA[2*DIMA+1];
+        float *s_memA = s_temp; float *s_memB = &s_memA[2*DIMA+1];
         for (unsigned pivRC = 0; pivRC < MAX_DIM; pivRC++){
             bool AActive = pivRC < DIMA; bool BActive = pivRC < DIMB;
             unsigned pivColOffsetA = pivRC*DIMA; unsigned pivColOffsetB = pivRC*DIMB;
@@ -331,16 +303,15 @@ namespace oldschur{
 
     // invert A,B,C assume memory for all is [V | VInv] where both are DIMxDIM and continguous
     // relies on s_temp of size [2*DIMA + 2*DIMB + 2*DIMC + 3]
-    template <typename T, unsigned DIMA, unsigned DIMB, unsigned DIMC, unsigned MAX_DIM>
     __device__
-    void invertMatrix(T *A, T *B, T *C, T *s_temp){
+    void invertMatrix(unsigned DIMA, unsigned DIMB, unsigned DIMC, unsigned MAX_DIM, float *A, float *B, float *C, float *s_temp){
 
         // now we are going to guassian elimination walking down the matrix (assuming no leading 0s)
         // we therefore use the columns in order as the pivot column for each pivot we need to rescale 
         // that row so that the pivot value (pv) is 1 THEN for all other row values (orv) we need to add a multiple 
         // of the NEW pivot row value (prv) such that we transorm the other row pivot column value (orpcv) to 0
         // pr *= 1/pv   orv -= orpcv*prv == orv -= orpcv*1/pv*prvOld
-        T *s_memA = s_temp; T *s_memB = &s_memA[2*DIMA+1]; T *s_memC = &s_memB[2*DIMB+1];
+        float *s_memA = s_temp; float *s_memB = &s_memA[2*DIMA+1]; float *s_memC = &s_memB[2*DIMB+1];
         for (unsigned pivRC = 0; pivRC < MAX_DIM; pivRC++){
             bool AActive = pivRC < DIMA; bool BActive = pivRC < DIMB; bool CActive = pivRC < DIMC;
             unsigned pivColOffsetA = pivRC*DIMA; unsigned pivColOffsetB = pivRC*DIMB; unsigned pivColOffsetC = pivRC*DIMC;
@@ -378,9 +349,11 @@ namespace oldschur{
         }
     }
 
-
+    
     __device__
-    void gato_form_ss_inner(T *d_S, T *d_Pinv, T *d_gamma, T *s_temp, unsigned blockrow){
+    void gato_form_ss_inner(uint32_t state_size, uint32_t knot_points, float *d_S, float *d_Pinv, float *d_gamma, float *s_temp, unsigned blockrow){
+
+        const uint32_t states_sq = state_size*state_size;
         
         //  STATE OF DEVICE MEM
         //  S:      -Q0_i in spot 00, phik left off-diagonal, thetak main diagonal
@@ -390,20 +363,21 @@ namespace oldschur{
 
         // GOAL SPACE ALLOCATION IN SHARED MEM
         // s_temp  = | phi_k_T | phi_k | phi_kp1 | thetaInv_k | thetaInv_kp1 | thetaInv_km1 | PhiInv_R | PhiInv_L | scratch
-        T *s_phi_k = s_temp;
-        T *s_phi_kp1_T = s_phi_k + states_sq;
-        T *s_thetaInv_k = s_phi_kp1_T + states_sq;
-        T *s_thetaInv_km1 = s_thetaInv_k + states_sq;
-        T *s_thetaInv_kp1 = s_thetaInv_km1 + states_sq;
-        T *s_PhiInv_k_R = s_thetaInv_kp1 + states_sq;
-        T *s_PhiInv_k_L = s_PhiInv_k_R + states_sq;
-        T *s_scratch = s_PhiInv_k_L + states_sq;
+        float *s_phi_k = s_temp;
+        float *s_phi_kp1_T = s_phi_k + states_sq;
+        float *s_thetaInv_k = s_phi_kp1_T + states_sq;
+        float *s_thetaInv_km1 = s_thetaInv_k + states_sq;
+        float *s_thetaInv_kp1 = s_thetaInv_km1 + states_sq;
+        float *s_PhiInv_k_R = s_thetaInv_kp1 + states_sq;
+        float *s_PhiInv_k_L = s_PhiInv_k_R + states_sq;
+        float *s_scratch = s_PhiInv_k_L + states_sq;
 
         const unsigned lastrow = knot_points - 1;
 
         // load phi_kp1_T
         if(blockrow!=lastrow){
-            load_block_bd<T, state_size, knot_points>(
+            load_block_bd<float>(
+                state_size, knot_points,
                 d_S,                // src
                 s_phi_kp1_T,        // dst
                 0,                  // block column (0, 1, or 2)
@@ -416,7 +390,9 @@ namespace oldschur{
 
         // load phi_k
         if(blockrow!=0){
-            load_block_bd<T, state_size, knot_points>(
+            load_block_bd<float>(
+                state_size,
+                knot_points,
                 d_S,
                 s_phi_k,
                 0,
@@ -428,7 +404,8 @@ namespace oldschur{
 
 
         // load thetaInv_k
-        load_block_bd<T, state_size, knot_points>(
+        load_block_bd<float>(
+            state_size, knot_points,
             d_Pinv,
             s_thetaInv_k,
             1,
@@ -439,7 +416,8 @@ namespace oldschur{
 
         // load thetaInv_km1
         if(blockrow!=0){
-            load_block_bd<T, state_size, knot_points>(
+            load_block_bd<float>(
+                state_size, knot_points,
                 d_Pinv,
                 s_thetaInv_km1,
                 1,
@@ -451,7 +429,8 @@ namespace oldschur{
 
         // load thetaInv_kp1
         if(blockrow!=lastrow){
-            load_block_bd<T, state_size, knot_points>(
+            load_block_bd<float>(
+                state_size, knot_points,
                 d_Pinv,
                 s_thetaInv_kp1,
                 1,
@@ -487,7 +466,8 @@ namespace oldschur{
             __syncthreads();//----------------------------------------------------------------
 
             // store left diagonal in Phi
-            store_block_bd<T, state_size, knot_points>(
+            store_block_bd<float>(
+                state_size, knot_points,
                 s_PhiInv_k_L, 
                 d_Pinv,
                 0,
@@ -523,7 +503,8 @@ namespace oldschur{
             __syncthreads();//----------------------------------------------------------------
 
             // store Phi right diag
-            store_block_bd<T, state_size, knot_points>(
+            store_block_bd<float>(
+                state_size, knot_points,
                 s_PhiInv_k_R, 
                 d_Pinv,
                 2,
@@ -534,18 +515,18 @@ namespace oldschur{
         }
     }
 
-
+    
     __global__
-    void gato_form_ss(T *d_S, T *d_Pinv, T *d_gamma){
-        
-        const unsigned s_temp_size = 9 * states_sq;
+    void gato_form_ss(uint32_t state_size, uint32_t knot_points, float *d_S, float *d_Pinv, float *d_gamma){
+
         // 8 * states^2
         // scratch space = states^2
 
-        __shared__ T s_temp[ s_temp_size ];
+        extern __shared__ float s_temp[ ];
 
-        for(unsigned ind=thread_id; ind<knot_points; ind+=GATO_NUM_BLOCKS){
+        for(unsigned ind=GATO_BLOCK_ID; ind<knot_points; ind+=GATO_NUM_BLOCKS){
             gato_form_ss_inner(
+                state_size, knot_points,
                 d_S,
                 d_Pinv,
                 d_gamma,
@@ -557,10 +538,7 @@ namespace oldschur{
 
 
     __device__
-    void gato_form_schur_jacobi_inner(float *d_G, float *d_C, float *d_g, float *d_c, float *d_S, float *d_Pinv, float *d_gamma, float rho, float *s_temp, unsigned blockrow){
-        const uint32_t STATE_SIZE = 14;
-        const uint32_t CONTROL_SIZE = 7;
-        const uint32_t KNOT_POINTS = 10;    
+    void gato_form_schur_jacobi_inner(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_G, float *d_C, float *d_g, float *d_c, float *d_S, float *d_Pinv, float *d_gamma, float rho, float *s_temp, unsigned blockrow){
         
         //  SPACE ALLOCATION IN SHARED MEM
         //  | phi_k | theta_k | thetaInv_k | gamma_k | block-specific...
@@ -569,7 +547,7 @@ namespace oldschur{
         float *s_theta_k = s_phi_k + STATES_SQ; 			            // theta_k      states^2
         float *s_thetaInv_k = s_theta_k + STATES_SQ; 			        // thetaInv_k   states^2
         float *s_gamma_k = s_thetaInv_k + STATES_SQ;                       // gamma_k      states
-        float *s_end_main = s_gamma_k + STATE_SIZE;                               
+        float *s_end_main = s_gamma_k + state_size;                               
 
         if(blockrow==0){
 
@@ -578,40 +556,40 @@ namespace oldschur{
             //              s^2   s^2     s   s^2   s^2     s      ? 
         
             float *s_QN = s_end_main;
-            float *s_QN_i = s_QN + STATE_SIZE * STATE_SIZE;
-            float *s_qN = s_QN_i + STATE_SIZE * STATE_SIZE;
-            float *s_Q0 = s_qN + STATE_SIZE;
-            float *s_Q0_i = s_Q0 + STATE_SIZE * STATE_SIZE;
-            float *s_q0 = s_Q0_i + STATE_SIZE * STATE_SIZE;
-            float *s_end = s_q0 + STATE_SIZE;
+            float *s_QN_i = s_QN + state_size * state_size;
+            float *s_qN = s_QN_i + state_size * state_size;
+            float *s_Q0 = s_qN + state_size;
+            float *s_Q0_i = s_Q0 + state_size * state_size;
+            float *s_q0 = s_Q0_i + state_size * state_size;
+            float *s_end = s_q0 + state_size;
 
             // scratch space
             float *s_R_not_needed = s_end;
-            float *s_r_not_needed = s_R_not_needed + CONTROL_SIZE * CONTROL_SIZE;
-            float *s_extra_temp = s_r_not_needed + CONTROL_SIZE * CONTROL_SIZE;
+            float *s_r_not_needed = s_R_not_needed + control_size * control_size;
+            float *s_extra_temp = s_r_not_needed + control_size * control_size;
 
             __syncthreads();//----------------------------------------------------------------
 
-            gato_memcpy<float>(s_Q0, d_G, STATES_SQ);
-            gato_memcpy<float>(s_QN, d_G+(KNOT_POINTS-1)*(STATES_SQ+CONTROLS_SQ), STATES_SQ);
-            gato_memcpy<float>(s_q0, d_g, STATE_SIZE);
-            gato_memcpy<float>(s_qN, d_g+(KNOT_POINTS-1)*(STATE_SIZE+CONTROL_SIZE), STATE_SIZE);
+            gato_memcpy(s_Q0, d_G, STATES_SQ);
+            gato_memcpy(s_QN, d_G+(knot_points-1)*(STATES_SQ+CONTROLS_SQ), STATES_SQ);
+            gato_memcpy(s_q0, d_g, state_size);
+            gato_memcpy(s_qN, d_g+(knot_points-1)*(state_size+control_size), state_size);
 
             __syncthreads();//----------------------------------------------------------------
 
-            add_identity(s_Q0, STATE_SIZE, rho);
-            add_identity(s_QN, STATE_SIZE, rho);
+            add_identity(s_Q0, state_size, rho);
+            add_identity(s_QN, state_size, rho);
             // if(PRINT_THREAD){
             //     printf("Q0\n");
-            //     printMat<float,STATE_SIZE,STATE_SIZE>(s_Q0,STATE_SIZE);
+            //     printMat<state_size,state_size>(s_Q0,state_size);
             //     printf("q0\n");
-            //     printMat<float,1,STATE_SIZE>(s_q0,1);
+            //     printMat<1,state_size>(s_q0,1);
             //     printf("QN\n");
-            //     printMat<float,STATE_SIZE,STATE_SIZE>(s_QN,STATE_SIZE);
+            //     printMat<state_size,state_size>(s_QN,state_size);
             //     printf("qN\n");
-            //     printMat<float,1,STATE_SIZE>(s_qN,1);
+            //     printMat<1,state_size>(s_qN,1);
             //     printf("start error\n");
-            //     printMat<float,1,STATE_SIZE>(s_integrator_error,1);
+            //     printMat<1,state_size>(s_integrator_error,1);
             //     printf("\n");
             // }
             __syncthreads();//----------------------------------------------------------------
@@ -621,7 +599,9 @@ namespace oldschur{
             
 
             // save -Q_0 in PhiInv spot 00
-            store_block_bd<float, STATE_SIZE, KNOT_POINTS>(
+            store_block_bd<float>(
+                state_size,
+                knot_points,
                 s_Q0,                       // src     
                 d_Pinv,                   // dst         
                 1,                          // col
@@ -632,22 +612,22 @@ namespace oldschur{
 
 
             // invert Q_N, Q_0
-            loadIdentity<float, STATE_SIZE,STATE_SIZE>(s_Q0_i, s_QN_i);
+            loadIdentity( state_size,state_size,s_Q0_i, s_QN_i);
             __syncthreads();//----------------------------------------------------------------
-            invertMatrix<float, STATE_SIZE,STATE_SIZE,STATE_SIZE>(s_Q0, s_QN, s_extra_temp);
+            invertMatrix( state_size,state_size,state_size,s_Q0, s_QN, s_extra_temp);
             
             __syncthreads();//----------------------------------------------------------------
 
 
             // if(PRINT_THREAD){
             //     printf("Q0Inv\n");
-            //     printMat<floatSTATE_SIZE,STATE_SIZE>(s_Q0_i,STATE_SIZE);
+            //     printMat<floatstate_size,state_size>(s_Q0_i,state_size);
             //     printf("QNInv\n");
-            //     printMat<floatSTATE_SIZE,STATE_SIZE>(s_QN_i,STATE_SIZE);
+            //     printMat<floatstate_size,state_size>(s_QN_i,state_size);
             //     printf("theta\n");
-            //     printMat<floatSTATE_SIZE,STATE_SIZE>(s_theta_k,STATE_SIZE);
+            //     printMat<floatstate_size,state_size>(s_theta_k,state_size);
             //     printf("thetaInv\n");
-            //     printMat<floatSTATE_SIZE,STATE_SIZE>(s_thetaInv_k,STATE_SIZE);
+            //     printMat<floatstate_size,state_size>(s_thetaInv_k,state_size);
             //     printf("\n");
             // }
             __syncthreads();//----------------------------------------------------------------
@@ -657,7 +637,7 @@ namespace oldschur{
             
 
             // compute gamma
-            mat_vec_prod<float, STATE_SIZE, STATE_SIZE>(
+            mat_vec_prod( state_size, state_size,
                 s_Q0_i,                                    
                 s_q0,                                       
                 s_gamma_k 
@@ -666,7 +646,7 @@ namespace oldschur{
             
 
             // save -Q0_i in spot 00 in S
-            store_block_bd<float, STATE_SIZE, KNOT_POINTS>(
+            store_block_bd<float>( state_size, knot_points,
                 s_Q0_i,                         // src             
                 d_S,                            // dst              
                 1,                              // col   
@@ -677,7 +657,7 @@ namespace oldschur{
 
 
             // compute Q0^{-1}q0
-            mat_vec_prod<float, STATE_SIZE, STATE_SIZE>(
+            mat_vec_prod( state_size, state_size,
                 s_Q0_i,
                 s_q0,
                 s_Q0
@@ -690,7 +670,7 @@ namespace oldschur{
 
 
             // save -Q0^{-1}q0 in spot 0 in gamma
-            for(unsigned ind = GATO_THREAD_ID; ind < STATE_SIZE; ind += GATO_THREADS_PER_BLOCK){
+            for(unsigned ind = GATO_THREAD_ID; ind < state_size; ind += GATO_THREADS_PER_BLOCK){
                 d_gamma[ind] = -s_Q0[ind];
             }
             __syncthreads();//----------------------------------------------------------------
@@ -715,9 +695,9 @@ namespace oldschur{
             float *s_Rk = s_Qkp1_i +    STATES_SQ;
             float *s_Rk_i = s_Rk +      CONTROLS_SQ;
             float *s_qk = s_Rk_i +      CONTROLS_SQ; 	
-            float *s_qkp1 = s_qk +      STATE_SIZE; 			
-            float *s_rk = s_qkp1 +      STATE_SIZE;
-            float *s_end = s_rk +       CONTROL_SIZE;
+            float *s_qkp1 = s_qk +      state_size; 			
+            float *s_rk = s_qkp1 +      state_size;
+            float *s_end = s_rk +       control_size;
             
             // scratch
             float *s_extra_temp = s_end;
@@ -725,62 +705,62 @@ namespace oldschur{
 
             // if(PRINT_THREAD){
             //     printf("xk\n");
-            //     printMat<float1,STATE_SIZE>(s_xux,1);
+            //     printMat<float1,state_size>(s_xux,1);
             //     printf("uk\n");
-            //     printMat<float1,CONTROL_SIZE>(&s_xux[STATE_SIZE],1);
+            //     printMat<float1,control_size>(&s_xux[state_size],1);
             //     printf("xkp1\n");
-            //     printMat<float1,STATE_SIZE>(&s_xux[STATE_SIZE+CONTROL_SIZE],1);
+            //     printMat<float1,state_size>(&s_xux[state_size+control_size],1);
             //     printf("\n");
             // }
 
             __syncthreads();//----------------------------------------------------------------
 
-            gato_memcpy<float>(s_Ak,   d_C+      (blockrow-1)*C_set_size,                        STATES_SQ);
-            gato_memcpy<float>(s_Bk,   d_C+      (blockrow-1)*C_set_size+STATES_SQ,              STATES_P_CONTROLS);
-            gato_memcpy<float>(s_Qk,   d_G+      (blockrow-1)*G_set_size,                        STATES_SQ);
-            gato_memcpy<float>(s_Qkp1, d_G+    (blockrow*G_set_size),                          STATES_SQ);
-            gato_memcpy<float>(s_Rk,   d_G+      ((blockrow-1)*G_set_size+STATES_SQ),            CONTROLS_SQ);
-            gato_memcpy<float>(s_qk,   d_g+      (blockrow-1)*(STATES_S_CONTROLS),               STATE_SIZE);
-            gato_memcpy<float>(s_qkp1, d_g+    (blockrow)*(STATES_S_CONTROLS),                 STATE_SIZE);
-            gato_memcpy<float>(s_rk,   d_g+      ((blockrow-1)*(STATES_S_CONTROLS)+STATE_SIZE),  CONTROL_SIZE);
+            gato_memcpy(s_Ak,   d_C+      (blockrow-1)*C_set_size,                        STATES_SQ);
+            gato_memcpy(s_Bk,   d_C+      (blockrow-1)*C_set_size+STATES_SQ,              STATES_P_CONTROLS);
+            gato_memcpy(s_Qk,   d_G+      (blockrow-1)*G_set_size,                        STATES_SQ);
+            gato_memcpy(s_Qkp1, d_G+    (blockrow*G_set_size),                          STATES_SQ);
+            gato_memcpy(s_Rk,   d_G+      ((blockrow-1)*G_set_size+STATES_SQ),            CONTROLS_SQ);
+            gato_memcpy(s_qk,   d_g+      (blockrow-1)*(STATES_S_CONTROLS),               state_size);
+            gato_memcpy(s_qkp1, d_g+    (blockrow)*(STATES_S_CONTROLS),                 state_size);
+            gato_memcpy(s_rk,   d_g+      ((blockrow-1)*(STATES_S_CONTROLS)+state_size),  control_size);
 
             __syncthreads();//----------------------------------------------------------------
 
-            add_identity(s_Qk, STATE_SIZE, rho);
-            add_identity(s_Qkp1, STATE_SIZE, rho);
-            add_identity(s_Rk, CONTROL_SIZE, rho);
+            add_identity(s_Qk, state_size, rho);
+            add_identity(s_Qkp1, state_size, rho);
+            add_identity(s_Rk, control_size, rho);
 
     #if DEBUG_MODE    
             if(GATO_BLOCK_ID==1 && GATO_THREAD_ID==0){
                 printf("Ak\n");
-                printMat<float,STATE_SIZE,STATE_SIZE>(s_Ak,STATE_SIZE);
+                printMat<state_size,state_size>(s_Ak,state_size);
                 printf("Bk\n");
-                printMat<float,STATE_SIZE,CONTROL_SIZE>(s_Bk,STATE_SIZE);
+                printMat<state_size,control_size>(s_Bk,state_size);
                 printf("Qk\n");
-                printMat<float,STATE_SIZE,STATE_SIZE>(s_Qk,STATE_SIZE);
+                printMat<state_size,state_size>(s_Qk,state_size);
                 printf("Rk\n");
-                printMat<float,CONTROL_SIZE,CONTROL_SIZE>(s_Rk,CONTROL_SIZE);
+                printMat<control_size,control_size>(s_Rk,control_size);
                 printf("qk\n");
-                printMat<float,STATE_SIZE, 1>(s_qk,1);
+                printMat<state_size, 1>(s_qk,1);
                 printf("rk\n");
-                printMat<float,CONTROL_SIZE, 1>(s_rk,1);
+                printMat<control_size, 1>(s_rk,1);
                 printf("Qkp1\n");
-                printMat<float,STATE_SIZE,STATE_SIZE>(s_Qkp1,STATE_SIZE);
+                printMat<state_size,state_size>(s_Qkp1,state_size);
                 printf("qkp1\n");
-                printMat<float,STATE_SIZE, 1>(s_qkp1,1);
+                printMat<state_size, 1>(s_qkp1,1);
                 printf("integrator error\n");
             }
             __syncthreads();//----------------------------------------------------------------
     #endif /* #if DEBUG_MODE */
             
             // Invert Q, Qp1, R 
-            loadIdentity<float, STATE_SIZE,STATE_SIZE,CONTROL_SIZE>(
+            loadIdentity( state_size,state_size,control_size,
                 s_Qk_i, 
                 s_Qkp1_i, 
                 s_Rk_i
             );
             __syncthreads();//----------------------------------------------------------------
-            invertMatrix<float, STATE_SIZE,STATE_SIZE,CONTROL_SIZE,STATE_SIZE>(
+            invertMatrix( state_size,state_size,control_size,state_size,
                 s_Qk, 
                 s_Qkp1, 
                 s_Rk, 
@@ -789,22 +769,22 @@ namespace oldschur{
             __syncthreads();//----------------------------------------------------------------
 
             // save Qk_i into G (now Ginv) for calculating dz
-            gato_memcpy<float>(
+            gato_memcpy(
                 d_G+(blockrow-1)*G_set_size,
                 s_Qk_i,
                 STATES_SQ
             );
 
             // save Rk_i into G (now Ginv) for calculating dz
-            gato_memcpy<float>( 
+            gato_memcpy( 
                 d_G+(blockrow-1)*G_set_size+STATES_SQ,
                 s_Rk_i,
                 CONTROLS_SQ
             );
 
-            if(blockrow==KNOT_POINTS-1){
+            if(blockrow==knot_points-1){
                 // save Qkp1_i into G (now Ginv) for calculating dz
-                gato_memcpy<float>(
+                gato_memcpy(
                     d_G+(blockrow)*G_set_size,
                     s_Qkp1_i,
                     STATES_SQ
@@ -815,11 +795,11 @@ namespace oldschur{
     #if DEBUG_MODE
             if(blockrow==1&&GATO_THREAD_ID==0){
                 printf("Qk\n");
-                printMat<float, STATE_SIZE,STATE_SIZE>(s_Qk_i,STATE_SIZE);
+                printMat< state_size,state_size>(s_Qk_i,state_size);
                 printf("RkInv\n");
-                printMat<float,CONTROL_SIZE,CONTROL_SIZE>(s_Rk_i,CONTROL_SIZE);
+                printMat<control_size,control_size>(s_Rk_i,control_size);
                 printf("Qkp1Inv\n");
-                printMat<float, STATE_SIZE,STATE_SIZE>(s_Qkp1_i,STATE_SIZE);
+                printMat< state_size,state_size>(s_Qkp1_i,state_size);
                 printf("\n");
             }
             __syncthreads();//----------------------------------------------------------------
@@ -831,10 +811,10 @@ namespace oldschur{
                 s_phi_k,
                 s_Ak,
                 s_Qk_i,
-                STATE_SIZE, 
-                STATE_SIZE, 
-                STATE_SIZE, 
-                STATE_SIZE
+                state_size, 
+                state_size, 
+                state_size, 
+                state_size
             );
             // for(int i = GATO_THREAD_ID; i < STATES_SQ; i++){
             //     s_phi_k[i] *= -1;
@@ -847,27 +827,27 @@ namespace oldschur{
                 s_Qkp1,
                 s_Bk,
                 s_Rk_i,
-                STATE_SIZE,
-                CONTROL_SIZE,
-                CONTROL_SIZE,
-                CONTROL_SIZE
+                state_size,
+                control_size,
+                control_size,
+                control_size
             );
 
             __syncthreads();//----------------------------------------------------------------
 
             // compute Q_{k+1}^{-1}q_{k+1} - IntegratorError in gamma
-            mat_vec_prod<float, STATE_SIZE, STATE_SIZE>(
+            mat_vec_prod( state_size, state_size,
                 s_Qkp1_i,
                 s_qkp1,
                 s_gamma_k
             );
-            for(unsigned i = GATO_THREAD_ID; i < STATE_SIZE; i += GATO_THREADS_PER_BLOCK){
-                s_gamma_k[i] -= d_c[(blockrow*STATE_SIZE)+i];
+            for(unsigned i = GATO_THREAD_ID; i < state_size; i += GATO_THREADS_PER_BLOCK){
+                s_gamma_k[i] -= d_c[(blockrow*state_size)+i];
             }
             __syncthreads();//----------------------------------------------------------------
 
             // compute -AQ^{-1}q for gamma         temp storage in extra temp
-            mat_vec_prod<float, STATE_SIZE, STATE_SIZE>(
+            mat_vec_prod( state_size, state_size,
                 s_phi_k,
                 s_qk,
                 s_extra_temp
@@ -877,17 +857,17 @@ namespace oldschur{
             __syncthreads();//----------------------------------------------------------------
             
             // compute -BR^{-1}r for gamma           temp storage in extra temp + states
-            mat_vec_prod<float, STATE_SIZE, CONTROL_SIZE>(
+            mat_vec_prod( state_size, control_size,
                 s_Qkp1,
                 s_rk,
-                s_extra_temp + STATE_SIZE
+                s_extra_temp + state_size
             );
 
             __syncthreads();//----------------------------------------------------------------
             
             // gamma = yeah...
-            for(unsigned i = GATO_THREAD_ID; i < STATE_SIZE; i += GATO_THREADS_PER_BLOCK){
-                s_gamma_k[i] += s_extra_temp[STATE_SIZE + i] + s_extra_temp[i]; 
+            for(unsigned i = GATO_THREAD_ID; i < state_size; i += GATO_THREADS_PER_BLOCK){
+                s_gamma_k[i] += s_extra_temp[state_size + i] + s_extra_temp[i]; 
             }
             __syncthreads();//----------------------------------------------------------------
 
@@ -896,10 +876,10 @@ namespace oldschur{
                 s_theta_k,
                 s_phi_k,
                 s_Ak,
-                STATE_SIZE,
-                STATE_SIZE,
-                STATE_SIZE,
-                STATE_SIZE,
+                state_size,
+                state_size,
+                state_size,
+                state_size,
                 true
             );
 
@@ -908,7 +888,7 @@ namespace oldschur{
     #if DEBUG_MODE
             if(blockrow==1&&GATO_THREAD_ID==0){
                 printf("this is the A thing\n");
-                printMat<float, STATE_SIZE, STATE_SIZE>(s_theta_k, 234);
+                printMat< state_size, state_size>(s_theta_k, 234);
             }
     #endif /* #if DEBUG_MODE */
 
@@ -923,10 +903,10 @@ namespace oldschur{
                 s_Qkp1_i,
                 s_Qkp1,
                 s_Bk,
-                STATE_SIZE,
-                CONTROL_SIZE,
-                STATE_SIZE,
-                CONTROL_SIZE,
+                state_size,
+                control_size,
+                state_size,
+                control_size,
                 true
             );
 
@@ -938,7 +918,7 @@ namespace oldschur{
             __syncthreads();//----------------------------------------------------------------
 
             // save phi_k into left off-diagonal of S, 
-            store_block_bd<float, STATE_SIZE, KNOT_POINTS>(
+            store_block_bd<float>( state_size, knot_points,
                 s_phi_k,                        // src             
                 d_S,                            // dst             
                 0,                              // col
@@ -948,7 +928,7 @@ namespace oldschur{
             __syncthreads();//----------------------------------------------------------------
 
             // save -s_theta_k main diagonal S
-            store_block_bd<float, STATE_SIZE, KNOT_POINTS>(
+            store_block_bd<float>( state_size, knot_points,
                 s_theta_k,                                               
                 d_S,                                                 
                 1,                                               
@@ -959,14 +939,14 @@ namespace oldschur{
 
     #if BLOCK_J_PRECON || SS_PRECON
         // invert theta
-        loadIdentity<float,STATE_SIZE>(s_thetaInv_k);
+        loadIdentity(state_size,s_thetaInv_k);
         __syncthreads();//----------------------------------------------------------------
-        invertMatrix<float,STATE_SIZE>(s_theta_k, s_extra_temp);
+        invertMatrix(state_size,s_theta_k, s_extra_temp);
         __syncthreads();//----------------------------------------------------------------
 
 
         // save thetaInv_k main diagonal PhiInv
-        store_block_bd<float, STATE_SIZE, KNOT_POINTS>(
+        store_block_bd<float>( state_size, knot_points
             s_thetaInv_k, 
             d_Pinv,
             1,
@@ -976,8 +956,8 @@ namespace oldschur{
     #else /* BLOCK_J_PRECONDITIONER || SS_PRECONDITIONER  */
 
         // save 1 / diagonal to PhiInv
-        for(int i = GATO_THREAD_ID; i < STATE_SIZE; i+=GATO_THREADS_PER_BLOCK){
-            d_Pinv[blockrow*(3*STATES_SQ)+STATES_SQ+i*STATE_SIZE+i]= 1 / d_S[blockrow*(3*STATES_SQ)+STATES_SQ+i*STATE_SIZE+i]; 
+        for(int i = GATO_THREAD_ID; i < state_size; i+=GATO_THREADS_PER_BLOCK){
+            d_Pinv[blockrow*(3*STATES_SQ)+STATES_SQ+i*state_size+i]= 1 / d_S[blockrow*(3*STATES_SQ)+STATES_SQ+i*state_size+i]; 
         }
     #endif /* BLOCK_J_PRECONDITIONER || SS_PRECONDITIONER  */
         
@@ -985,21 +965,21 @@ namespace oldschur{
         __syncthreads();//----------------------------------------------------------------
 
         // save gamma_k in gamma
-        for(unsigned ind = GATO_THREAD_ID; ind < STATE_SIZE; ind += GATO_THREADS_PER_BLOCK){
-            unsigned offset = (blockrow)*STATE_SIZE + ind;
+        for(unsigned ind = GATO_THREAD_ID; ind < state_size; ind += GATO_THREADS_PER_BLOCK){
+            unsigned offset = (blockrow)*state_size + ind;
             d_gamma[offset] = s_gamma_k[ind]*-1;
         }
 
         __syncthreads();//----------------------------------------------------------------
 
         //transpose phi_k
-        loadIdentity<float,STATE_SIZE>(s_Ak);
+        loadIdentity(state_size,s_Ak);
         __syncthreads();//----------------------------------------------------------------
-        mat_mat_prod(s_Qkp1,s_Ak,s_phi_k,STATE_SIZE,STATE_SIZE,STATE_SIZE,STATE_SIZE,true);
+        mat_mat_prod(s_Qkp1,s_Ak,s_phi_k,state_size,state_size,state_size,state_size,true);
         __syncthreads();//----------------------------------------------------------------
 
         // save phi_k_T into right off-diagonal of S,
-        store_block_bd<float, STATE_SIZE, KNOT_POINTS>(
+        store_block_bd<float>( state_size, knot_points,
             s_Qkp1,                        // src             
             d_S,                            // dst             
             2,                              // col
@@ -1015,7 +995,12 @@ namespace oldschur{
 
 
     __device__
-    void gato_compute_dz_inner(T *d_Ginv_dense, T *d_C_dense, T *d_g_val, T *d_lambda, T *d_dz, T *s_mem, int blockrow){
+    void gato_compute_dz_inner(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_Ginv_dense, float *d_C_dense, float *d_g_val, float *d_lambda, float *d_dz, float *s_mem, int blockrow){
+
+        const uint32_t states_sq = state_size*state_size;
+        const uint32_t states_p_controls = state_size * control_size;
+        const uint32_t controls_sq = control_size * control_size;
+        const uint32_t states_s_controls = state_size + control_size;
 
         const unsigned set = blockrow/2;
         
@@ -1024,9 +1009,9 @@ namespace oldschur{
             //    Rkinv |   BkT
             //      C^2  |  S*C
 
-            T *s_Rk_i = s_mem;
-            T *s_BkT = s_Rk_i + controls_sq;
-            T *s_scratch = s_BkT + states_p_controls;
+            float *s_Rk_i = s_mem;
+            float *s_BkT = s_Rk_i + controls_sq;
+            float *s_scratch = s_BkT + states_p_controls;
 
             // load Rkinv from G
             gato_memcpy(s_Rk_i, 
@@ -1056,22 +1041,22 @@ namespace oldschur{
             __syncthreads();
 
             // multiply Rk_i*scratch in scratch + C
-            mat_vec_prod<T, control_size, control_size>(s_Rk_i,
+            mat_vec_prod( control_size, control_size,s_Rk_i,
                                                             s_scratch,
                                                             s_scratch+control_size);
             __syncthreads();
             
             // store in d_dz
-            gato_memcpy<T>(d_dz+set*(states_s_controls)+state_size,
+            gato_memcpy(d_dz+set*(states_s_controls)+state_size,
                             s_scratch+control_size,
                             control_size);
 
         }
         else{   // state row
 
-            T *s_Qk_i = s_mem;
-            T *s_AkT = s_Qk_i + states_sq;
-            T *s_scratch = s_AkT + states_sq;
+            float *s_Qk_i = s_mem;
+            float *s_AkT = s_Qk_i + states_sq;
+            float *s_scratch = s_AkT + states_sq;
             
             // shared mem config
             //    Qkinv |  AkT | scratch
@@ -1124,27 +1109,33 @@ namespace oldschur{
             
             
             // multiply Qk_i(scratch) in Akt
-            mat_vec_prod<T, state_size, state_size>(s_Qk_i,
+            mat_vec_prod( state_size, state_size,s_Qk_i,
                                                         s_scratch,
                                                         s_AkT);
             __syncthreads();
 
             // store in dz
-            gato_memcpy<T>(d_dz+set*(states_s_controls),
+            gato_memcpy(d_dz+set*(states_s_controls),
                             s_AkT,
                             state_size);
         }
     }
 
     __global__
-    void gato_compute_dz(T *d_G_dense, T *d_C_dense, T *d_g_val, T *d_lambda, T *d_dz){
+    void compute_dz(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_G_dense, float *d_C_dense, float *d_g_val, float *d_lambda, float *d_dz){
+
+        const uint32_t states_sq = state_size*state_size;
+        const uint32_t states_p_controls = state_size * control_size;
+        const uint32_t controls_sq = control_size * control_size;
+        const uint32_t states_s_controls = state_size + control_size;
+        
         
         // const unsigned s_mem_size = max(2*control_size, state_size);
 
-        __shared__ T s_mem[2*states_sq+state_size]; 
+        extern __shared__ float s_mem[]; 
 
-        for(int ind = thread_id; ind < 2*knot_points-1; ind+=GATO_NUM_BLOCKS){
-            gato_compute_dz_inner(d_G_dense, d_C_dense, d_g_val, d_lambda, d_dz, s_mem, ind);
+        for(int ind = GATO_BLOCK_ID; ind < 2*knot_points-1; ind+=GATO_NUM_BLOCKS){
+            gato_compute_dz_inner(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g_val, d_lambda, d_dz, s_mem, ind);
         }
     }
 
@@ -1163,436 +1154,3 @@ namespace oldschur{
 
 
 
-
-
-
-
-
-
-/*******************************************************************************
- *                           Private Functions                                 *
- *******************************************************************************/
-
-// template <typename T>
-// __device__
-// void gato_form_schur_jacobi_inner(
-//     uint32_t state_size,
-//     uint32_t control_size,
-//     uint32_t knot_points,
-//     T *d_G, 
-//     T *d_C, 
-//     T *d_g, 
-//     T *d_c, 
-//     T *d_S, 
-//     T *d_Pinv, 
-//     T *d_gamma, 
-//     T rho, 
-//     T *s_temp, 
-//     unsigned blockrow)
-// {
-//     const cgrps::thread_block = block;
-//     const uint32_t states_sq = states_sq;
-//     const uint32_t states_p_controls = state_size * control_size;
-//     const uint32_t controls_sq = control_size * control_size;
-//     const uint32_t states_s_controls = state_size + control_size;
-//     const uint32_t thread_id = threadIdx.x;
-//     const unit32_t num_threads = blockDim.x;
-//     const uint32_t block_id = blockIdx.x;
-//     const uint32_t num_blocks = gridDim.x;
-
-    
-//     //  SPACE ALLOCATION IN SHARED MEM
-//     //  | phi_k | theta_k | thetaInv_k | gamma_k | block-specific...
-//     //     s^2      s^2         s^2         s
-//     T *s_phi_k = s_temp; 	                            	    // phi_k        states^2
-//     T *s_theta_k = s_phi_k + states_sq; 			            // theta_k      states^2
-//     T *s_thetaInv_k = s_theta_k + states_sq; 			        // thetaInv_k   states^2
-//     T *s_gamma_k = s_thetaInv_k + states_sq;                       // gamma_k      states
-//     T *s_end_main = s_gamma_k + state_size;                               
-
-//     if(blockrow==0){
-
-//         //  LEADING BLOCK GOAL SHARED MEMORY STATE
-//         //  ...gamma_k | . | Q_N_I | q_N | . | Q_0_I | q_0 | scatch
-//         //              s^2   s^2     s   s^2   s^2     s      ? 
-    
-//         T *s_QN = s_end_main;
-//         T *s_QN_i = s_QN + states_sq;
-//         T *s_qN = s_QN_i + states_sq;
-//         T *s_Q0 = s_qN + state_size;
-//         T *s_Q0_i = s_Q0 + states_sq;
-//         T *s_q0 = s_Q0_i + states_sq;
-//         T *s_end = s_q0 + state_size;
-
-//         // scratch space
-//         T *s_R_not_needed = s_end;
-//         T *s_r_not_needed = s_R_not_needed + control_size * control_size;
-//         T *s_extra_temp = s_r_not_needed + control_size * control_size;
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         glass::copy<T>(states_sq, d_G, s_Q0);
-//         glass::copy<T>(states_sq, s_QN, &d_G[(knot_points-1)*(states_sq+controls_sq)]);
-//         glass::copy<T>(state_size, d_g, s_q0);
-//         glass::copy<T>(state_size, s_qN, &d_g[(knot_points-1)*(states_s_controls)]);
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         glass::addI(state_size, s_Q0, rho, block);
-//         glass::addI(state_size, s_QN, rho, block);
-
-//         __syncthreads();//----------------------------------------------------------------
-        
-//         // SHARED MEMORY STATE
-//         // | Q_N | . | q_N | Q_0 | . | q_0 | scatch
-        
-
-//         // save -Q_0 in PhiInv spot 00
-//         store_block_bd<T>(
-//             state_size, 
-//             knot_points,
-//             s_Q0,                       // src     
-//             d_Pinv,                   // dst         
-//             1,                          // col
-//             blockrow,                    // blockrow
-//             -1,                          //  multiplier
-//             block
-//         );
-//         __syncthreads();//----------------------------------------------------------------
-
-
-//         // invert Q_N, Q_0
-//         loadIdentity<T>(state_size, s_Q0_i, state_size, s_QN_i);
-//         __syncthreads();//----------------------------------------------------------------
-//         invertMatrix<T>(state_size, s_Q0, state_size, s_QN, s_extra_temp);
-        
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // SHARED MEMORY STATE
-//         // | . | Q_N_i | q_N | . | Q_0_i | q_0 | scatch
-        
-
-//         // compute gamma
-//         glass::gemv<T>(state_size, state_size, static_cast<T>(1), S_Q0_i, s_q0, s_gamma_k);
-//         // mat_vec_prod<T, state_size, state_size>(
-//         //     s_Q0_i,                                    
-//         //     s_q0,                                       
-//         //     s_gamma_k 
-//         // );
-//         __syncthreads();//----------------------------------------------------------------
-        
-
-//         // save -Q0_i in spot 00 in S
-//         store_block_bd<T>(
-//             state_size,
-//             knot_points,
-//             s_Q0_i,                         // src             
-//             d_S,                            // dst              
-//             1,                              // col   
-//             blockrow,                        // blockrow         
-//             -1                              //  multiplier   
-//         );
-//         __syncthreads();//----------------------------------------------------------------
-
-
-//         // compute Q0^{-1}q0
-//         glass::gemv<T>(state_size, state_size, static_cast<T>(1), s_Q0_i, s_q0, s_Q0);
-//         // mat_vec_prod<T, state_size, state_size>(
-//         //     s_Q0_i,
-//         //     s_q0,
-//         //     s_Q0
-//         // );
-//         __syncthreads();//----------------------------------------------------------------
-
-
-//         // SHARED MEMORY STATE
-//         // | . | Q_N_i | q_N | Q0^{-1}q0 | Q_0_i | q_0 | scatch
-
-
-//         // save -Q0^{-1}q0 in spot 0 in gamma
-//         for(unsigned ind = thread_id; ind < state_size; ind += num_threads){
-//             d_gamma[ind] = -s_Q0[ind];
-//         }
-//         __syncthreads();//----------------------------------------------------------------
-
-//     }
-//     else{                       // blockrow!=LEAD_BLOCK
-
-
-//         const unsigned C_set_size = states_sq+states_p_controls;
-//         const unsigned G_set_size = states_sq+controls_sq;
-
-//         //  NON-LEADING BLOCK GOAL SHARED MEMORY STATE
-//         //  ...gamma_k | A_k | B_k | . | Q_k_I | . | Q_k+1_I | . | R_k_I | q_k | q_k+1 | r_k | integrator_error | extra_temp
-//         //               s^2   s*c  s^2   s^2   s^2    s^2    s^2   s^2     s      s      s          s                <s^2?
-
-//         T *s_Ak = s_end_main; 								
-//         T *s_Bk = s_Ak +        states_sq;
-//         T *s_Qk = s_Bk +        states_p_controls; 	
-//         T *s_Qk_i = s_Qk +      states_sq;	
-//         T *s_Qkp1 = s_Qk_i +    states_sq;
-//         T *s_Qkp1_i = s_Qkp1 +  states_sq;
-//         T *s_Rk = s_Qkp1_i +    states_sq;
-//         T *s_Rk_i = s_Rk +      controls_sq;
-//         T *s_qk = s_Rk_i +      controls_sq; 	
-//         T *s_qkp1 = s_qk +      state_size; 			
-//         T *s_rk = s_qkp1 +      state_size;
-//         T *s_end = s_rk +       control_size;
-        
-//         // scratch
-//         T *s_extra_temp = s_end;
-        
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         glass::copy<T>(states_sq,  d_C+      (blockrow-1)*C_set_size,  s_Ak);
-//         glass::copy<T>(states_p_controls,  d_C+      (blockrow-1)*C_set_size+states_sq,  s_Bk);
-//         glass::copy<T>(states_sq,  d_G+      (blockrow-1)*G_set_size,  s_Qk);
-//         glass::copy<T>(states_sq,  d_G+    (blockrow*G_set_size),  s_Qkp1);
-//         glass::copy<T>(controls_sq,  d_G+      ((blockrow-1)*G_set_size+states_sq),  s_Rk);
-//         glass::copy<T>(state_size,  d_g+      (blockrow-1)*(states_s_controls),  s_qk);
-//         glass::copy<T>(state_size,  d_g+    (blockrow)*(states_s_controls),  s_qkp1);
-//         glass::copy<T>(control_size,  d_g+      ((blockrow-1)*(states_s_controls)+state_size),  s_rk);
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         addI<T>(state_size, s_Qk, rho);
-//         addI<T>(state_size, s_Qkp1, rho);
-//         addI<T>(control_size, s_Rk, rho);
-//         // add_identity(s_Qk, state_size, rho);
-//         // add_identity(s_Qkp1, state_size, rho);
-//         // add_identity(s_Rk, control_size, rho);
-
-
-        
-//         // Invert Q, Qp1, R 
-//         loadIdentity<T>(
-//             state_size,
-//             s_Qk_i, 
-//             state_size,
-//             s_Qkp1_i, 
-//             control_size,
-//             s_Rk_i
-//         );
-//         __syncthreads();//----------------------------------------------------------------
-//         invertMatrix<T>(
-//             state_size,
-//             s_Qk, 
-//             state_size,
-//             s_Qkp1, 
-//             control_size
-//             s_Rk, 
-//             s_extra_temp
-//         );
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // save Qk_i into G (now Ginv) for calculating dz
-//         gato_memcpy<T>(
-//             d_G+(blockrow-1)*G_set_size,
-//             s_Qk_i,
-//             states_sq
-//         );
-
-
-//         // save Rk_i into G (now Ginv) for calculating dz
-//         glass::copy<T>(controls_sq, s_Rk_i, d_G+(blockrow-1)*G_set_size+states_sq);
-//         // gato_memcpy<T>( 
-//         //     d_G+(blockrow-1)*G_set_size+states_sq,
-//         //     s_Rk_i,
-//         //     controls_sq
-//         // );
-
-//         if(blockrow==knot_points-1){
-//             // save Qkp1_i into G (now Ginv) for calculating dz
-//             glass::copy<T>(states_sq, s_Qkp1_i, d_G+(blockrow)*G_set_size);
-//             // gato_memcpy<T>(
-//             //     d_G+(blockrow)*G_set_size,
-//             //     s_Qkp1_i,
-//             //     states_sq
-//             // );
-//         }
-//         __syncthreads();//----------------------------------------------------------------
-
-
-//         glass::gemm<T>(state_size,
-//                        state_size,
-//                        state_size,
-//                        static_cast<T>(1),
-//                        s_Ak,
-//                        s_Qk_i,
-//                        s_phi_k);
-
-//         // Compute -AQ^{-1} in phi
-//         // mat_mat_prod(
-//         //     s_phi_k,
-//         //     s_Ak,
-//         //     s_Qk_i,
-//         //     state_size, 
-//         //     state_size, 
-//         //     state_size, 
-//         //     state_size
-//         // );
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // Compute -BR^{-1} in Qkp1
-//         glass::gemm<T>(state_size, control_size, control_size, static_cast<T>(1), s_Bk, s_Rk_i, s_Qkp1);
-//         // mat_mat_prod(
-//         //     s_Qkp1,
-//         //     s_Bk,
-//         //     s_Rk_i,
-//         //     state_size,
-//         //     control_size,
-//         //     control_size,
-//         //     control_size
-//         // );
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // compute Q_{k+1}^{-1}q_{k+1} - IntegratorError in gamma
-//         glass::gemv<T>(state_size, state_size, static_cast<T>(1), s_Qkp1_i, s_qkp1, s_gamma_k);
-//         // mat_vec_prod<T, state_size, state_size>(
-//         //     s_Qkp1_i,
-//         //     s_qkp1,
-//         //     s_gamma_k
-//         // );
-//         for(unsigned i = thread_id; i < state_size; i += num_threads){
-//             s_gamma_k[i] -= d_c[(blockrow*state_size)+i];
-//         }
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // compute -AQ^{-1}q for gamma         temp storage in extra temp
-//         glass::gemv<T>(state_size, state_size, static_cast<T>(1), s_phi_k, s_qk, s_extra_temp);
-//         // mat_vec_prod<T, state_size, state_size>(
-//         //     s_phi_k,
-//         //     s_qk,
-//         //     s_extra_temp
-//         // );
-        
-
-//         __syncthreads();//----------------------------------------------------------------
-        
-//         // compute -BR^{-1}r for gamma           temp storage in extra temp + states
-//         glass::gemv<T>(state_size, control_size, static_cast<T>(1), s_Qkp1, s_rk, &s_extra_temp[state_size]);
-//         // mat_vec_prod<T, state_size, control_size>(
-//         //     s_Qkp1,
-//         //     s_rk,
-//         //     s_extra_temp + state_size
-//         // );
-
-//         __syncthreads();//----------------------------------------------------------------
-        
-//         // gamma = yeah...
-//         for(unsigned i = thread_id; i < state_size; i += num_threads){
-//             s_gamma_k[i] += s_extra_temp[state_size + i] + s_extra_temp[i]; 
-//         }
-//         __syncthreads();//----------------------------------------------------------------
-
-
-//         // compute AQ^{-1}AT   -   Qkp1^{-1} for theta
-//         glass::gemm<T, true>(state_size, state_size, state_size, static_cast<T>(1), s_phi_k, s_Ak, s_theta_k);
-//         // mat_mat_prod(
-//         //     s_theta_k,
-//         //     s_phi_k,
-//         //     s_Ak,
-//         //     state_size,
-//         //     state_size,
-//         //     state_size,
-//         //     state_size,
-//         //     true
-//         // );
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         for(unsigned i = thread_id; i < states_sq; i += num_threads){
-//             s_theta_k[i] += s_Qkp1_i[i];
-//         }
-        
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // compute BR^{-1}BT for theta            temp storage in QKp1{-1}
-//         glass::gemm<T, true>(state_size, control_size, state_size, static_cast<T>(1), s_Qkp1_i, s_Qkp1, s_Bk);
-//         //         mat_mat_prod(
-//         //     s_Qkp1_i,
-//         //     s_Qkp1,
-//         //     s_Bk,
-//         //     state_size,
-//         //     control_size,
-//         //     state_size,
-//         //     control_size,
-//         //     true
-//         // );
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         for(unsigned i = thread_id; i < states_sq; i += GATO_THREADS_PER_BLOCK){
-//             s_theta_k[i] += s_Qkp1_i[i];
-//         }
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // save phi_k into left off-diagonal of S, 
-//         store_block_bd<T, state_size, knot_points>(
-//             s_phi_k,                        // src             
-//             d_S,                            // dst             
-//             0,                              // col
-//             blockrow,                        // blockrow    
-//             -1
-//         );
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // save -s_theta_k main diagonal S
-//         store_block_bd<T, state_size, knot_points>(
-//             s_theta_k,                                               
-//             d_S,                                                 
-//             1,                                               
-//             blockrow,
-//             -1                                             
-//         );          
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // invert theta
-//         loadIdentity<T,state_size>(s_thetaInv_k);
-//         __syncthreads();//----------------------------------------------------------------
-//         invertMatrix<T,state_size>(s_theta_k, s_extra_temp);
-//         __syncthreads();//----------------------------------------------------------------
-
-
-//         // save thetaInv_k main diagonal PhiInv
-//         store_block_bd<T, state_size, knot_points>(
-//             s_thetaInv_k, 
-//             d_Pinv,
-//             1,
-//             blockrow,
-//             -1
-//         );
-        
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // save gamma_k in gamma
-//         for(unsigned ind = GATO_THREAD_ID; ind < state_size; ind += GATO_THREADS_PER_BLOCK){
-//             unsigned offset = (blockrow)*state_size + ind;
-//             d_gamma[offset] = s_gamma_k[ind]*-1;
-//         }
-
-//         __syncthreads();//----------------------------------------------------------------
-
-//         //transpose phi_k
-//         loadIdentity<T,state_size>(s_Ak);
-//         __syncthreads();//----------------------------------------------------------------
-//         mat_mat_prod(s_Qkp1,s_Ak,s_phi_k,state_size,state_size,state_size,state_size,true);
-//         __syncthreads();//----------------------------------------------------------------
-
-//         // save phi_k_T into right off-diagonal of S,
-//         store_block_bd<T, state_size, knot_points>(
-//             s_Qkp1,                        // src             
-//             d_S,                            // dst             
-//             2,                              // col
-//             blockrow-1,                      // blockrow    
-//             -1
-//         );
-
-//         __syncthreads();//----------------------------------------------------------------
-//     }
-
-// }
