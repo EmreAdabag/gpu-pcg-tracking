@@ -1,5 +1,5 @@
 #pragma once
-
+#include <vector>
 #include <cstdint>
 #include <cublas_v2.h>
 #include <math.h>
@@ -248,57 +248,52 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     gpuErrchk(cudaFreeAsync(d_dz, 0));
 }
 
-
 template <typename T>
-void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_xu, T *d_traj, T *d_lambda){
-
-    void *d_dynmem = gato_plant::initializeDynamicsConstMem<float>();
-    gpuErrchk(cudaPeekAtLastError());
-
-    sqpSolve<float>(state_size, control_size, knot_points, .1, d_traj, d_lambda, d_xu, d_dynmem);    
-
-    gato_plant::freeDynamicsConstMem<float>(d_dynmem);
-}
-
-
-template <typename T>
-void interpolate_knotpoints_kernel(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_mod_timestep, T *d_xs, T *d_xu, T *d_xu_temp){
+void interpolate_knotpoints_kernel(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_since_update, T *d_xs, T *d_xu, T *d_xu_temp){
 
     const uint32_t thread_id = threadIdx.x;
     const uint32_t block_id = blockIdx.x;
     const uint32_t block_dim = blockDim.x;
     const uint32_t grid_dim = gridDim.x;
     const uint32_t states_s_controls = state_size + control_size;
-    float new_timestep = (timestep * knot_points - time_mod_timestep) / knot_points;    // redistributed knot points for new time-to-goal
+    float new_timestep = (timestep * knot_points - time_since_update) / knot_points;    // redistributed knot points for new time-to-goal
 
     float new_time, time_diff;
     T prev, next, diff;
+    uint32_t prev_knot, threads_needed;
 
     for(uint32_t knot = block_id; knot < knot_points; knot += grid_dim){
 
         new_time = knot * new_timestep;
-        uint32_t knot_before_new_time = static_cast<uint32_t>(floorf(new_time / timestep));
-        float time_diff = new_time - timestep * knot_before_new_time;
+        ///TODO: make sure on first iter floating point error isn't making this mess up
+        prev_knot = static_cast<uint32_t>(floorf(new_time / timestep));
+        time_diff = new_time - timestep * prev_knot;
+        threads_needed = state_size + (knot < knot_points-1)*control_size;
 
-        for (uint32_t ind = thread_id; ind < states_s_controls; ind += block_dim){
-            
-            prev = d_xu[knot_before_new_time*states_s_controls+ind];
-            next = d_xu[(knot_before_new_time+1)*states_s_controls+ind];
-            diff = next - prev;
+        for (uint32_t ind = thread_id; ind < threads_needed; ind += block_dim){
 
-            d_xu_temp[block_id * (states_s_controls) + ind] = prev + (time_diff/timestep) * diff;
+            if (knot==0){
+                d_xu_temp[ind] = d_xs[ind];    
+            }
+            else{
+                prev = d_xu[knot_before_new_time*states_s_controls+ind];
+                next = d_xu[(knot_before_new_time+1)*states_s_controls+ind];
+                diff = next - prev;
+
+                d_xu_temp[block_id * (states_s_controls) + ind] = prev + (time_diff/timestep) * diff;
+            }
         }
     }
 }
 
 template <typename T>
-float interpolate_knotpoints(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_mod_timestep, T *d_xs, T *d_xu){
+float interpolate_knotpoints(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_since_update, T *d_xs, T *d_xu){
 
-    float new_timestep = (timestep * knot_points - time_mod_timestep) / knot_points;    // redistributed knot points for new time-to-goal
+    float new_timestep = (timestep * knot_points - time_since_update) / knot_points;    // redistributed knot points for new time-to-goal
     T d_xu_temp;
     gpuErrchk(cudaMalloc(&d_xu_temp, (state_size+control_size)*knot_points*sizeof(T)));
 
-    interpolate_knotpoints_kernel<T><<<knot_points, 64>>>(state_size, control_size, knot_points, timestep, time_mod_timestep, d_xs, d_xu, d_xu_temp);
+    interpolate_knotpoints_kernel<T><<<knot_points, 64>>>(state_size, control_size, knot_points, timestep, time_since_update, d_xs, d_xu, d_xu_temp);
     gpuErrchk(cudaPeekAtLastError());
 
     gpuErrchk(cudaMemcpy(d_xu, d_xu_temp, (state_size+control_size)*knot_points*sizeof(T), cudaMemcpyDeviceToDevice));
@@ -306,3 +301,121 @@ float interpolate_knotpoints(uint32_t state_size, uint32_t control_size, uint32_
 
     return new_timestep;
 }
+
+template <typename T>
+void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_since_update, T *d_xs, T *d_traj, T *d_lambda){
+
+    float new_timestep = interpolate_knotpoints<T>(state_size, control_size, knot_points, timestep, time_since_update, d_xs, d_traj);
+
+    void *d_dynmem = gato_plant::initializeDynamicsConstMem<T>();
+    gpuErrchk(cudaPeekAtLastError());
+
+    sqpSolve<T>(state_size, control_size, knot_points, new_timestep, d_traj, d_lambda, d_xu, d_dynmem);
+
+    gato_plant::freeDynamicsConstMem<T>(d_dynmem);
+}
+
+
+__device__ __forceinline__
+void gato_fmemset(float *dst, float val, unsigned num_floats){
+    for(int i = GATO_THREAD_ID; i < num_floats; i+=GATO_THREADS_PER_BLOCK){
+        dst[i] = val;
+    }
+}
+
+__global__
+void gato_fmemset_kernel(float *dst, float val, unsigned num_floats){
+    gato_fmemset(dst, val, num_floats);
+}
+
+
+// template <typename T>
+// std::vector<std::vector<T>> plan_traj(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *h_xs, T *h_xg, ){
+    
+//     std::vector<std::vector<T>> final_traj;
+
+//     const uint32_t states_s_controls = state_size + control_size;
+
+//     const uint32_t xu_len = (states_s_controls*KNOT_POINTS-CONTROL_SIZE);
+//     const uint32_t lambda_len = (state_size * knot_points);
+//     const uint32_t xg_len = state_size;
+
+//     // Allocate space for host xu and goal
+//     T h_xu[states_s_controls*KNOT_POINTS-CONTROL_SIZE];
+//     T h_xg[STATE_SIZE];
+//     T h_xs[STATE_SIZE];
+
+//     // Alocate space for them d_xu, d_xg, d_lambda, d_dynMem, config
+//     T *d_xu;
+//     T *d_xg;
+//     T *d_lambda;
+    
+//     gpuErrchk(cudaMalloc(&d_xu, xu_len * sizeof(T)));
+//     gpuErrchk(cudaMalloc(&d_xg, xg_len * sizeof(T)));
+//     gpuErrchk(cudaMalloc(&d_lambda, lambda_len * sizeof(T)));
+//     gato_fmemset_kernel<<<1, 64>>>(d_lambda, 0.0, lambda_len);
+
+//     for (uint32_t ind = 0; ind < xu_len; ind++){
+//         h_xu[ind] = h_xs[ind % states_s_controls];
+//     }
+
+//     final_path.push_back(std::vector<T>(h_xs, &h_xs[STATE_SIZE]));
+
+//     gpuErrchk(cudaMemcpy(d_xu, h_xu, xu_size*sizeof(T), cudaMemcpyHostToDevice));
+//     gpuErrchk(cudaMemcpy(d_xg, h_xg, xg_size*sizeof(T), cudaMemcpyHostToDevice));
+
+
+    
+    
+//     while(true){
+
+//         // Call SQP with d_xu, d_xg, d_lambda, d_dynMem, config
+    
+//         SQP_PCG(d_xu, d_xg, d_lambda, d_dynMem_const, input_config, mpc_iters);
+
+//         // Get x, u
+//         gpuErrchk(cudaMemcpy(h_xu, d_xu, xu_size, cudaMemcpyDeviceToHost));
+        
+//         // Integrate and Shift trajectory
+//         integrator_shift<T>(h_xs, h_xu, d_dynMem_const, input_config);
+        
+//         // add to trajectory
+//         final_path.push_back(std::vector<T>(h_xs, &h_xs[STATE_SIZE]));
+        
+//         // calculate error
+//         err = error(h_xs, h_xg);
+//         delta_err = abs(last_err - err);
+
+//         if(err < input_config->mpc_exit_tolerance){
+//             std::cout << "converged in " << mpc_iters << " iterations with final error " << err << std::endl;
+//             break;
+//         }
+        
+//         std::cout <<  "iter " <<  mpc_iters << " distance to goal: " << err << "\n";
+//         //Copy shifted trajectory back
+//     #if DYNAMIC_RHO
+//         input_config->rho_init = min(err*DYNAMIC_RHO_CONST, DYNAMIC_RHO_CONST);
+//         // if(err < 3.5){
+//         //     input_config->rho_init *= 4;
+//         // }
+//     #endif /* DYNAMIC_RHO*/
+       
+//         gpuErrchk(cudaMemcpy(d_xu, h_xu, xu_size, cudaMemcpyHostToDevice));
+//         last_err = err;
+        
+//         mpc_iters++;
+//         if(mpc_iters >= MAX_MPC_ITERS){
+//             std::cout << "breaking for lots of mpc iters\n";
+//             break;
+//         }
+//     }
+
+//     //Free stuff
+//     gpuErrchk(cudaFree(d_xu));
+//     gpuErrchk(cudaFree(d_xg));
+//     gpuErrchk(cudaFree(d_lambda));
+//     gato_plant::freeDynamicsConstMem<T>(d_dynMem_const);
+
+//     return final_path;
+
+// }

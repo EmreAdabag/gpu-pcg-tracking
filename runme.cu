@@ -14,9 +14,8 @@
 pre-compute trajectory
 
 loop:
-    shift trajectory with new state vector
     solve from current state vector
-    simulate for solve duration
+    simulate for solve duration with old traj
 
 
 -------------------------------------------
@@ -33,11 +32,12 @@ concurrently:
         follow traj
         on traj update: 
 
+
 */
 
 
 
-
+//TODO: implement planning, then tracking
 
 int main(){
     const uint32_t state_size = 14;
