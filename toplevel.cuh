@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include <chrono>
 #include <cublas_v2.h>
 #include <math.h>
 #include "schur.cuh"
@@ -120,16 +121,16 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     //
     for(sqp_iters = 0; sqp_iters < 5; sqp_iters++){
 
-        std::cout << "xu\n";
-        T h_xu_copy[56];
-        gpuErrchk(cudaMemcpy(h_xu_copy, d_xu, 56*sizeof(float), cudaMemcpyDeviceToHost));
-        for(int i = 0; i < 3; i++){
-            for(int j = 0; j < 21; j++){
-                if(i==2 && j > 13){ continue; }
-                std::cout << h_xu_copy[21 * i + j] << " ";
-            }
-            std::cout << std::endl;
-        }
+        // std::cout << "xu\n";
+        // T h_xu_copy[56];
+        // gpuErrchk(cudaMemcpy(h_xu_copy, d_xu, 56*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 3; i++){
+        //     for(int j = 0; j < 21; j++){
+        //         if(i==2 && j > 13){ continue; }
+        //         std::cout << h_xu_copy[21 * i + j] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
 
         gato_form_kkt<float><<<knot_points, 64, oldschur::get_kkt_smem_size<T>(state_size, control_size)>>>(
             state_size,
@@ -152,6 +153,7 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
                    d_S, d_Pinv, d_gamma,
                    rho);
         gpuErrchk(cudaPeekAtLastError());
+        gpuErrchk(cudaDeviceSynchronize());
 
         // pcg
         pcg_config config;
@@ -249,70 +251,112 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 }
 
 template <typename T>
-void interpolate_knotpoints_kernel(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_since_update, T *d_xs, T *d_xu, T *d_xu_temp){
+__global__
+void interpolate_knotpoints_kernel(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float traj_timestep, float time_since_update, T *d_traj_lambdas, T *d_lambda, T *d_xu, T *d_xu_temp, T *d_traj){
 
     const uint32_t thread_id = threadIdx.x;
     const uint32_t block_id = blockIdx.x;
     const uint32_t block_dim = blockDim.x;
     const uint32_t grid_dim = gridDim.x;
     const uint32_t states_s_controls = state_size + control_size;
-    float new_timestep = (timestep * knot_points - time_since_update) / knot_points;    // redistributed knot points for new time-to-goal
+    float new_timestep = (traj_timestep * traj_steps - time_since_update) / knot_points;    // redistributed knot points for new time-to-goal
 
     float new_time, time_diff;
     T prev, next, diff;
-    uint32_t prev_knot, threads_needed;
+    uint32_t prev_step, threads_needed;
 
     for(uint32_t knot = block_id; knot < knot_points; knot += grid_dim){
 
-        new_time = knot * new_timestep;
+        new_time = knot * new_timestep + time_since_update;
         ///TODO: make sure on first iter floating point error isn't making this mess up
-        prev_knot = static_cast<uint32_t>(floorf(new_time / timestep));
-        time_diff = new_time - timestep * prev_knot;
+        prev_step = static_cast<uint32_t>(floorf(new_time / traj_timestep));
+        time_diff = new_time - traj_timestep * prev_step;
         threads_needed = state_size + (knot < knot_points-1)*control_size;
 
         for (uint32_t ind = thread_id; ind < threads_needed; ind += block_dim){
+            
+            if(ind < state_size){
+                d_lambda[knot*state_size + ind] = d_traj_lambdas[prev_step*state_size+ind];
+            }
 
             if (knot==0){
-                d_xu_temp[ind] = d_xs[ind];    
+                d_xu_temp[ind] = d_xu[ind];    
             }
             else{
-                prev = d_xu[knot_before_new_time*states_s_controls+ind];
-                next = d_xu[(knot_before_new_time+1)*states_s_controls+ind];
+                prev = d_traj[prev_step*states_s_controls+ind];
+                next = d_traj[(prev_step+1)*states_s_controls+ind];
                 diff = next - prev;
 
-                d_xu_temp[block_id * (states_s_controls) + ind] = prev + (time_diff/timestep) * diff;
+                d_xu_temp[knot * (states_s_controls) + ind] = prev + (time_diff/traj_timestep) * diff;
             }
         }
     }
 }
 
 template <typename T>
-float interpolate_knotpoints(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_since_update, T *d_xs, T *d_xu){
+float interpolate_knotpoints(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, const float traj_timestep, float time_since_update, T *d_traj_lambdas, T *d_lambda, T *d_xu,T *d_traj){
 
-    float new_timestep = (timestep * knot_points - time_since_update) / knot_points;    // redistributed knot points for new time-to-goal
-    T d_xu_temp;
-    gpuErrchk(cudaMalloc(&d_xu_temp, (state_size+control_size)*knot_points*sizeof(T)));
+    float new_timestep = (traj_timestep * knot_points - time_since_update) / knot_points;    // redistributed knot points for new time-to-goal
+    T *d_xu_temp;
+    gpuErrchk(cudaMalloc(&d_xu_temp, ((state_size+control_size)*knot_points-control_size)*sizeof(T)));
 
-    interpolate_knotpoints_kernel<T><<<knot_points, 64>>>(state_size, control_size, knot_points, timestep, time_since_update, d_xs, d_xu, d_xu_temp);
+    interpolate_knotpoints_kernel<T><<<knot_points, 64>>>(state_size, control_size, knot_points, traj_steps, traj_timestep, time_since_update, d_traj_lambdas, d_lambda, d_xu, d_xu_temp, d_traj);
     gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
 
-    gpuErrchk(cudaMemcpy(d_xu, d_xu_temp, (state_size+control_size)*knot_points*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu, d_xu_temp, ((state_size+control_size)*knot_points-control_size)*sizeof(T), cudaMemcpyDeviceToDevice));
     gpuErrchk(cudaPeekAtLastError());
 
     return new_timestep;
 }
 
 template <typename T>
-void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, float time_since_update, T *d_xs, T *d_traj, T *d_lambda){
+void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float traj_timestep, T *d_traj, T *d_traj_lambdas, T *d_xs){
 
-    float new_timestep = interpolate_knotpoints<T>(state_size, control_size, knot_points, timestep, time_since_update, d_xs, d_traj);
+    const size_t traj_len = (state_size+control_size)*knot_points-control_size;
+    float cur_timestep = traj_timestep;
+    double time_since_update = 0;
+    std::chrono::time_point<std::chrono::steady_clock> start, end;
+    std::vector<std::vector<float>> tracking_path;
 
-    void *d_dynmem = gato_plant::initializeDynamicsConstMem<T>();
-    gpuErrchk(cudaPeekAtLastError());
+    T *d_lambda, *d_xu, *d_xu_old;
+    gpuErrchk(cudaMalloc(&d_lambda, state_size*knot_points*sizeof(float)));
+    gpuErrchk(cudaMalloc(&d_xu, traj_len*sizeof(float)));
+    gpuErrchk(cudaMalloc(&d_xu_old, traj_len*sizeof(float)));
+    gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(float), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu_old, d_traj, traj_len*sizeof(float), cudaMemcpyDeviceToDevice));
 
-    sqpSolve<T>(state_size, control_size, knot_points, new_timestep, d_traj, d_lambda, d_xu, d_dynmem);
+    start = std::chrono::steady_clock::now();
+    while(1){
 
-    gato_plant::freeDynamicsConstMem<T>(d_dynmem);
+        cur_timestep = interpolate_knotpoints<T>(state_size, control_size, knot_points, traj_steps, traj_timestep, time_since_update, d_traj_lambdas, d_lambda, d_xu, d_traj);
+
+        void *d_dynmem = gato_plant::initializeDynamicsConstMem<T>();
+        gpuErrchk(cudaPeekAtLastError());
+
+        sqpSolve<T>(state_size, control_size, knot_points, cur_timestep, d_traj, d_lambda, d_xu, d_dynmem);
+
+        gato_plant::freeDynamicsConstMem<T>(d_dynmem);
+
+        end = std::chrono::steady_clock::now();
+
+        std::chrono::duration<double> diff = end - start;
+        time_since_update = diff.count();
+
+        // simulate for time_since_update seconds using old traj
+
+
+
+        // old xu = new xu
+        gpuErrchk(cudaMemcpy(d_xu_old, d_xu, traj_len*sizeof(float), cudaMemcpyDeviceToDevice));
+
+        break;
+
+    }
+
+    gpuErrchk(cudaFree(d_lambda));
+    gpuErrchk(cudaFree(d_xu));
+    gpuErrchk(cudaFree(d_xu_old));
 }
 
 

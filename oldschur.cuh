@@ -937,57 +937,48 @@ namespace oldschur{
             );          
             __syncthreads();//----------------------------------------------------------------
 
-    #if BLOCK_J_PRECON || SS_PRECON
-        // invert theta
-        loadIdentity(state_size,s_thetaInv_k);
-        __syncthreads();//----------------------------------------------------------------
-        invertMatrix(state_size,s_theta_k, s_extra_temp);
-        __syncthreads();//----------------------------------------------------------------
+            // invert theta
+            loadIdentity(state_size,s_thetaInv_k);
+            __syncthreads();//----------------------------------------------------------------
+            invertMatrix(state_size,s_theta_k, s_extra_temp);
+            __syncthreads();//----------------------------------------------------------------
 
 
-        // save thetaInv_k main diagonal PhiInv
-        store_block_bd<float>( state_size, knot_points
-            s_thetaInv_k, 
-            d_Pinv,
-            1,
-            blockrow,
-            -1
-        );
-    #else /* BLOCK_J_PRECONDITIONER || SS_PRECONDITIONER  */
+            // save thetaInv_k main diagonal PhiInv
+            store_block_bd<float>( state_size, knot_points,
+                s_thetaInv_k, 
+                d_Pinv,
+                1,
+                blockrow,
+                -1
+            );
 
-        // save 1 / diagonal to PhiInv
-        for(int i = GATO_THREAD_ID; i < state_size; i+=GATO_THREADS_PER_BLOCK){
-            d_Pinv[blockrow*(3*STATES_SQ)+STATES_SQ+i*state_size+i]= 1 / d_S[blockrow*(3*STATES_SQ)+STATES_SQ+i*state_size+i]; 
-        }
-    #endif /* BLOCK_J_PRECONDITIONER || SS_PRECONDITIONER  */
-        
+            __syncthreads();//----------------------------------------------------------------
 
-        __syncthreads();//----------------------------------------------------------------
+            // save gamma_k in gamma
+            for(unsigned ind = GATO_THREAD_ID; ind < state_size; ind += GATO_THREADS_PER_BLOCK){
+                unsigned offset = (blockrow)*state_size + ind;
+                d_gamma[offset] = s_gamma_k[ind]*-1;
+            }
 
-        // save gamma_k in gamma
-        for(unsigned ind = GATO_THREAD_ID; ind < state_size; ind += GATO_THREADS_PER_BLOCK){
-            unsigned offset = (blockrow)*state_size + ind;
-            d_gamma[offset] = s_gamma_k[ind]*-1;
-        }
+            __syncthreads();//----------------------------------------------------------------
 
-        __syncthreads();//----------------------------------------------------------------
+            //transpose phi_k
+            loadIdentity(state_size,s_Ak);
+            __syncthreads();//----------------------------------------------------------------
+            mat_mat_prod(s_Qkp1,s_Ak,s_phi_k,state_size,state_size,state_size,state_size,true);
+            __syncthreads();//----------------------------------------------------------------
 
-        //transpose phi_k
-        loadIdentity(state_size,s_Ak);
-        __syncthreads();//----------------------------------------------------------------
-        mat_mat_prod(s_Qkp1,s_Ak,s_phi_k,state_size,state_size,state_size,state_size,true);
-        __syncthreads();//----------------------------------------------------------------
+            // save phi_k_T into right off-diagonal of S,
+            store_block_bd<float>( state_size, knot_points,
+                s_Qkp1,                        // src             
+                d_S,                            // dst             
+                2,                              // col
+                blockrow-1,                      // blockrow    
+                -1
+            );
 
-        // save phi_k_T into right off-diagonal of S,
-        store_block_bd<float>( state_size, knot_points,
-            s_Qkp1,                        // src             
-            d_S,                            // dst             
-            2,                              // col
-            blockrow-1,                      // blockrow    
-            -1
-        );
-
-        __syncthreads();//----------------------------------------------------------------
+            __syncthreads();//----------------------------------------------------------------
         }
 
     }

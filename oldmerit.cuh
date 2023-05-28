@@ -14,11 +14,8 @@ void ls_gato_compute_merit(float *d_xu, float *d_xu_traj, float mu, float dt, vo
 
     float Jk, ck, pointmerit;
 
-#if UNIFORM_ALPHA_DIST
-    float alpha = -1.0 + alpha_multiplier * (1.0 / max_alphas);      // alpha sign
-#else
+
     float alpha = -1.0 / (1 << alpha_multiplier);   // alpha sign
-#endif /* #if UNIFORM_ALPHA_DIST */
 
 
 
