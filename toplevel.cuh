@@ -7,6 +7,7 @@
 #include "schur.cuh"
 #include "merit.cuh"
 #include "gpu_pcg.cuh"
+#include "oldintegrator.cuh"
 
 template <typename T>
 void interpolate_traj(uint32_t knot_points, T *d_traj){
@@ -26,7 +27,6 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     const uint32_t KKT_C_DENSE_SIZE_BYTES ((states_sq+states_p_controls)*(knot_points-1)*sizeof(T));
     const uint32_t KKT_g_SIZE_BYTES       (((state_size+control_size)*knot_points-control_size)*sizeof(T));
     const uint32_t KKT_c_SIZE_BYTES         ((states_p_controls)*sizeof(T));     
-    const uint32_t LAMBDA_SIZE_BYTES        ((states_p_controls*sizeof(T)));
     const uint32_t DZ_SIZE_BYTES            ((states_s_controls*knot_points-control_size)*sizeof(T));
 
     const size_t merit_smem_size = get_merit_smem_size<T>(state_size, control_size);
@@ -315,44 +315,55 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
     const size_t traj_len = (state_size+control_size)*knot_points-control_size;
     float cur_timestep = traj_timestep;
-    double time_since_update = 0;
-    std::chrono::time_point<std::chrono::steady_clock> start, end;
-    std::vector<std::vector<float>> tracking_path;
+    float old_timestep = traj_timestep;
+    double time_since_start, iter_solve_time;
+    time_since_start = 0;
+    std::chrono::time_point<std::chrono::steady_clock> iter_start, iter_end;
+    std::chrono::duration<double> iter_diff;
+    std::vector<std::vector<T>> tracking_path;
 
     T *d_lambda, *d_xu, *d_xu_old;
-    gpuErrchk(cudaMalloc(&d_lambda, state_size*knot_points*sizeof(float)));
-    gpuErrchk(cudaMalloc(&d_xu, traj_len*sizeof(float)));
-    gpuErrchk(cudaMalloc(&d_xu_old, traj_len*sizeof(float)));
-    gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(float), cudaMemcpyDeviceToDevice));
-    gpuErrchk(cudaMemcpy(d_xu_old, d_traj, traj_len*sizeof(float), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMalloc(&d_lambda, state_size*knot_points*sizeof(T)));
+    gpuErrchk(cudaMalloc(&d_xu, traj_len*sizeof(T)));
+    gpuErrchk(cudaMalloc(&d_xu_old, traj_len*sizeof(T)));
+    gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xs, d_traj, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu_old, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
 
-    start = std::chrono::steady_clock::now();
+    void *d_dynmem = gato_plant::initializeDynamicsConstMem<T>();
+
+    
     while(1){
 
-        cur_timestep = interpolate_knotpoints<T>(state_size, control_size, knot_points, traj_steps, traj_timestep, time_since_update, d_traj_lambdas, d_lambda, d_xu, d_traj);
-
-        void *d_dynmem = gato_plant::initializeDynamicsConstMem<T>();
+        iter_start = std::chrono::steady_clock::now();
+        
+        cur_timestep = interpolate_knotpoints<T>(state_size, control_size, knot_points, traj_steps, traj_timestep, time_since_start, d_traj_lambdas, d_lambda, d_xu, d_traj);
         gpuErrchk(cudaPeekAtLastError());
 
         sqpSolve<T>(state_size, control_size, knot_points, cur_timestep, d_traj, d_lambda, d_xu, d_dynmem);
 
-        gato_plant::freeDynamicsConstMem<T>(d_dynmem);
+        iter_end = std::chrono::steady_clock::now();
 
-        end = std::chrono::steady_clock::now();
+        
+        iter_diff = iter_end - iter_start;
+        iter_solve_time = iter_diff.count();
+        time_since_start += iter_solve_time;
 
-        std::chrono::duration<double> diff = end - start;
-        time_since_update = diff.count();
-
-        // simulate for time_since_update seconds using old traj
-
+        // simulate for iter_solve_time seconds using old traj
+        oldintegrator::integrator_shift<T>(state_size, control_size, knot_points, d_xs, d_xu_old, d_dynmem, old_timestep, iter_solve_time);
 
 
         // old xu = new xu
-        gpuErrchk(cudaMemcpy(d_xu_old, d_xu, traj_len*sizeof(float), cudaMemcpyDeviceToDevice));
+        gpuErrchk(cudaMemcpy(d_xu_old, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+        old_timestep = cur_timestep;
+
+        gpuErrchk(cudaMemcpy(d_xu, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
 
         break;
 
     }
+
+    gato_plant::freeDynamicsConstMem<T>(d_dynmem);
 
     gpuErrchk(cudaFree(d_lambda));
     gpuErrchk(cudaFree(d_xu));
