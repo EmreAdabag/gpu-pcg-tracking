@@ -103,9 +103,6 @@ int main(){
     //     }
     //     std::cout << std::endl;
     // }
-    for(int i = 0; i < state_size/2; i++){
-        h_traj[state_size/2 + i] = 1.0;
-    }
 
     float *d_traj, *d_traj_lambdas, *d_xs;
     gpuErrchk(cudaMalloc(&d_traj, h_traj.size()*sizeof(float)));

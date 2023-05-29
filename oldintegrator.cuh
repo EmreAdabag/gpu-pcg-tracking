@@ -265,7 +265,7 @@ namespace oldintegrator{
                 integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, simulation_iter_time/simulator_steps);
             }
             
-            if (abs(simulation_iter_time-traj_timestep) < .001){    //EMRE
+            if (abs(simulation_iter_time-traj_timestep) < .0001){    //EMRE
                 shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
                 // std::cout << "shifting\n";
             }

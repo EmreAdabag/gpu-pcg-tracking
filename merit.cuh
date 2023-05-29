@@ -52,12 +52,12 @@ void ls_gato_compute_merit(uint32_t state_size,
             s_xux_k_traj[i] = d_xu_traj[knot*states_s_controls+i];                            
         }
         block.sync();
-        if(knot > 0){
+        // if(knot > 0){
             Jk = gato_plant::trackingcost<T>(state_size, control_size, knot_points, s_xux_k, s_xux_k_traj, s_temp);
-        }
-        else{
-            Jk = 0;
-        }
+        // }
+        // else{
+        //     Jk = 0;
+        // }
         block.sync();
         if(knot < knot_points-1){
             ck = integratorError<T>(state_size, s_xux_k, &s_xux_k[states_s_controls], s_temp, d_dynMem_const, dt, block);
@@ -108,12 +108,10 @@ void compute_merit(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
         }
         block.sync();
         ///TODO: EMRE verify this
-        if(knot > 0){
+        // if(knot > 0){
             Jk = gato_plant::trackingcost<T>(state_size, control_size, knot_points, s_xux_k, s_xux_k_traj, s_temp);
-        }
-        else{
-            Jk = 0;
-        }
+        // }
+
 
         block.sync();
         if(knot < knot_points-1){
