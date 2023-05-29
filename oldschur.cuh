@@ -1115,12 +1115,6 @@ namespace oldschur{
     __global__
     void compute_dz(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_G_dense, float *d_C_dense, float *d_g_val, float *d_lambda, float *d_dz){
 
-        const uint32_t states_sq = state_size*state_size;
-        const uint32_t states_p_controls = state_size * control_size;
-        const uint32_t controls_sq = control_size * control_size;
-        const uint32_t states_s_controls = state_size + control_size;
-        
-        
         // const unsigned s_mem_size = max(2*control_size, state_size);
 
         extern __shared__ float s_mem[]; 

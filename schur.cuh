@@ -137,8 +137,8 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
             __syncthreads();
 
             for(int i = thread_id; i < state_size; i+=num_threads){
-                ///TODO: EMRE what to do here
-                d_c[i] = 0;
+                //EMRE->ORDER
+                d_c[i] = d_xu[i] - d_xu_traj[i];
             }
             glass::copy<T>(states_sq, s_Qk, &d_G_dense[(states_sq+controls_sq)*k]);
             glass::copy<T>(controls_sq, s_Rk, &d_G_dense[(states_sq+controls_sq)*k+states_sq]);

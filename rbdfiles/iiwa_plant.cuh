@@ -141,7 +141,7 @@ namespace gato_plant{
 		T err, val;
 
 
-		for(int i = blockIdx.x; i < threadsNeeded; i += blockDim.x){
+		for(int i = threadIdx.x; i < threadsNeeded; i += blockDim.x){
 			if(i < state_size){
 				err = s_xux[i] - s_xux_traj[i];
 				val = Q_cost * err * err;
@@ -150,7 +150,7 @@ namespace gato_plant{
 				err = s_xux[state_size + i];
 				val = R_cost * err * err;
 			}
-			s_temp[i] = val;
+			s_temp[i] = static_cast<T>(0.5) * val;
 		}
 
 		g.sync();
@@ -189,7 +189,7 @@ namespace gato_plant{
 			if(i < state_size){
 				err = s_xu[i] - s_xu_traj[i];
 				//gradient
-				s_qk[i] = 2 * Q_cost * err;
+				s_qk[i] = Q_cost * err;
 				//hessian
 				for(int j = 0; j < state_size; j++){
 					s_Qk[i*state_size+j] = (i == j) ? Q_cost : static_cast<T>(0);
@@ -199,7 +199,7 @@ namespace gato_plant{
 				err = s_xu[i];
 				offset = i - state_size;
 				//gradient
-				s_rk[offset] = 2 * R_cost * err;
+				s_rk[offset] = R_cost * err;
 				//hessian
 				for(int j = 0; j < control_size; j++){
 					s_Rk[offset*control_size+j] = (offset == j) ? R_cost : static_cast<T>(0);
@@ -238,7 +238,7 @@ namespace gato_plant{
 
 			if (i < state_size){
 				err = s_xux[i] - s_xux_traj[i];
-				s_qk[i] = 2 * Q_cost * err;
+				s_qk[i] = Q_cost * err;
 				
 				for(int j = 0; j < state_size; j++){
 					s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
@@ -247,7 +247,7 @@ namespace gato_plant{
 			else if(i < state_size + control_size){
 				err = s_xux[i];
 				offset = i - state_size;
-				s_rk[offset] = 2 * R_cost * err;
+				s_rk[offset] = R_cost * err;
 
 				for(int j = 0; j < control_size; j++){
 					s_Rk[offset*control_size + j] = (offset == j) ? R_cost : static_cast<T>(0);
@@ -256,7 +256,7 @@ namespace gato_plant{
 			else{
 				offset = i - state_size - control_size;
 				err = s_xux[i] - s_xux_traj[i];
-				s_qkp1[offset] = 2 * Q_cost * err;
+				s_qkp1[offset] = Q_cost * err;
 
 				for(int j = 0; j < state_size; j++){
 					s_Qkp1[offset*state_size+j] = (offset == j) ? Q_cost : static_cast<T>(0);

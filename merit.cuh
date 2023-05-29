@@ -98,7 +98,7 @@ void compute_merit(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
 
     T Jk, ck, pointmerit;
 
-    for(unsigned knot = blockIdx.x; knot < knot_points; knot += gridDim.x){
+    for(unsigned knot = block_id; knot < knot_points; knot += gridDim.x){
         T *s_xux_k_traj = s_xux_k + 2 * state_size + control_size;
         T *s_temp = s_xux_k_traj + 2 * state_size + control_size;
 

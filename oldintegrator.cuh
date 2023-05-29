@@ -214,9 +214,9 @@ namespace oldintegrator{
         // gpuErrchk(cudaMemcpy(d_xu + state_size, h_xu + state_size, control_size*sizeof(T), cudaMemcpyHostToDevice));
         //TODO: needs sync?
 
-        const size_t integrator_kernel_smem_size = 2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared();
+        const size_t integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
         //TODO: one block one thread? Why?
-        integrator_kernel<T><<<1,1>>>(state_size, control_size, d_xs, d_xu, d_dynMem_const, dt);
+        integrator_kernel<T><<<1,1, integrator_kernel_smem_size>>>(state_size, control_size, d_xs, d_xu, d_dynMem_const, dt);
 
         //TODO: needs sync?
         // gpuErrchk(cudaMemcpy(h_xs, d_xs_new, xs_size, cudaMemcpyDeviceToHost));
@@ -257,22 +257,24 @@ namespace oldintegrator{
 
         while(simulation_time_left > 0){
             
-            simulator_steps = ceil(simulation_iter_time / .005);    // hard coded
-            std::cout << "simulator steps: " << simulator_steps << std::endl;
+            // simulator_steps = ceil(simulation_iter_time / .005);    // hard coded
+            simulator_steps = 1; // EMRE
 
             ///TODO: compute xs with LQR tracking like python
             for(int s=0; s < simulator_steps; s++){
                 integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, simulation_iter_time/simulator_steps);
             }
             
-            if (simulation_iter_time==traj_timestep){
+            if (abs(simulation_iter_time-traj_timestep) < .001){    //EMRE
                 shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
+                // std::cout << "shifting\n";
             }
 
             simulation_time_left -= simulation_iter_time;
             simulation_iter_time = min(traj_timestep, simulation_time_left);
         }
     }
+
 
 
 }
