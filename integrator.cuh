@@ -5,6 +5,17 @@ namespace cgrps = cooperative_groups;
 
 #include "glass.cuh"
 
+
+template<typename T>
+__host__ __device__ 
+T angleWrap(T input){
+    const T pi = static_cast<T>(3.14159);
+    if(input > pi){input = -(input - pi);}
+    if(input < -pi){input = -(input + pi);}
+    return input;
+}
+
+
 template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
 __device__ 
 void exec_integrator_error(uint32_t state_size, T *s_err, T *s_qkp1, T *s_qdkp1, T *s_q, T *s_qd, T *s_qdd, float dt, cgrps::thread_block block, bool absval = false){
@@ -48,9 +59,9 @@ void exec_integrator_error(uint32_t state_size, T *s_err, T *s_qkp1, T *s_qdkp1,
         // block.sync();
 
         // wrap angles if needed
-        // if(ANGLE_WRAP){ printf("ANGLE_WRAP!\n");
-        //     new_qkp1 = angleWrap(new_qkp1);
-        // }
+        if(ANGLE_WRAP){ printf("ANGLE_WRAP!\n");
+            new_qkp1 = angleWrap(new_qkp1);
+        }
 
         // then computre error
         if(absval){
@@ -132,9 +143,9 @@ void exec_integrator(uint32_t state_size, T *s_qkp1, T *s_qdkp1, T *s_q, T *s_qd
         else{printf("Integrator [%d] not defined. Currently support [0: Euler and 1: Semi-Implicit Euler]",INTEGRATOR_TYPE);}
 
         // wrap angles if needed
-        // if(ANGLE_WRAP){
-        //     s_qkp1[ind] = angleWrap(s_qkp1[ind]);
-        // }
+        if(ANGLE_WRAP){
+            s_qkp1[ind] = angleWrap(s_qkp1[ind]);
+        }
     }
 }
 
@@ -199,4 +210,124 @@ T integratorError(uint32_t state_size, T *s_xuk, T *s_xkp1, T *s_temp, void *d_d
     block.sync();
     // if(GATO_LEAD_THREAD){printf("in integratorError with reduced error of [%f]\n",s_err[0]);}
     return s_err[0];
+}
+
+
+
+template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
+__device__ 
+void integrator(uint32_t state_size, T *s_xkp1, T *s_xuk, T *s_temp, void *d_dynMem_const, T dt, cgrps::thread_block block){
+    // first compute qdd
+    T *s_q = s_xuk; 					T *s_qd = s_q + state_size/2; 				T *s_u = s_qd + state_size/2;
+    T *s_qkp1 = s_xkp1; 				T *s_qdkp1 = s_qkp1 + state_size/2;
+    T *s_qdd = s_temp; 					T *s_extra_temp = s_qdd + state_size/2;
+    gato_plant::forwardDynamics<T>(s_qdd, s_q, s_qd, s_u, s_extra_temp, d_dynMem_const, block);
+    block.sync();
+    exec_integrator<T,INTEGRATOR_TYPE,ANGLE_WRAP>(state_size, s_qkp1, s_qdkp1, s_q, s_qd, s_qdd, dt, block);
+}
+
+
+
+
+template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
+__global__
+void integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_xkp1, T *d_xuk, void *d_dynMem_const, T dt){
+    extern __shared__ T s_smem[];
+    T *s_xkp1 = s_smem;
+    T *s_xuk = s_xkp1 + state_size; 
+    T *s_temp = s_xuk + state_size + control_size;
+    cgrps::thread_block block = cgrps::this_thread_block();	  
+    cgrps::grid_group grid = cgrps::this_grid();
+    for (unsigned ind = threadIdx.x; ind < state_size + control_size; ind += blockDim.x){
+        s_xuk[ind] = d_xuk[ind];
+    }
+
+    block.sync();
+    integrator<T,INTEGRATOR_TYPE,ANGLE_WRAP>(state_size, s_xkp1, s_xuk, s_temp, d_dynMem_const, dt, block);
+    block.sync();
+
+    for (unsigned ind = threadIdx.x; ind < state_size; ind += blockDim.x){
+        d_xkp1[ind] = s_xkp1[ind];
+    }
+}
+
+// We take start state from h_xs, and control input from h_xu, and update h_xs
+template <typename T>
+void integrator_host(uint32_t state_size, uint32_t control_size, T *d_xs, T *d_xu, void *d_dynMem_const, T dt){
+    // T *d_xu;
+    // T *d_xs_new;
+    // gpuErrchk(cudaMalloc(&d_xu, xu_size));
+    // gpuErrchk(cudaMalloc(&d_xs_new, xs_size));
+
+    // gpuErrchk(cudaMemcpy(d_xu, h_xs, state_size*sizeof(T), cudaMemcpyHostToDevice));
+    // gpuErrchk(cudaMemcpy(d_xu + state_size, h_xu + state_size, control_size*sizeof(T), cudaMemcpyHostToDevice));
+    //TODO: needs sync?
+
+    const size_t integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+    //TODO: one block one thread? Why?
+    integrator_kernel<T><<<1,1, integrator_kernel_smem_size>>>(state_size, control_size, d_xs, d_xu, d_dynMem_const, dt);
+
+    //TODO: needs sync?
+    // gpuErrchk(cudaMemcpy(h_xs, d_xs_new, xs_size, cudaMemcpyDeviceToHost));
+
+    // gpuErrchk(cudaFree(d_xu));
+    // gpuErrchk(cudaFree(d_xs_new));
+}
+
+//TODO - xs_new, xs_end can be done together concurrently
+template <typename T>
+void shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float traj_timestep){
+    
+    const uint32_t states_s_controls = state_size + control_size;
+    uint32_t stepsize;
+
+    ///TODO: this is stupid, don't use in timed code
+    for (int knot = 0; knot < knot_points-1; knot++){
+        stepsize = (state_size+(knot<knot_points-2)*control_size);
+        gpuErrchk(cudaMemcpy(&d_xu[knot*states_s_controls], &d_xu[knot*states_s_controls+stepsize], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
+    }
+    gpuErrchk(cudaMemcpy(d_xu, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
+
+    // Fill in the end
+    unsigned last_step = (knot_points-1)*states_s_controls;
+    unsigned integrator_step = (knot_points-2)*states_s_controls;
+    integrator_host<T>(state_size, control_size, d_xu + last_step, d_xu + integrator_step, d_dynMem_const, traj_timestep);
+    
+}
+
+
+template <typename T>
+void integrator_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float traj_timestep, float time_offset, float simulation_time){
+
+    float time_offset_left = time_offset;
+    float simulation_time_left = simulation_time;
+    float simulation_iter_time;
+
+
+    // shifts over unused timesteps
+    while (time_offset_left > traj_timestep){
+        shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
+        time_offset_left -= traj_timestep;
+    }
+    
+    // simulate half-used timestep
+    integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, traj_timestep-time_offset_left);
+    shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
+
+    simulation_time_left -= traj_timestep-time_offset_left;
+
+
+    while(simulation_time_left > 0){
+        
+        simulation_iter_time = min(simulation_time_left, traj_timestep);
+
+        integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, simulation_iter_time);
+        
+        
+        if (simulation_iter_time == traj_timestep){
+            shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
+        }
+
+        simulation_time_left -= simulation_iter_time;
+    }
 }

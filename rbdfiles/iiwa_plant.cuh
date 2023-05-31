@@ -143,6 +143,7 @@ namespace gato_plant{
 
 		for(int i = threadIdx.x; i < threadsNeeded; i += blockDim.x){
 			if(i < state_size){
+				//EMRE->ORDER
 				err = s_xux[i] - s_xux_traj[i];
 				val = Q_cost * err * err;
 			}
