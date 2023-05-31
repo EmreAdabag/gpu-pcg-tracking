@@ -49,6 +49,7 @@ namespace gato_plant{
 	__host__ __device__
 	constexpr T GRAVITY() {return static_cast<T>(0.0);}
 
+
 	template<class T>
 	__host__ __device__
 	constexpr T COST_Q1() {return static_cast<T>(0.1);}
@@ -61,9 +62,9 @@ namespace gato_plant{
 	// template<class T>
 	// __host__ __device__
 	// constexpr T COST_QF2() {return static_cast<T>(100);}	
-	// template<class T>
-	// __host__ __device__
-	// constexpr T COST_R() {return static_cast<T>(0.0001);}
+	template<class T>
+	__host__ __device__
+	constexpr T COST_R() {return static_cast<T>(0.000001);}
 
 	template <typename T>
 	void *initializeDynamicsConstMem(){
@@ -135,8 +136,8 @@ namespace gato_plant{
 		
 
 		const uint32_t threadsNeeded = state_size + control_size * (blockIdx.x != knot_points - 1);
-		const T Q_cost = static_cast<T>(.1);
-		const T R_cost = static_cast<T>(0.0001);
+		const T Q_cost = COST_Q1<T>();
+		const T R_cost = COST_R<T>();
 
 		T err, val;
 
@@ -177,8 +178,8 @@ namespace gato_plant{
 										cooperative_groups::thread_group g)
 	{	
 		const uint32_t threadsNeeded = state_size + control_size;
-		const T Q_cost = static_cast<T>(.1);
-		const T R_cost = static_cast<T>(0.0001);
+		const T Q_cost = COST_Q1<T>();
+		const T R_cost = COST_R<T>();
 
 		uint32_t offset;
 		T err;
@@ -226,8 +227,8 @@ namespace gato_plant{
 							    				  cooperative_groups::thread_group g)
 	{
 		unsigned threadsNeeded = 2*state_size + control_size;
-		const T Q_cost = static_cast<T>(.1);
-		const T R_cost = static_cast<T>(0.0001);
+		const T Q_cost = COST_Q1<T>();
+		const T R_cost = COST_R<T>();
 
 		T err;
 		uint32_t offset;

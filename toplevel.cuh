@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cublas_v2.h>
 #include <math.h>
+#include <cmath>
 #include "schur.cuh"
 #include "merit.cuh"
 #include "gpu_pcg.cuh"
@@ -314,24 +315,76 @@ float interpolate_knotpoints(uint32_t state_size, uint32_t control_size, uint32_
     return new_timestep;
 }
 
-template <typename T>
-void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float traj_timestep, T *d_traj, T *d_traj_lambdas, T *d_xs){
 
-    const size_t traj_len = (state_size+control_size)*knot_points-control_size;
-    float cur_timestep = traj_timestep;
-    float old_timestep = traj_timestep;
-    double time_since_start, iter_solve_time, prev_iter_solve_time;
-    time_since_start = 0;
-    prev_iter_solve_time = 0;
+template <typename T>
+__global__
+void simple_interpolate_kernel(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, double time_offset, T *d_xu_goal, uint32_t traj_steps, T *d_traj){
+
+    T prev, next, diff;
+    const uint32_t thread_id = threadIdx.x;
+    const uint32_t block_id = blockIdx.x;
+    const uint32_t block_dim = blockDim.x;
+    const uint32_t grid_dim = gridDim.x;
+    const uint32_t states_s_controls = state_size + control_size;
+    const float time_offset_mod_timestep = fmodf(time_offset, timestep);
+    uint32_t prev_traj_step;
+    float new_time;
+
+    for (uint32_t knot = block_id; knot < knot_points; knot += grid_dim){
+
+        const uint32_t threads_needed = state_size + (knot < knot_points-1)*control_size;
+        new_time = time_offset + knot * timestep;
+        prev_traj_step = static_cast<uint32_t>(floorf(new_time / timestep));
+        
+        for (uint32_t ind = thread_id; ind < threads_needed; ind += block_dim){
+             
+            if (prev_traj_step > knot_points - 2){
+                d_xu_goal[knot*states_s_controls + ind] = d_traj[(traj_steps-1)*states_s_controls + ind];
+            }
+            else{
+                prev = d_traj[prev_traj_step*states_s_controls+ind];
+                next = d_traj[(prev_traj_step+1)*states_s_controls+ind];
+                diff = next - prev;
+
+                d_xu_goal[knot*states_s_controls + ind] = prev + (time_offset_mod_timestep/timestep)*diff;
+            }
+        }
+    }
+}
+
+
+// given a time offset from the beginning of d_traj, interpolate between d_traj and set d_xu, d_xu_goal
+template <typename T>
+void simple_interpolate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, double time_offset, T *d_xu, T *d_xu_goal, uint32_t traj_steps, T *d_traj){
+
+    const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
+
+    simple_interpolate_kernel<T><<<knot_points, 32>>>(state_size, control_size, knot_points, timestep, time_offset, d_xu_goal, traj_steps, d_traj);
+
+    gpuErrchk(cudaMemcpy(d_xu, d_xu_goal, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+
+}
+
+template <typename T>
+void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float timestep, T *d_traj, T *d_traj_lambdas, T *d_xs){
+
+    const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
+    double iter_solve_time = 0;
+    double prev_iter_solve_time = 0;
+    double time_since_start = 0;
+    std::vector<std::vector<T>> tracking_path;
     std::chrono::time_point<std::chrono::steady_clock> iter_start, iter_end;
     std::chrono::duration<double> iter_diff;
-    std::vector<std::vector<T>> tracking_path;
 
     T *d_lambda, *d_xu_goal, *d_xu, *d_xu_old;
     gpuErrchk(cudaMalloc(&d_lambda, state_size*knot_points*sizeof(T)));
     gpuErrchk(cudaMalloc(&d_xu, traj_len*sizeof(T)));
     gpuErrchk(cudaMalloc(&d_xu_old, traj_len*sizeof(T)));
     gpuErrchk(cudaMalloc(&d_xu_goal, traj_len*sizeof(T)));
+    gpuErrchk(cudaMemcpy(d_lambda, d_traj_lambdas, state_size*knot_points*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu_goal, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu_old, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
 
     void *d_dynmem = gato_plant::initializeDynamicsConstMem<T>();
 
@@ -344,14 +397,12 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     }
     std::cout <<"\n\n\n";
 
-    int iter = 0;
-
     while(1){
-
+        
         // store xs in final trajectory vector
         gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
         tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));
-
+        
         // exit if low error
         T tot_err = 0;
         for (int i = 0; i < state_size; i++){
@@ -363,27 +414,19 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
 
         iter_start = std::chrono::steady_clock::now();
-        
-        // interpolate knot points on pre-computed trajectory, fill xu_goal
-        cur_timestep = interpolate_knotpoints<T>(state_size, 
-                                                 control_size, 
-                                                 knot_points, 
-                                                 traj_steps, 
-                                                 traj_timestep, 
-                                                 time_since_start, 
-                                                 d_traj_lambdas, 
-                                                 d_lambda, 
-                                                 d_xu_goal, 
-                                                 d_traj);
-        gpuErrchk(cudaPeekAtLastError());
-        gpuErrchk(cudaMemcpy(d_xu, d_xu_goal, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+
+        simple_interpolate<T>(state_size, control_size, knot_points, timestep, time_since_start, d_xu, d_xu_goal, traj_steps, d_traj);
+        gpuErrchk(cudaMemcpy(h_xg, d_xu_goal, state_size*sizeof(T), cudaMemcpyDeviceToHost));
+        for (int i = 0; i < state_size; i++){
+            std::cout << h_xg[i] << " ";
+        }
+        std::cout <<"\n\n";
         gpuErrchk(cudaMemcpy(d_xu, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
 
-        if (iter==0){
-            gpuErrchk(cudaMemcpy(d_xu_old, d_xu_goal, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
-        }
-        
-        sqpSolve<T>(state_size, control_size, knot_points, cur_timestep, d_xu_goal, d_lambda, d_xu, d_dynmem);
+        gpuErrchk(cudaMemcpy(d_lambda, &d_traj_lambdas[static_cast<uint32_t>(floorf(time_since_start / timestep)) * state_size], state_size * sizeof(T), cudaMemcpyDeviceToDevice));
+
+
+        sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem);
 
         iter_end = std::chrono::steady_clock::now();
 
@@ -396,18 +439,11 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         
         // std::cout << "solve took " << iter_solve_time << " seconds\n";
         // simulate for iter_solve_time seconds using old traj
-        integrator_shift<T>(state_size, control_size, knot_points, d_xs, d_xu_old, d_dynmem, old_timestep, prev_iter_solve_time, iter_solve_time);
-
+        simple_integrator<T>(state_size, control_size, knot_points, d_xs, d_xu_old, d_dynmem, timestep, prev_iter_solve_time, iter_solve_time);
 
         // old xu = new xu
         gpuErrchk(cudaMemcpy(d_xu_old, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
-        old_timestep = cur_timestep;
         prev_iter_solve_time = iter_solve_time;
-
-        gpuErrchk(cudaMemcpy(d_xu, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
-
-        // break;
-        iter++;
 
     }
 

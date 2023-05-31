@@ -1,5 +1,7 @@
 #pragma once
 #include <cooperative_groups.h>
+#include <algorithm>
+#include <cmath>
 namespace cgrps = cooperative_groups;
 #include "iiwa_plant.cuh"
 
@@ -319,7 +321,7 @@ void integrator_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_
 
     while(simulation_time_left > 0){
         
-        simulation_iter_time = min(simulation_time_left, traj_timestep);
+        simulation_iter_time = fminf(simulation_time_left, traj_timestep);
 
         integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, simulation_iter_time);
         
@@ -331,3 +333,66 @@ void integrator_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_
         simulation_time_left -= simulation_iter_time;
     }
 }
+
+template <typename T>
+__global__
+void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, float dt){
+
+    extern __shared__ T s_mem[];
+    T *s_xkp1 = s_mem;
+    T *s_xuk = s_xkp1 + state_size; 
+    T *s_temp = s_xuk + state_size + control_size;
+    cgrps::thread_block block = cgrps::this_thread_block();	  
+    cgrps::grid_group grid = cgrps::this_grid();
+    for (unsigned ind = threadIdx.x; ind < state_size + control_size; ind += blockDim.x){
+        if(ind < state_size){
+            s_xuk[ind] = d_x[ind];
+        }
+        else{
+            s_xuk[ind] = d_u[ind-state_size];
+        }
+    }
+
+    block.sync();
+    integrator<T,0,0>(state_size, s_xkp1, s_xuk, s_temp, d_dynMem_const, dt, block);
+    block.sync();
+
+    for (unsigned ind = threadIdx.x; ind < state_size; ind += blockDim.x){
+        d_x[ind] = s_xkp1[ind];
+    }
+}
+
+///TODO: edge case where all knots are used, shift at some point
+template <typename T>
+void simple_integrator(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float timestep, float time_offset, float simulation_time){
+
+    const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+    const uint32_t states_s_controls = state_size + control_size;
+    float time_since_traj_start = time_offset;
+    float simulation_time_left = simulation_time;
+    uint32_t prev_knot = static_cast<uint32_t>(floorf(time_offset / timestep));
+    float simulation_iter_time;
+
+    simulation_iter_time = std::min(timestep, (timestep - (std::fmod(time_offset, timestep))));  //EMRE verify this
+
+    // simulate half-used timestep
+    simple_integrator_kernel<T><<< 1, 1, simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, &d_xu[prev_knot*states_s_controls + state_size], d_dynMem_const, simulation_iter_time);
+
+    simulation_time_left -= simulation_iter_time;
+    time_since_traj_start += simulation_iter_time;
+
+    while(simulation_time_left > 0){
+        
+        simulation_iter_time = fminf(simulation_time_left, timestep);
+        
+        prev_knot = static_cast<uint32_t>(floorf(time_since_traj_start / timestep));
+
+        simple_integrator_kernel<T><<< 1, 1, simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, &d_xu[prev_knot*states_s_controls + state_size], d_dynMem_const, simulation_iter_time);
+
+        simulation_time_left -= simulation_iter_time;
+        time_since_traj_start += simulation_iter_time;
+    }
+}
+
+
+
