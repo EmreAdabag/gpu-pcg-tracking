@@ -47,17 +47,14 @@ void ls_gato_compute_merit(uint32_t state_size,
 
     for(unsigned knot = block_id; knot < knot_points; knot += num_blocks){
 
-        for(int i = thread_id; i < state_size+(knot_points < knot_points-1)*(states_s_controls); i+=num_threads){
+        for(int i = thread_id; i < state_size+(knot < knot_points-1)*(states_s_controls); i+=num_threads){
             s_xux_k[i] = d_xu[knot*states_s_controls+i] + alpha * d_dz[knot*states_s_controls+i];  
             s_xux_k_traj[i] = d_xu_traj[knot*states_s_controls+i];                            
         }
         block.sync();
-        // if(knot > 0){
-            Jk = gato_plant::trackingcost<T>(state_size, control_size, knot_points, s_xux_k, s_xux_k_traj, s_temp);
-        // }
-        // else{
-        //     Jk = 0;
-        // }
+        
+        Jk = gato_plant::trackingcost<T>(state_size, control_size, knot_points, s_xux_k, s_xux_k_traj, s_temp);
+        
         block.sync();
         if(knot < knot_points-1){
             ck = integratorError<T>(state_size, s_xux_k, &s_xux_k[states_s_controls], s_temp, d_dynMem_const, dt, block);
@@ -70,6 +67,7 @@ void ls_gato_compute_merit(uint32_t state_size,
         if(thread_id == 0){
             pointmerit = Jk + mu*ck;
             d_merit_temp[alpha_multiplier*knot_points+knot] = pointmerit;
+            // printf("alpha: %f knot: %d reporting merit: %f\n", alpha, knot, pointmerit);
         }
     }
     cooperative_groups::this_grid().sync();
@@ -82,6 +80,7 @@ void ls_gato_compute_merit(uint32_t state_size,
     }
 }
 
+// zero merit out
 // shared mem size get_merit_smem_size()
 // cost compute for non line search
 template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
@@ -97,25 +96,22 @@ void compute_merit(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
     extern __shared__ T s_xux_k[];
 
     T Jk, ck, pointmerit;
+    T *s_xux_k_traj = s_xux_k + 2 * state_size + control_size;
+    T *s_temp = s_xux_k_traj + 2 * state_size + control_size;
 
     for(unsigned knot = block_id; knot < knot_points; knot += gridDim.x){
-        T *s_xux_k_traj = s_xux_k + 2 * state_size + control_size;
-        T *s_temp = s_xux_k_traj + 2 * state_size + control_size;
 
         for(int i = thread_id; i < state_size+(knot < knot_points-1)*(states_s_controls); i+=num_threads){
             s_xux_k[i] = d_xu[knot*states_s_controls+i];  
             s_xux_k_traj[i] = d_xu_traj[knot*states_s_controls+i];                            
         }
         block.sync();
-        ///TODO: EMRE verify this
-        // if(knot > 0){
-            Jk = gato_plant::trackingcost<T>(state_size, control_size, knot_points, s_xux_k, s_xux_k_traj, s_temp);
-        // }
+        Jk = gato_plant::trackingcost<T>(state_size, control_size, knot_points, s_xux_k, s_xux_k_traj, s_temp);
 
 
         block.sync();
         if(knot < knot_points-1){
-            ck = integratorError<T, INTEGRATOR_TYPE, ANGLE_WRAP>(state_size, s_xux_k, &s_xux_k[states_s_controls], s_temp, d_dynMem_const, dt, block);
+            ck = integratorError<T>(state_size, s_xux_k, &s_xux_k[states_s_controls], s_temp, d_dynMem_const, dt, block);
         }
         else{
             ck = 0;

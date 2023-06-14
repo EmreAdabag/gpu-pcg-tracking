@@ -137,7 +137,6 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
             __syncthreads();
 
             for(int i = thread_id; i < state_size; i+=num_threads){
-                //EMRE->ORDER
                 d_c[i] = d_xu[i] - d_xu_traj[i];
             }
             glass::copy<T>(states_sq, s_Qk, &d_G_dense[(states_sq+controls_sq)*k]);
@@ -238,7 +237,7 @@ void parallel_line_search(uint32_t state_size, uint32_t control_size, uint32_t k
 
     void *ls_merit_kernel = (void *) ls_gato_compute_merit<float>;
     
-    float mu = 10;
+    float mu = 10.0f;
 
     for(int p = 0; p < alphas; p++){
         void *kernelArgs[] = {

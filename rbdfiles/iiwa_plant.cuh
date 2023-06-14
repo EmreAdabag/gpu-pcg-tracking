@@ -52,19 +52,10 @@ namespace gato_plant{
 
 	template<class T>
 	__host__ __device__
-	constexpr T COST_Q1() {return static_cast<T>(0.1);}
-	// template<class T>
-	// __host__ __device__
-	// constexpr T COST_Q2() {return static_cast<T>(0.01);}
-	// template<class T>
-	// __host__ __device__
-	// constexpr T COST_QF1() {return static_cast<T>(100);}		
-	// template<class T>
-	// __host__ __device__
-	// constexpr T COST_QF2() {return static_cast<T>(100);}	
+	constexpr T COST_Q1() {return static_cast<T>(.10);}
 	template<class T>
 	__host__ __device__
-	constexpr T COST_R() {return static_cast<T>(0.000001);}
+	constexpr T COST_R() {return static_cast<T>(0.0001);}
 
 	template <typename T>
 	void *initializeDynamicsConstMem(){
@@ -144,12 +135,12 @@ namespace gato_plant{
 
 		for(int i = threadIdx.x; i < threadsNeeded; i += blockDim.x){
 			if(i < state_size){
-				//EMRE->ORDER
+				
 				err = s_xux[i] - s_xux_traj[i];
 				val = Q_cost * err * err;
 			}
 			else{
-				err = s_xux[state_size + i];
+				err = s_xux[i];
 				val = R_cost * err * err;
 			}
 			s_temp[i] = static_cast<T>(0.5) * val;
@@ -186,22 +177,28 @@ namespace gato_plant{
 
 		for (int i = g.thread_rank(); i < threadsNeeded; i += g.size()){
 
-			// EMRE->ORDER
+			
 			
 			if(i < state_size){
-				err = s_xu[i] - s_xu_traj[i];
 				//gradient
-				s_qk[i] = Q_cost * err;
+				if (i < state_size){
+					err = s_xu[i] - s_xu_traj[i];
+					s_qk[i] = Q_cost * err;
+				}
+				
 				//hessian
 				for(int j = 0; j < state_size; j++){
-					s_Qk[i*state_size+j] = (i == j) ? Q_cost : static_cast<T>(0);
+					s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
 				}
 			}
 			else{
+
 				err = s_xu[i];
 				offset = i - state_size;
+				
 				//gradient
 				s_rk[offset] = R_cost * err;
+				
 				//hessian
 				for(int j = 0; j < control_size; j++){
 					s_Rk[offset*control_size+j] = (offset == j) ? R_cost : static_cast<T>(0);
@@ -235,9 +232,6 @@ namespace gato_plant{
 
 		for (int i = g.thread_rank(); i < threadsNeeded; i += g.size()){
 
-			// EMRE->ORDER
-
-
 			if (i < state_size){
 				err = s_xux[i] - s_xux_traj[i];
 				s_qk[i] = Q_cost * err;
@@ -257,6 +251,7 @@ namespace gato_plant{
 			}
 			else{
 				offset = i - state_size - control_size;
+
 				err = s_xux[i] - s_xux_traj[i];
 				s_qkp1[offset] = Q_cost * err;
 

@@ -12,35 +12,6 @@
 
 
 
-/*
-
-pre-compute trajectory
-
-loop:
-    solve from current state vector
-    simulate for solve duration with old traj
-
-
--------------------------------------------
-
-realtime
-
-pre-compute trajectory
-
-concurrently:
-    track traj:
-        shift traj with new state vector
-        solve QP
-    move:
-        follow traj
-        on traj update: 
-
-
-*/
-
-
-
-
 
 std::vector<std::vector<float>> readCSVToVecVec(const std::string& filename) {
     std::vector<std::vector<float>> data;
@@ -74,7 +45,7 @@ std::vector<std::vector<float>> readCSVToVecVec(const std::string& filename) {
 int main(){
     const uint32_t state_size = 14;
     const uint32_t control_size = 7;
-    const uint32_t knot_points = 50;
+    const uint32_t knot_points = 20;
 
 
     std::vector<std::vector<float>> traj2d = readCSVToVecVec("./testfiles/0_traj.csv");
@@ -89,21 +60,6 @@ int main(){
         h_lambdas.insert(h_lambdas.end(), vec.begin(), vec.end());
     }
 
-    // std::cout << "pre-computed traj\n";
-    // for (int i = 0; i < traj2d.size(); i++){
-    //     for (int j = 0; j < traj2d[i].size(); j++){
-    //         std::cout << traj2d[i][j] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-    // std::cout << "pre-computed lambdas\n";
-    // for (int i = 0; i < lambdas2d.size(); i++){
-    //     for (int j = 0; j < lambdas2d[i].size(); j++){
-    //         std::cout << lambdas2d[i][j] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-
     float *d_traj, *d_traj_lambdas, *d_xs;
     gpuErrchk(cudaMalloc(&d_traj, h_traj.size()*sizeof(float)));
     gpuErrchk(cudaMemcpy(d_traj, h_traj.data(), h_traj.size()*sizeof(float), cudaMemcpyHostToDevice));
@@ -114,7 +70,7 @@ int main(){
     gpuErrchk(cudaMalloc(&d_traj_lambdas, h_lambdas.size() *sizeof(float)));
     gpuErrchk(cudaMemcpy(d_traj_lambdas, h_lambdas.data(), h_lambdas.size()*sizeof(float), cudaMemcpyHostToDevice));
 
-
+    std::cout << "traj steps: " << traj2d.size() << std::endl;
     track<float>(state_size, control_size, knot_points, traj2d.size(), .01, d_traj, d_traj_lambdas, d_xs);
     gpuErrchk(cudaPeekAtLastError());
    
