@@ -6,7 +6,7 @@
 
 #include "iiwa_plant.cuh"
 
-
+#include "settings.cuh"
 
 
 
@@ -45,7 +45,8 @@ std::vector<std::vector<float>> readCSVToVecVec(const std::string& filename) {
 int main(){
     const uint32_t state_size = 14;
     const uint32_t control_size = 7;
-    const uint32_t knot_points = 20;
+    const uint32_t knot_points = 50;
+    const float timestep = .01;
 
 
     std::vector<std::vector<float>> traj2d = readCSVToVecVec("./testfiles/0_traj.csv");
@@ -70,8 +71,10 @@ int main(){
     gpuErrchk(cudaMalloc(&d_traj_lambdas, h_lambdas.size() *sizeof(float)));
     gpuErrchk(cudaMemcpy(d_traj_lambdas, h_lambdas.data(), h_lambdas.size()*sizeof(float), cudaMemcpyHostToDevice));
 
-    std::cout << "traj steps: " << traj2d.size() << std::endl;
-    track<float>(state_size, control_size, knot_points, traj2d.size(), .01, d_traj, d_traj_lambdas, d_xs);
+
+
+
+    track<float>(state_size, control_size, knot_points, traj2d.size(), timestep, d_traj, d_traj_lambdas, d_xs);
     gpuErrchk(cudaPeekAtLastError());
    
 

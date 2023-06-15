@@ -65,7 +65,7 @@ __global__
 void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_points,
                    T *d_G_dense, T *d_C_dense, T *d_g, T *d_c,
                    void *d_dynMem_const, float timestep,
-                   T *d_xu_traj, T *d_xu)
+                   T *d_xu_traj, T *d_xs, T *d_xu)
 {
 
     const cgrps::thread_block block = cgrps::this_thread_block();
@@ -137,7 +137,7 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
             __syncthreads();
 
             for(int i = thread_id; i < state_size; i+=num_threads){
-                d_c[i] = d_xu[i] - d_xu_traj[i];
+                d_c[i] = d_xu[i] - d_xs[i];
             }
             glass::copy<T>(states_sq, s_Qk, &d_G_dense[(states_sq+controls_sq)*k]);
             glass::copy<T>(controls_sq, s_Rk, &d_G_dense[(states_sq+controls_sq)*k+states_sq]);
@@ -224,7 +224,7 @@ void compute_dz(uint32_t state_size, uint32_t control_size, uint32_t knot_points
 }
 
 
-void parallel_line_search(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_xu, float *d_xu_traj, void *d_dynMem_const, float *d_dz, float timestep, float *d_merits_out, float *d_merit_temp)
+void parallel_line_search(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_xs, float *d_xu, float *d_xu_traj, void *d_dynMem_const, float *d_dz, float timestep, float *d_merits_out, float *d_merit_temp)
 {
 
     int alphas = 8;
@@ -244,6 +244,7 @@ void parallel_line_search(uint32_t state_size, uint32_t control_size, uint32_t k
             (void *)&state_size,
             (void *)&control_size,
             (void *)&knot_points,
+            (void *)&d_xs,
             (void *)&d_xu,
             (void *)&d_xu_traj,
             (void *)&mu, 

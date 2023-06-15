@@ -18,6 +18,7 @@ __global__
 void ls_gato_compute_merit(uint32_t state_size,
                            uint32_t control_size,
                            uint32_t knot_points,
+                           T *d_xs,
                            T *d_xu, 
                            T *d_xu_traj, 
                            T mu, 
@@ -60,7 +61,14 @@ void ls_gato_compute_merit(uint32_t state_size,
             ck = integratorError<T>(state_size, s_xux_k, &s_xux_k[states_s_controls], s_temp, d_dynMem_const, dt, block);
         }
         else{
-            ck = 0;
+            // diff xs vs xs_traj
+            for(int i = threadIdx.x; i < state_size; i++){
+                s_temp[i] = abs((d_xu[i] + alpha *d_dz[i]) - d_xs[i]);
+            }
+            block.sync();
+            glass::reduce<T>(state_size, s_temp, block);
+            block.sync();
+            ck = s_temp[0];
         }
         block.sync();
 

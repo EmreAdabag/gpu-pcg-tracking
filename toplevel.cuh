@@ -12,7 +12,7 @@
 #include "merit.cuh"
 #include "gpu_pcg.cuh"
 #include "integrator.cuh"
-
+#include "settings.cuh"
 
 void write_device_matrix_to_file(float* d_matrix, int rows, int cols, const char* filename, int filesuffix = 0) {
     
@@ -80,7 +80,8 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     T *d_merit_initial, *d_merit_news, *d_merit_temp,
           *d_G_dense, *d_C_dense, *d_g, *d_c, *d_Ginv_dense,
           *d_S, *d_Pinv, *d_gamma,
-          *d_dz;
+          *d_dz,
+          *d_xs;
 
     float alphafinal, min_merit;
     
@@ -112,6 +113,9 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     
     /*   STREAM 1   */
     gpuErrchk(cudaMallocAsync(&d_dz,       DZ_SIZE_BYTES, streams[1]));
+    gpuErrchk(cudaMallocAsync(&d_xs,       state_size*sizeof(T), streams[1]));
+    //EMRE should this be passed in instead?
+    gpuErrchk(cudaMemcpyAsync(d_xs, d_xu,  state_size*sizeof(T), cudaMemcpyDeviceToDevice, streams[1]));
     gpuErrchk(cudaMallocAsync(&d_merit_news, 8*sizeof(T), streams[1]));     
     gpuErrchk(cudaMallocAsync(&d_merit_temp, 8*knot_points*sizeof(T), streams[1]));
     gpuErrchk(cudaMallocAsync(&d_r, state_size*knot_points*sizeof(T), streams[1]));
@@ -175,6 +179,7 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
             d_dynMem_const,
             timestep,
             d_traj,
+            d_xs,
             d_xu
         );
         gpuErrchk(cudaPeekAtLastError());
@@ -209,14 +214,17 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         // write_device_matrix_to_file(d_gamma, state_size*knot_points, 1, "gamma", 0);
         // gpuErrchk(cudaPeekAtLastError());
     
+#if ZERO_LAMBDA
         //EMRE REMOVE THIS UNLESS WRONG KNOTS FOR WS
         gpuErrchk(cudaMemset(d_lambda, 0, state_size*knot_points*sizeof(T)));
+#endif
 
         // pcg
         pcg_config config;
-        uint32_t pcg_s = solvePCG(state_size, knot_points, d_S, d_Pinv, d_gamma, d_lambda, &config);
-        // std::cout << config.pcg_max_iter << " " << " " << std::endl;
-        // std::cout << "iters: " << pcg_iters << std::endl;
+        uint32_t pcg_iters = solvePCG(state_size, knot_points, d_S, d_Pinv, d_gamma, d_lambda, &config);
+#if PRINT_PCG_ITERS
+        std::cout << "pcg iters: " << pcg_iters << std::endl;
+#endif
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
 
@@ -234,12 +242,12 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
         
-        write_device_matrix_to_file(d_dz, (control_size+state_size)*knot_points-control_size, 1, "dz", 0);
+        // write_device_matrix_to_file(d_dz, (control_size+state_size)*knot_points-control_size, 1, "dz", 0);
         // gpuErrchk(cudaPeekAtLastError());
 
 
         // line search
-        parallel_line_search(state_size, control_size, knot_points, d_xu, d_traj, d_dynMem_const, d_dz, timestep, d_merit_news, d_merit_temp);
+        parallel_line_search(state_size, control_size, knot_points, d_xs, d_xu, d_traj, d_dynMem_const, d_dz, timestep, d_merit_news, d_merit_temp);
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
         cudaMemcpy(h_merit_news, d_merit_news, 8*sizeof(T), cudaMemcpyDeviceToHost);
@@ -247,20 +255,27 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
         line_search_step = 0;
         min_merit = h_merit_initial;
-        // std::cout << "merit to beat: " << min_merit << "\n";
+#if PRINT_LINE_SEARCH
+        std::cout << "merit to beat: " << min_merit << " line search merits:\n";
         for(int i = 0; i < 8; i++){
-            // std::cout << h_merit_news[i] << " ";
+            std::cout << "[ " << 1.0 / (1 << i) << " ] [ " << h_merit_news[i] << " ]\t";
+        }
+        std::cout << std::endl;
+#endif
+        for(int i = 0; i < 8; i++){
             ///TODO: reduction ratio
             if(h_merit_news[i] < min_merit){
                 min_merit = h_merit_news[i];
                 line_search_step = i;
             }
         }
-        // std::cout << "\n";
+
         gpuErrchk(cudaPeekAtLastError());
-        
 
         if(min_merit == h_merit_initial){
+#if PRINT_LINE_SEARCH
+            std::cout << "line search failed\n";
+#endif
             // line search failure
             drho = max(drho*rho_factor, rho_factor);
             rho = max(rho*drho, rho_min);
@@ -270,7 +285,10 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
             }
             continue;
         }
+
+#if PRINT_LINE_SEARCH
         std::cout << "line search accepted\n";
+#endif
         alphafinal = -1.0 / (1 << line_search_step);        // alpha sign
 
         drho = min(drho/rho_factor, 1/rho_factor);
@@ -326,6 +344,7 @@ void sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     gpuErrchk(cudaFreeAsync(d_Pinv, 0));
     gpuErrchk(cudaFreeAsync(d_gamma, 0));
     gpuErrchk(cudaFreeAsync(d_dz, 0));
+    gpuErrchk(cudaFreeAsync(d_xs, 0));
 }
 /*
 template <typename T>
@@ -490,7 +509,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dis(0.0f, 0.01f);
-    std::uniform_real_distribution<float> dis1(-1.0f, 1.0f);
+    std::uniform_real_distribution<float> dis1(-.10f, .10f);
     std::uniform_real_distribution<float> dis2(-10.0f, 10.0f);
 
     T *d_lambda, *d_xu_goal, *d_xu, *d_xu_old, *d_xu_temp;
@@ -545,8 +564,11 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
 
-        // iter_solve_time = dis(gen); // EMRE 
-        iter_solve_time = .005;
+#if CONSTANT_SOLVE_TIME
+        iter_solve_time = SOLVE_TIME;
+#else
+        iter_solve_time = dis(gen); // EMRE 
+#endif
         time_since_timestep += iter_solve_time;
 
 
@@ -575,7 +597,9 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
             time_since_timestep = 0.0f;
         }
 
-        // addnoise<<<1,32>>>(d_xs, 14, dis1(gen));
+#if     ADD_NOISE
+        addnoise<<<1,32>>>(d_xs, 14, dis1(gen));
+#endif
         gpuErrchk(cudaPeekAtLastError());
 
         gpuErrchk(cudaMemcpy(d_xu, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
