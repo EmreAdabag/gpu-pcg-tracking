@@ -28,6 +28,7 @@
 #include <cuda_runtime_api.h>
 #include <cooperative_groups.h>
 #include "iiwa_grid.cuh"
+#include "settings.cuh"
 
 #include "glass.cuh"
 
@@ -52,7 +53,12 @@ namespace gato_plant{
 
 	template<class T>
 	__host__ __device__
-	constexpr T COST_Q1() {return static_cast<T>(.10);}
+	constexpr T COST_Q1() {return static_cast<T>(1.0);}
+	
+	template<class T>
+	__host__ __device__
+	constexpr T COST_QD() {return static_cast<T>(0.0001);}
+
 	template<class T>
 	__host__ __device__
 	constexpr T COST_R() {return static_cast<T>(0.0001);}
@@ -128,6 +134,7 @@ namespace gato_plant{
 
 		const uint32_t threadsNeeded = state_size + control_size * (blockIdx.x != knot_points - 1);
 		const T Q_cost = COST_Q1<T>();
+		const T QD_cost = COST_QD<T>();
 		const T R_cost = COST_R<T>();
 
 		T err, val;
@@ -135,9 +142,20 @@ namespace gato_plant{
 
 		for(int i = threadIdx.x; i < threadsNeeded; i += blockDim.x){
 			if(i < state_size){
+				if(i < state_size / 2){
+					err = s_xux[i] - s_xux_traj[i];
+					val = Q_cost * err * err;
+				}
+				else{
+
+#if ABSOLUTE_QD_PENALTY
+					err = s_xux[i];
+#else
+					err = s_xux[i] - s_xux_traj[i];
+#endif
+					val = QD_cost * err * err;
+				}
 				
-				err = s_xux[i] - s_xux_traj[i];
-				val = Q_cost * err * err;
 			}
 			else{
 				err = s_xux[i];
@@ -170,6 +188,7 @@ namespace gato_plant{
 	{	
 		const uint32_t threadsNeeded = state_size + control_size;
 		const T Q_cost = COST_Q1<T>();
+		const T QD_cost = COST_QD<T>();
 		const T R_cost = COST_R<T>();
 
 		uint32_t offset;
@@ -181,14 +200,27 @@ namespace gato_plant{
 			
 			if(i < state_size){
 				//gradient
-				if (i < state_size){
+				if (i < state_size / 2){
 					err = s_xu[i] - s_xu_traj[i];
 					s_qk[i] = Q_cost * err;
+				}
+				else{
+#if ABSOLUTE_QD_PENALTY
+					err = s_xu[i];
+#else
+					err = s_xu[i] - s_xu_traj[i];
+#endif
+					s_qk[i] = QD_cost * err;
 				}
 				
 				//hessian
 				for(int j = 0; j < state_size; j++){
-					s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
+					if(j < state_size / 2){
+						s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
+					}
+					else{
+						s_Qk[i*state_size + j] = (i == j) ? QD_cost : static_cast<T>(0);
+					}
 				}
 			}
 			else{
@@ -225,6 +257,7 @@ namespace gato_plant{
 	{
 		unsigned threadsNeeded = 2*state_size + control_size;
 		const T Q_cost = COST_Q1<T>();
+		const T QD_cost = COST_QD<T>();
 		const T R_cost = COST_R<T>();
 
 		T err;
@@ -233,11 +266,26 @@ namespace gato_plant{
 		for (int i = g.thread_rank(); i < threadsNeeded; i += g.size()){
 
 			if (i < state_size){
-				err = s_xux[i] - s_xux_traj[i];
-				s_qk[i] = Q_cost * err;
+				if(i < state_size / 2){
+					err = s_xux[i] - s_xux_traj[i];
+					s_qk[i] = Q_cost * err;
+				}
+				else{
+#if ABSOLUTE_QD_PENALTY
+					err = s_xux[i];
+#else
+					err = s_xux[i] - s_xux_traj[i];
+#endif
+					s_qk[i] = QD_cost * err;
+				}
 				
 				for(int j = 0; j < state_size; j++){
-					s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
+					if(j < state_size / 2){
+						s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
+					}
+					else{
+						s_Qk[i*state_size + j] = (i == j) ? QD_cost : static_cast<T>(0);
+					}
 				}
 			}
 			else if(i < state_size + control_size){
@@ -251,12 +299,27 @@ namespace gato_plant{
 			}
 			else{
 				offset = i - state_size - control_size;
+				if(offset < state_size / 2){
+					err = s_xux[i] - s_xux_traj[i];
+					s_qkp1[offset] = Q_cost * err;
+				}
+				else{
+#if ABSOLUTE_QD_PENALTY
+					err = s_xux[i];
+#else
+					err = s_xux[i] - s_xux_traj[i];
+#endif
+					s_qkp1[offset] = QD_cost * err;
+				}
 
-				err = s_xux[i] - s_xux_traj[i];
-				s_qkp1[offset] = Q_cost * err;
 
 				for(int j = 0; j < state_size; j++){
-					s_Qkp1[offset*state_size+j] = (offset == j) ? Q_cost : static_cast<T>(0);
+					if(j < state_size / 2){
+						s_Qkp1[offset*state_size+j] = (offset == j) ? Q_cost : static_cast<T>(0);
+					}
+					else{
+						s_Qkp1[offset*state_size+j] = (offset == j) ? QD_cost : static_cast<T>(0);
+					}
 				}
 
 			}

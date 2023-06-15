@@ -431,3 +431,27 @@ void simple_integrator(uint32_t state_size, uint32_t control_size, uint32_t knot
     }
 }
 
+
+template <typename T>
+void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float timestep, float time_offset, float sim_time){
+
+
+    const float sim_step_time = .0002;
+    const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+    const uint32_t states_s_controls = state_size + control_size;
+    uint32_t control_offset;
+    T *control;
+
+
+    uint32_t sim_steps_needed = static_cast<uint32_t>(sim_time / sim_step_time);
+
+
+
+    for(int step = 0; step < sim_steps_needed; step++){
+        control_offset = static_cast<uint32_t>((time_offset + step * sim_step_time) / timestep);
+        control = &d_xu[control_offset * states_s_controls + state_size];
+
+        simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time);
+    }
+
+}
