@@ -208,7 +208,7 @@ T integratorError(uint32_t state_size, T *s_xuk, T *s_xkp1, T *s_temp, void *d_d
     block.sync();
 
     // finish off forming the error
-    glass::reduce<T>(state_size, s_err, block);
+    glass::reduce<T>(state_size, s_err);
     block.sync();
     // if(GATO_LEAD_THREAD){printf("in integratorError with reduced error of [%f]\n",s_err[0]);}
     return s_err[0];
@@ -436,7 +436,7 @@ template <typename T>
 void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float timestep, float time_offset, float sim_time){
 
 
-    const float sim_step_time = .0002;
+    const float sim_step_time = .002;
     const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
     const uint32_t states_s_controls = state_size + control_size;
     uint32_t control_offset;

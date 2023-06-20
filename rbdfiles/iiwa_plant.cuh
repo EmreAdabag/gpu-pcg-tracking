@@ -165,7 +165,7 @@ namespace gato_plant{
 		}
 
 		g.sync();
-		glass::reduce<T>(threadsNeeded, s_temp, g);
+		glass::reduce<T>(threadsNeeded, s_temp);
 		g.sync();
 		return s_temp[0];
 	}

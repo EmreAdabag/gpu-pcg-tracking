@@ -2,7 +2,7 @@
 
 # Compiler and compiler flags
 NVCC = nvcc
-CFLAGS = -g -G -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -Irbdfiles -lcublas
+CFLAGS = -g -O3 -G -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -Irbdfiles -lcublas
 
 # Name of the output executable
 EXECUTABLE = runme

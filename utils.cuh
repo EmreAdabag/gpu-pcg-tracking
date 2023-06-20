@@ -50,7 +50,6 @@ template <typename T>
 __device__
 void load_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned bcol, unsigned brow, bool transpose=false, cooperative_groups::thread_group g = cooperative_groups::this_thread_block()){
     
-    // EMRE assert this
     if(bcol > 2 || brow > m_dim-1){
         printf("doing somehting wrong in load_block_bd\n");
         return;
