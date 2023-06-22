@@ -5,7 +5,7 @@ NVCC = nvcc
 CFLAGS = -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -Irbdfiles -lcublas
 
 # Name of the output executable
-EXECUTABLE = runme
+EXECUTABLE = runme.exe
 
 # Source file
 SOURCE = runme.cu
