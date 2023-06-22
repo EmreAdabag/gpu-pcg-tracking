@@ -161,6 +161,9 @@ std::tuple<std::vector<int>, std::vector<double>> sqpSolve(uint32_t state_size, 
     
 
     pcg_config config;
+    config.pcg_block = PCG_NUM_THREADS;
+    config.pcg_exit_tol = PCG_EXIT_TOL;
+    config.pcg_max_iter = PCG_MAX_ITER;
     int pcg_iters;
     double pcg_time;
     double precon_time;
@@ -331,7 +334,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
 
     const float shift_threshold = SHIFT_THRESHOLD;
-    const int max_control_updates = 50000;
+    const int max_control_updates = 10000;
     
     
     struct timespec solve_start, solve_end;
@@ -397,17 +400,16 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     for(control_update_step = 0; control_update_step < max_control_updates; control_update_step++){
 
 
-        // exit if close to goal
         tot_err = 0;
         for (int i = 0; i < state_size; i++){
-            // std::cout << h_xs[i] << " ";
+#if LIVE_PRINT_PATH
+            std::cout << h_xs[i] << (i < state_size-1 ? " " : "\n");
+#endif // #if LIVE_PRINT_PATH
             tot_err += abs(h_xs[i] - h_xg[i]);
         }
-        // std::cout << "\n";
-        if(tot_err < .1){ 
+        if(tot_err < TRACKING_EXIT_TOL){ 
             break;
         }
-        // std::cout << "total error: " << tot_err << std::endl;
         
 
         
@@ -440,7 +442,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
         time_since_timestep += iter_solve_time_us * 1e-6;
 
-        // shift xu if shift_threshold% through timestep
+        // shift xu and goal if shift_threshold% through timestep
         if (!shifted && time_since_timestep > shift_threshold){
             just_shift<T>(state_size, control_size, knot_points, d_xu);             // shift everything over one
             if (traj_offset + 1 + knot_points < traj_steps){
@@ -453,13 +455,6 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
                 gpuErrchk(cudaMemset(&d_xu[traj_len - state_size / 2], 0, (state_size/2) * sizeof(T)));
                 gpuErrchk(cudaMemset(&d_xu[traj_len - (state_size+control_size)], 0, control_size * sizeof(T)));
             }
-            shifted = true;
-        }
-
-        // shift goal if through timestep
-        if (time_since_timestep > timestep){
-            // std::cout << "shifted to offset: " << traj_offset + 1 << std::endl;
-            shifted = false;
             traj_offset++;
             just_shift(state_size, control_size, knot_points, d_xu_goal);
             if (traj_offset + knot_points < traj_steps){
@@ -473,7 +468,14 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
                 gpuErrchk(cudaMemcpy(&d_xu_goal[(knot_points-1)*(state_size+control_size)], &d_traj[(traj_steps-1)*(state_size+control_size)], (state_size/2)*sizeof(T), cudaMemcpyDeviceToDevice));
                 gpuErrchk(cudaMemset(&d_xu_goal[(knot_points-1)*(state_size+control_size) + state_size / 2], 0, (state_size/2) * sizeof(T)));
             }
-            time_since_timestep = 0.0f;
+            shifted = true;
+        }
+
+
+        if (time_since_timestep > timestep){
+            // std::cout << "shifted to offset: " << traj_offset + 1 << std::endl;
+            shifted = false;
+            time_since_timestep = std::fmod(time_since_timestep, timestep);
         }
         gpuErrchk(cudaMemcpy(d_xu, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
 
@@ -502,7 +504,8 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     // printStats<int>(&pcg_iters);
     // printStats<double>(&sqp_times);
     // printStats<float>(&tracking_errors);
-    std::cout << "converged in " << traj_offset << " timesteps with " << control_update_step << " updates and original trajectory of length " << traj_steps << " timesteps\n\n";
+    std::cout << "converged in " << traj_offset << " timesteps with " << control_update_step << " updates and original trajectory of length " << traj_steps << " timesteps\n";
+    std::cout << "total tracking error: " << std::accumulate(tracking_errors.begin(), tracking_errors.end(), 0) << "\n\n";
 
     gato_plant::freeDynamicsConstMem<T>(d_dynmem);
 
@@ -511,6 +514,21 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaFree(d_xu_goal));
     gpuErrchk(cudaFree(d_xu_old));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //TODO  if timeout
 
     // ignore
@@ -529,5 +547,3 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     // previous end fills
             // gpuErrchk(cudaMemcpy(&d_xu[traj_len - (state_size + control_size)], &d_traj[(state_size+control_size)*(traj_offset+1) - control_size], sizeof(T)*(state_size+control_size), cudaMemcpyDeviceToDevice));     // last state filled from precomputed trajectory
             // gpuErrchk(cudaMemcpy(d_xu_goal, &d_traj[traj_offset * (state_size + control_size)], traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
-
-

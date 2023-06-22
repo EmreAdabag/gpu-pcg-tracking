@@ -4,23 +4,18 @@
 #include <fstream>
 #include <iostream>
 #include "gpuassert.cuh"
-
+#include "settings.cuh"
 
 
 template <typename T>
 __global__
 void compute_tracking_error_kernel(float *d_tracking_error, uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu_goal, T *d_xu){
     
-    if (threadIdx.x==0){
-        d_tracking_error[0] = 0.0f;
-    }
-    __syncthreads();
-
     float err;
 
-    for(int ind = threadIdx.x; ind < (state_size+control_size)*knot_points; ind += blockDim.x){
+    for(int ind = threadIdx.x; ind < (state_size+control_size)*knot_points - control_size; ind += blockDim.x){
         if (ind % (state_size+control_size) < state_size){
-            err = abs(d_xu - d_xu_goal);
+            err = abs(d_xu[ind] - d_xu_goal[ind]);
             atomicAdd(d_tracking_error, err);
         }
     }
@@ -31,9 +26,10 @@ void compute_tracking_error_kernel(float *d_tracking_error, uint32_t state_size,
 template <typename T>
 float compute_tracking_error(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu_goal, T *d_xu){
 
-    float h_tracking_error;
+    float h_tracking_error = 0.0f;
     float *d_tracking_error;
     gpuErrchk(cudaMalloc(&d_tracking_error, sizeof(float)));
+    gpuErrchk(cudaMemcpy(d_tracking_error, &h_tracking_error, sizeof(float), cudaMemcpyHostToDevice));
 
     compute_tracking_error_kernel<T><<<1,1024>>>(d_tracking_error, state_size, control_size, knot_points, d_xu_goal, d_xu);
     gpuErrchk(cudaPeekAtLastError());
@@ -49,7 +45,7 @@ template <typename T>
 void dump_tracking_data(std::vector<int> pcg_iters, std::vector<double> linsys_times, std::vector<double> sqp_times, std::vector<float> tracking_errors, std::vector<std::vector<T>> tracking_path, uint32_t timesteps_taken, uint32_t control_updates_taken, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
     // Helper function to create file names
     auto createFileName = [&](const std::string& data_type) {
-        std::string filename = "testresults_pcg15/" + std::to_string(start_state_ind) + "_" + std::to_string(goal_state_ind) + "_" + std::to_string(test_iter) + "_" + data_type + ".result";
+        std::string filename = RESULTS_DIRECTORY + std::to_string(start_state_ind) + "_" + std::to_string(goal_state_ind) + "_" + std::to_string(test_iter) + "_" + data_type + ".result";
         return filename;
     };
     

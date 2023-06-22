@@ -2,6 +2,11 @@
 #include <cooperative_groups.h>
 #include <algorithm>
 #include <cmath>
+#if ADD_NOISE
+#include <curand.h>
+#include <curand_kernel.h>
+#endif
+
 namespace cgrps = cooperative_groups;
 #include "iiwa_plant.cuh"
 
@@ -356,7 +361,12 @@ void integrator_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_
 
 template <typename T>
 __global__
-void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, float dt){
+void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, float dt, unsigned long long seed = 12345){
+
+#if ADD_NOISE
+    curandState_t state;
+    curand_init(seed, blockIdx.x*blockDim.x+threadIdx.x, 0, &state);
+#endif // #if ADD_NOISE
 
     extern __shared__ T s_mem[];
     T *s_xkp1 = s_mem;
@@ -379,6 +389,11 @@ void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x
 
     for (unsigned ind = threadIdx.x; ind < state_size; ind += blockDim.x){
         d_x[ind] = s_xkp1[ind];
+#if ADD_NOISE
+        if (curand_uniform(&state) < NOISE_FREQUENCY){
+            d_x[ind] += curand_normal(&state) * NOISE_MULTIPLIER * s_xuk[(ind/2) + (state_size/2)];
+        }
+#endif // #if ADD_NOISE
     }
 }
 
@@ -433,9 +448,10 @@ void simple_integrator(uint32_t state_size, uint32_t control_size, uint32_t knot
 
 
 template <typename T>
-void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, double timestep, double time_offset_us, double sim_time_us){
+void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, double timestep, double time_offset_us, double sim_time_us, unsigned long long = 123456){
 
     // std::cout << "simulating for " << sim_time_us * 1e-6 << " seconds\n";
+
 
     double time_offset = time_offset_us * 1e-6;
     double sim_time = sim_time_us * 1e-6;
@@ -460,6 +476,6 @@ void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_p
 
     float half_sim_step_time = fmod(sim_time, sim_step_time);
 
-    // half sim step
-    simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, half_sim_step_time);
+    // half sim step — this one adds noise if ADD_NOISE is enabled
+    simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, half_sim_step_time, time(0));
 }
