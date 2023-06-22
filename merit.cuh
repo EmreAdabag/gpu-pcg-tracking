@@ -66,7 +66,7 @@ void ls_gato_compute_merit(uint32_t state_size,
                 s_temp[i] = abs((d_xu[i] + alpha *d_dz[i]) - d_xs[i]);
             }
             block.sync();
-            glass::reduce<T>(state_size, s_temp, block);
+            glass::reduce<T>(state_size, s_temp);
             block.sync();
             ck = s_temp[0];
         }
@@ -80,7 +80,7 @@ void ls_gato_compute_merit(uint32_t state_size,
     }
     cooperative_groups::this_grid().sync();
     if(block_id == 0){
-        glass::reduce<T>(knot_points, &d_merit_temp[alpha_multiplier*knot_points], block);
+        glass::reduce<T>(knot_points, &d_merit_temp[alpha_multiplier*knot_points]);
     
         if(thread_id == 0){
             d_merits_out[alpha_multiplier] = d_merit_temp[alpha_multiplier*knot_points];

@@ -1,5 +1,7 @@
 #pragma once
 
+#error "old merit defined"
+
 #include "iiwa_plant.cuh"
 
 namespace oldmerit{

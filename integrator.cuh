@@ -2,6 +2,11 @@
 #include <cooperative_groups.h>
 #include <algorithm>
 #include <cmath>
+#if ADD_NOISE
+#include <curand.h>
+#include <curand_kernel.h>
+#endif
+
 namespace cgrps = cooperative_groups;
 #include "iiwa_plant.cuh"
 
@@ -208,7 +213,7 @@ T integratorError(uint32_t state_size, T *s_xuk, T *s_xkp1, T *s_temp, void *d_d
     block.sync();
 
     // finish off forming the error
-    glass::reduce<T>(state_size, s_err, block);
+    glass::reduce<T>(state_size, s_err);
     block.sync();
     // if(GATO_LEAD_THREAD){printf("in integratorError with reduced error of [%f]\n",s_err[0]);}
     return s_err[0];
@@ -302,7 +307,7 @@ template <typename T>
 void just_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu){
     for (int knot = 0; knot < knot_points-1; knot++){
         uint32_t stepsize = (state_size+(knot<knot_points-2)*control_size);
-        gpuErrchk(cudaMemcpy(&d_xu[knot*(state_size+control_size)], &d_xu[knot*(state_size+control_size)+stepsize], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
+        gpuErrchk(cudaMemcpy(&d_xu[knot*(state_size+control_size)], &d_xu[(knot+1)*(state_size+control_size)], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
     }
 }
 /*
@@ -356,7 +361,12 @@ void integrator_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_
 
 template <typename T>
 __global__
-void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, float dt){
+void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, float dt, unsigned long long seed = 12345){
+
+#if ADD_NOISE
+    curandState_t state;
+    curand_init(seed, blockIdx.x*blockDim.x+threadIdx.x, 0, &state);
+#endif // #if ADD_NOISE
 
     extern __shared__ T s_mem[];
     T *s_xkp1 = s_mem;
@@ -379,6 +389,11 @@ void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x
 
     for (unsigned ind = threadIdx.x; ind < state_size; ind += blockDim.x){
         d_x[ind] = s_xkp1[ind];
+#if ADD_NOISE
+        if (curand_uniform(&state) < NOISE_FREQUENCY){
+            d_x[ind] += curand_normal(&state) * NOISE_MULTIPLIER * s_xuk[(ind/2) + (state_size/2)];
+        }
+#endif // #if ADD_NOISE
     }
 }
 
@@ -431,3 +446,36 @@ void simple_integrator(uint32_t state_size, uint32_t control_size, uint32_t knot
     }
 }
 
+
+template <typename T>
+void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, double timestep, double time_offset_us, double sim_time_us, unsigned long long = 123456){
+
+    // std::cout << "simulating for " << sim_time_us * 1e-6 << " seconds\n";
+
+
+    double time_offset = time_offset_us * 1e-6;
+    double sim_time = sim_time_us * 1e-6;
+
+    const float sim_step_time = 2e-4;
+    const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+    const uint32_t states_s_controls = state_size + control_size;
+    uint32_t control_offset;
+    T *control;
+
+
+    uint32_t sim_steps_needed = static_cast<uint32_t>(sim_time / sim_step_time);
+
+
+
+    for(int step = 0; step < sim_steps_needed; step++){
+        control_offset = static_cast<uint32_t>((time_offset + step * sim_step_time) / timestep);
+        control = &d_xu[control_offset * states_s_controls + state_size];
+
+        simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time);
+    }
+
+    float half_sim_step_time = fmod(sim_time, sim_step_time);
+
+    // half sim step — this one adds noise if ADD_NOISE is enabled
+    simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, half_sim_step_time, time(0));
+}
