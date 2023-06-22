@@ -42,7 +42,7 @@ float compute_tracking_error(uint32_t state_size, uint32_t control_size, uint32_
 
 
 template <typename T>
-void dump_tracking_data(std::vector<int> pcg_iters, std::vector<double> linsys_times, std::vector<double> sqp_times, std::vector<float> tracking_errors, std::vector<std::vector<T>> tracking_path, uint32_t timesteps_taken, uint32_t control_updates_taken, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
+void dump_tracking_data(std::vector<int> *pcg_iters, std::vector<double> *linsys_times, std::vector<double> *sqp_times, std::vector<uint32_t> *sqp_iters, std::vector<bool> *sqp_exits, std::vector<float> *tracking_errors, std::vector<std::vector<T>> *tracking_path, uint32_t timesteps_taken, uint32_t control_updates_taken, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
     // Helper function to create file names
     auto createFileName = [&](const std::string& data_type) {
         std::string filename = RESULTS_DIRECTORY + std::to_string(start_state_ind) + "_" + std::to_string(goal_state_ind) + "_" + std::to_string(test_iter) + "_" + data_type + ".result";
@@ -56,7 +56,7 @@ void dump_tracking_data(std::vector<int> pcg_iters, std::vector<double> linsys_t
             std::cerr << "Failed to open " << data_type << " file.\n";
             return;
         }
-        for (const auto& item : data) {
+        for (const auto& item : *data) {
             file << item << '\n';
         }
         file.close();
@@ -66,6 +66,8 @@ void dump_tracking_data(std::vector<int> pcg_iters, std::vector<double> linsys_t
     dumpVectorData(pcg_iters, "pcg_iters");
     dumpVectorData(linsys_times, "linsys_times");
     dumpVectorData(sqp_times, "sqp_times");
+    dumpVectorData(sqp_iters, "sqp_iters");
+    dumpVectorData(sqp_exits, "sqp_exits");
     dumpVectorData(tracking_errors, "tracking_errors");
 
 
@@ -75,7 +77,7 @@ void dump_tracking_data(std::vector<int> pcg_iters, std::vector<double> linsys_t
         std::cerr << "Failed to open tracking_path file.\n";
         return;
     }
-    for (const auto& outerItem : tracking_path) {
+    for (const auto& outerItem : *tracking_path) {
         for (const auto& innerItem : outerItem) {
             file << innerItem << ',';
         }
@@ -88,9 +90,9 @@ void dump_tracking_data(std::vector<int> pcg_iters, std::vector<double> linsys_t
         std::cerr << "Failed to open stats file.\n";
         return;
     }
-    statsfile << "{\n\ttimesteps: " << timesteps_taken << ",\n";
-    statsfile << "\tcontrol_updates: " << control_updates_taken << "\n";
-    statsfile << "}";
+    statsfile << "timesteps: " << timesteps_taken << "\n";
+    statsfile << "control_updates: " << control_updates_taken << "\n";
+    // printStatsToFile<double>(&linsys_times, )
     
     statsfile.close();
 }

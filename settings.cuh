@@ -1,7 +1,10 @@
 #pragma once
 
+#define KNOT_POINTS 64
+#define STATE_SIZE  14
+
 // if ADD_NOISE is enabled a value from a rand_normal(mean=0, std_dev=1)*NOISE_MULTIPLIER*joint_velocity will be added to a current joint state every NOISE_FREQUENCY control updates
-#define ADD_NOISE  1
+#define ADD_NOISE  1 
 #define NOISE_FREQUENCY .8
 #define NOISE_MULTIPLIER .0001
 
@@ -21,11 +24,16 @@
 #define SHIFT_THRESHOLD (1 * timestep)
 
 
-#define MAX_SQP_ITERS   5
+#define SQP_MAX_TIME_US 3500        // this should have some buffer
 
-#define PCG_NUM_THREADS     64
+#define PCG_NUM_THREADS     128
 #define PCG_EXIT_TOL        1e-6
-#define PCG_MAX_ITER        25
+#define PCG_MAX_ITER        75
+
+#define MERIT_THREADS       128
+#define SCHUR_THREADS       128
+#define DZ_THREADS          128
+#define KKT_THREADS         128
 
 #define TRACKING_EXIT_TOL   .1
 
@@ -34,4 +42,4 @@
 
 
 // prints state while tracking
-#define LIVE_PRINT_PATH 0
+#define LIVE_PRINT_PATH 1

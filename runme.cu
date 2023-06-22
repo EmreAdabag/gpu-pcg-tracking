@@ -43,9 +43,9 @@ std::vector<std::vector<float>> readCSVToVecVec(const std::string& filename) {
 
 
 int main(){
-    const uint32_t state_size = 14;
-    const uint32_t control_size = 7;
-    const uint32_t knot_points = 64;
+    const uint32_t state_size = grid::NUM_JOINTS*2;
+    const uint32_t control_size = grid::NUM_JOINTS;
+    const uint32_t knot_points = KNOT_POINTS;
     const float timestep = .015625;
 
 

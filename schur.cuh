@@ -209,7 +209,7 @@ double form_schur(uint32_t state_size, uint32_t control_size, uint32_t knot_poin
                                 3 * control_size + 2 * control_size * control_size + 3);
 
     // form Schur, Pinv
-    gato_form_schur_jacobi<T><<<knot_points, 64, s_temp_size>>>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_S, d_Pinv, d_gamma, rho, knot_points);// hard coded
+    gato_form_schur_jacobi<T><<<knot_points, SCHUR_THREADS, s_temp_size>>>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_S, d_Pinv, d_gamma, rho, knot_points);// hard coded
     
     const uint32_t states_sq = state_size*state_size;
 
@@ -218,7 +218,7 @@ double form_schur(uint32_t state_size, uint32_t control_size, uint32_t knot_poin
     gpuErrchk(cudaDeviceSynchronize());
     clock_gettime(CLOCK_MONOTONIC,&precon_start);
     
-    oldschur::gato_form_ss<<<knot_points, 64, sizeof(T)*9 * states_sq>>>(state_size, knot_points, d_S, d_Pinv, d_gamma);// hard coded
+    oldschur::gato_form_ss<<<knot_points, SCHUR_THREADS, sizeof(T)*9 * states_sq>>>(state_size, knot_points, d_S, d_Pinv, d_gamma);// hard coded
 
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
@@ -232,7 +232,7 @@ double form_schur(uint32_t state_size, uint32_t control_size, uint32_t knot_poin
 template <typename T>
 void compute_dz(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_G_dense, T *d_C_dense, T *d_g_val, T *d_lambda, T *d_dz){
     
-    oldschur::compute_dz<<<knot_points, 64, sizeof(T)*(2*state_size*state_size+state_size)>>>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g_val, d_lambda, d_dz);
+    oldschur::compute_dz<<<knot_points, DZ_THREADS, sizeof(T)*(2*state_size*state_size+state_size)>>>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g_val, d_lambda, d_dz);
 }
 
 
@@ -267,7 +267,7 @@ void parallel_line_search(uint32_t state_size, uint32_t control_size, uint32_t k
             (void *)&d_merits_out,
             (void *)&d_merit_temp
         };
-        gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, 64, kernelArgs, get_merit_smem_size<float>(state_size, knot_points), streams[p]));
+        gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, MERIT_THREADS, kernelArgs, get_merit_smem_size<float>(state_size, knot_points), streams[p]));
     }
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
