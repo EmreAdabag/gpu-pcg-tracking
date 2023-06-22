@@ -198,7 +198,7 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
 
 
 template <typename T>
-double form_schur(uint32_t state_size, uint32_t control_size, uint32_t knot_points,
+void form_schur(uint32_t state_size, uint32_t control_size, uint32_t knot_points,
                 T *d_G_dense, T *d_C_dense, T *d_g, T *d_c, 
                 T *d_S, T *d_Pinv, T *d_gamma, 
                 T rho)
@@ -211,21 +211,6 @@ double form_schur(uint32_t state_size, uint32_t control_size, uint32_t knot_poin
     // form Schur, Pinv
     gato_form_schur_jacobi<T><<<knot_points, SCHUR_THREADS, s_temp_size>>>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_S, d_Pinv, d_gamma, rho, knot_points);// hard coded
     
-    const uint32_t states_sq = state_size*state_size;
-
- 
-    struct timespec precon_start, precon_end;
-    gpuErrchk(cudaDeviceSynchronize());
-    clock_gettime(CLOCK_MONOTONIC,&precon_start);
-    
-    oldschur::gato_form_ss<<<knot_points, SCHUR_THREADS, sizeof(T)*9 * states_sq>>>(state_size, knot_points, d_S, d_Pinv, d_gamma);// hard coded
-
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
-
-    clock_gettime(CLOCK_MONOTONIC,&precon_end);
-
-    return time_delta_us_timespec(precon_start,precon_end);
 }
 
 

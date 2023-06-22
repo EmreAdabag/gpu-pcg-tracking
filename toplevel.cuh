@@ -175,7 +175,6 @@ std::tuple<std::vector<int>, std::vector<double>, uint32_t, bool> sqpSolve(uint3
     config.pcg_max_iter = PCG_MAX_ITER;
     int pcg_iters;
     double pcg_time;
-    double precon_time;
 
 
     //
@@ -202,15 +201,15 @@ std::tuple<std::vector<int>, std::vector<double>, uint32_t, bool> sqpSolve(uint3
 
 
         // form schur
-        precon_time = form_schur(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c,
+        form_schur(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c,
                    d_S, d_Pinv, d_gamma,
                    rho);
         gpuErrchk(cudaPeekAtLastError());
+        if (sqpTimecheck()){ break; }
         
 
         // TIME PCG SOLVE
         gpuErrchk(cudaDeviceSynchronize());
-        if (sqpTimecheck()){ break; }
         clock_gettime(CLOCK_MONOTONIC,&start);
 
         pcg_iters = solvePCG(state_size, knot_points, d_S, d_Pinv, d_gamma, d_lambda, d_r, d_p, d_v_temp, d_eta_new_temp, &config);
@@ -220,14 +219,14 @@ std::tuple<std::vector<int>, std::vector<double>, uint32_t, bool> sqpSolve(uint3
         clock_gettime(CLOCK_MONOTONIC,&end);
         
         // PCG time vs. qdl is solve time + preconditioner time
-        pcg_time = time_delta_us_timespec(start,end) + precon_time;
+        pcg_time = time_delta_us_timespec(start,end);
 
 
         pcg_time_vec.push_back(pcg_time);
         pcg_iter_vec.push_back(pcg_iters);
-
-
         if (sqpTimecheck()){ break; }
+
+
         // recover dz
         compute_dz(
             state_size,
@@ -240,12 +239,13 @@ std::tuple<std::vector<int>, std::vector<double>, uint32_t, bool> sqpSolve(uint3
             d_dz
         );
         gpuErrchk(cudaPeekAtLastError());
+        if (sqpTimecheck()){ break; }
         
 
-        if (sqpTimecheck()){ break; }
         // line search
         parallel_line_search(state_size, control_size, knot_points, d_xs, d_xu, d_traj, d_dynMem_const, d_dz, timestep, d_merit_news, d_merit_temp);
         gpuErrchk(cudaPeekAtLastError());
+        if (sqpTimecheck()){ break; }
         cudaMemcpy(h_merit_news, d_merit_news, 8*sizeof(T), cudaMemcpyDeviceToHost);
 
 
@@ -286,6 +286,7 @@ std::tuple<std::vector<int>, std::vector<double>, uint32_t, bool> sqpSolve(uint3
             d_xu, 1
         );
         gpuErrchk(cudaPeekAtLastError());
+        if (sqpTimecheck()){ break; }
 
         // if success increment after update
         sqp_iter++;
@@ -399,13 +400,14 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaPeekAtLastError());
     
 
-    // remove jitters
+#if REMOVE_JITTERS
     for(int j = 0; j < 100; j++){
         clock_gettime(CLOCK_MONOTONIC, &solve_start);
         sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem, solve_start);
         gpuErrchk(cudaMemcpy(d_lambda, d_traj_lambdas, state_size*knot_points*sizeof(T), cudaMemcpyDeviceToDevice));
         gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
     }
+#endif // #if REMOVE_JITTERS
 
     //
     // MPC

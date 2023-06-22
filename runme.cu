@@ -48,6 +48,9 @@ int main(){
     const uint32_t knot_points = KNOT_POINTS;
     const float timestep = .015625;
 
+    // checks if enough GPU space for pcg
+    checkPcgOccupancy<float>((void *) pcg<float, state_size, knot_points>, PCG_NUM_THREADS, state_size, knot_points);
+
 
     const uint32_t recorded_states = 5;
     const uint32_t start_goal_combinations = recorded_states*recorded_states;

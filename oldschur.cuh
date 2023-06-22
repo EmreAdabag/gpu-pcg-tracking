@@ -356,7 +356,7 @@ namespace oldschur{
         const uint32_t states_sq = state_size*state_size;
         
         //  STATE OF DEVICE MEM
-        //  S:      -Q0_i in spot 00, phik left off-diagonal, thetak main diagonal
+        //  S:      -Q0_i in spot 00, phik left off-diagonal, thetak main diagonal, phik_T right off-diagonal
         //  Phi:    -Q0 in spot 00, theta_invk main diagonal
         //  gamma:  -Q0_i*q0 spot 0, gammak
 
