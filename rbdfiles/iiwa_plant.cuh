@@ -53,15 +53,15 @@ namespace gato_plant{
 
 	template<class T>
 	__host__ __device__
-	constexpr T COST_Q1() {return static_cast<T>(1.0);}
+	constexpr T COST_Q1() {return static_cast<T>(Q_COST);}
 	
 	template<class T>
 	__host__ __device__
-	constexpr T COST_QD() {return static_cast<T>(0.0001);}
+	constexpr T COST_QD() {return static_cast<T>(QD_COST);}
 
 	template<class T>
 	__host__ __device__
-	constexpr T COST_R() {return static_cast<T>(0.0001);}
+	constexpr T COST_R() {return static_cast<T>(R_COST);}
 
 	template <typename T>
 	void *initializeDynamicsConstMem(){
