@@ -65,11 +65,15 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     bool sqp_time_exit = 1;     // for data recording, not a flag
 
 
+#if CONST_UPDATE_FREQ
     struct timespec sqp_cur;
     auto sqpTimecheck = [&]() {
         clock_gettime(CLOCK_MONOTONIC, &sqp_cur);
         return time_delta_us_timespec(sqp_solve_start,sqp_cur) - sqp_omit_time > SQP_MAX_TIME_US;
     };
+#else
+    auto sqpTimecheck = [&]() { return false; };
+#endif
 
     T *d_merit_initial, *d_merit_news, *d_merit_temp,
           *d_G_dense, *d_C_dense, *d_g, *d_c, *d_Ginv_dense,
@@ -150,14 +154,14 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     config.pcg_block = PCG_NUM_THREADS;
     config.pcg_exit_tol = PCG_EXIT_TOL;
     config.pcg_max_iter = PCG_MAX_ITER;
-    int pcg_iters;
+    int pcg_iters = 0;
     double linsys_time;
 
 
     //
     //      SQP LOOP
     //
-    while(1){
+    for(uint32_t sqpiter = 0; sqpiter < SQP_MAX_ITER; sqpiter++){
         
         gato_form_kkt<float><<<knot_points, KKT_THREADS, oldschur::get_kkt_smem_size<T>(state_size, control_size)>>>(
             state_size,
@@ -251,11 +255,11 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
             // line search failure
             drho = max(drho*rho_factor, rho_factor);
             rho = max(rho*drho, rho_min);
+            sqp_iter++;
             if(rho > rho_max){
                 sqp_time_exit = 0;
                 break; 
             }
-            sqp_iter++;
             continue;
         }
 
@@ -273,10 +277,10 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
             d_xu, 1
         );
         gpuErrchk(cudaPeekAtLastError());
-        if (sqpTimecheck()){ break; }
-
         // if success increment after update
         sqp_iter++;
+
+        if (sqpTimecheck()){ break; }
 
 
         delta_merit_iter = h_merit_initial - min_merit;
