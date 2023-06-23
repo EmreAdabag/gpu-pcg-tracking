@@ -68,7 +68,7 @@ int main(){
         if(start_state == goal_state){ continue; }
         std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
-        for (int single_traj_test_iter = 0; single_traj_test_iter < 2; single_traj_test_iter++){
+        for (int single_traj_test_iter = 0; single_traj_test_iter < 1; single_traj_test_iter++){
 
             // read in traj, lambdas
             snprintf(traj_file_name, sizeof(traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
