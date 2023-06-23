@@ -1,16 +1,16 @@
 #pragma once
 
-#define KNOT_POINTS 128
+#define KNOT_POINTS 64
 #define STATE_SIZE  14
 
 // if ADD_NOISE is enabled a value from a rand_normal(mean=0, std_dev=1)*NOISE_MULTIPLIER*joint_velocity will be added to a current joint state every NOISE_FREQUENCY control updates
-#define ADD_NOISE  0
+#define ADD_NOISE  1
 #define NOISE_FREQUENCY .8
 #define NOISE_MULTIPLIER .0001
 
 
 // qdldl if 0
-#define PCG_SOLVE       1
+#define PCG_SOLVE       0
 
 // turn off warm start
 #define ZERO_LAMBDA     0
@@ -27,15 +27,7 @@
 #define SHIFT_THRESHOLD (1 * timestep)
 
 
-#define CONST_UPDATE_FREQ   0
-
-#if CONST_UPDATE_FREQ
 #define SQP_MAX_TIME_US 3500        // this should have some buffer
-#define SQP_MAX_ITER    100
-#else
-#define SQP_MAX_ITER    5
-#endif
-
 
 #define PCG_NUM_THREADS     128
 #define PCG_EXIT_TOL        1e-6

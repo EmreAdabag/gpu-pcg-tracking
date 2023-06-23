@@ -76,8 +76,6 @@ int main(){
             std::vector<std::vector<float>> traj2d = readCSVToVecVec(traj_file_name);
             std::vector<std::vector<float>> lambdas2d = readCSVToVecVec(lambda_file_name);
 
-            if(traj2d.size() > knot_points){continue;}  ///TODO
-
             std::vector<float> h_traj;
             for (const auto& vec : traj2d) {
                 h_traj.insert(h_traj.end(), vec.begin(), vec.end());
