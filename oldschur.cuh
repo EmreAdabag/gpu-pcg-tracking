@@ -386,7 +386,6 @@ namespace oldschur{
             );
         }
         
-        __syncthreads();//----------------------------------------------------------------
 
         // load phi_k
         if(blockrow!=0){
@@ -400,7 +399,6 @@ namespace oldschur{
             );
         }
         
-        __syncthreads();//----------------------------------------------------------------
 
 
         // load thetaInv_k
@@ -412,7 +410,6 @@ namespace oldschur{
             blockrow
         );
 
-        __syncthreads();//----------------------------------------------------------------
 
         // load thetaInv_km1
         if(blockrow!=0){
@@ -425,7 +422,6 @@ namespace oldschur{
             );
         }
 
-        __syncthreads();//----------------------------------------------------------------
 
         // load thetaInv_kp1
         if(blockrow!=lastrow){

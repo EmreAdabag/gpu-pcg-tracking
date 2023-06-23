@@ -1,6 +1,6 @@
 #pragma once
 
-#define KNOT_POINTS 128
+#define KNOT_POINTS 64
 #define STATE_SIZE  14
 
 // if ADD_NOISE is enabled a value from a rand_normal(mean=0, std_dev=1)*NOISE_MULTIPLIER*joint_velocity will be added to a current joint state every NOISE_FREQUENCY control updates
@@ -42,7 +42,7 @@
 
 
 // prints state while tracking
-#define LIVE_PRINT_PATH 0
+#define LIVE_PRINT_PATH 1
 
 // runs sqp a bunch of times before starting to track
 #define REMOVE_JITTERS  1
