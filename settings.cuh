@@ -1,6 +1,6 @@
 #pragma once
 
-#define KNOT_POINTS 256
+#define KNOT_POINTS 32
 #define STATE_SIZE  14
 
 
@@ -26,12 +26,16 @@
 #define CONST_UPDATE_FREQ   1
 
 #if CONST_UPDATE_FREQ 
-#define SQP_MAX_TIME_US 3600        // should be some buffer between sqp max time and simulation period there's probably a correct way to implement this
-#define SIMULATION_PERIOD 4000
+#define SQP_MAX_TIME_US 2100        // should be some buffer between sqp max time and simulation period there's probably a correct way to implement this
+#define SIMULATION_PERIOD 2500
 #define SQP_MAX_ITER    100
 #else
 #define SQP_MAX_ITER    1
 #endif
+
+
+
+#define TIME_LINSYS     0
 
 
 #define PCG_NUM_THREADS     128
@@ -43,15 +47,16 @@
 #define DZ_THREADS          128
 #define KKT_THREADS         128
 
-// #define TRACKING_EXIT_TOL   .1
 
-// where to store test results — manually create this directory
-#define SAVE_DATA   1
-#define DATA_DIRECTORY   "./testresults_qdl/"
 
 
 // prints state while tracking
 #define LIVE_PRINT_PATH 0
+#define LIVE_PRINT_STATS 1
 
 // runs sqp a bunch of times before starting to track
 #define REMOVE_JITTERS  1
+
+// where to store test results — manually create this directory
+#define SAVE_DATA   1
+#define DATA_DIRECTORY   "./testresults_qdl/"

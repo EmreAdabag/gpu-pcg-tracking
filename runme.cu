@@ -48,7 +48,7 @@ int main(){
     const uint32_t knot_points = KNOT_POINTS;
     const float timestep = .015625;
 
-    const uint32_t traj_test_iters = 4;
+    const uint32_t traj_test_iters = 1;
 
     // checks if enough GPU space for pcg
     checkPcgOccupancy<float>((void *) pcg<float, state_size, knot_points>, PCG_NUM_THREADS, state_size, knot_points);

@@ -22,5 +22,6 @@ void addNoiseKernel(uint32_t state_size, T *d_x, float freq, float q_factor, flo
 
 template <typename T>
 void addNoise(uint32_t state_size, T *d_x, float frequency, float q_factor, float qd_factor){
-    addNoiseKernel<<<1,32>>>(state_size, d_x, frequency, q_factor, qd_factor, time(0));
+    const unsigned long long seed = 12345;
+    addNoiseKernel<<<1,32>>>(state_size, d_x, frequency, q_factor, qd_factor, seed);
 }
