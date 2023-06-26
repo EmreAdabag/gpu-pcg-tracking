@@ -83,8 +83,8 @@ void printStats(std::vector<double> *times){
 
 template<typename T>
 void printStats(std::vector<T> *data){
-   T sum = std::accumulate(data->begin(), data->end(), static_cast<T>(0));
-   double mean = sum/static_cast<T>(data->size());
+   double sum = std::accumulate(data->begin(), data->end(), 0);
+   double mean = sum/static_cast<double>(data->size());
    std::vector<T> diff(data->size());
    std::transform(data->begin(), data->end(), diff.begin(), [mean](T x) {return x - mean;});
    double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
