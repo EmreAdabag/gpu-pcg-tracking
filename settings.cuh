@@ -8,7 +8,7 @@
 
 
 // qdldl if 0
-#define PCG_SOLVE       1
+#define PCG_SOLVE       0
 
 
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
@@ -23,7 +23,7 @@
 
 
 // if 1 sqp exits on time or rho, else sqp exits on max iters or rho
-#define CONST_UPDATE_FREQ   1
+#define CONST_UPDATE_FREQ   0
 
 #if CONST_UPDATE_FREQ 
 #define SQP_MAX_TIME_US 2100        // should be some buffer between sqp max time and simulation period there's probably a correct way to implement this
@@ -51,8 +51,8 @@
 
 
 // prints state while tracking
-#define LIVE_PRINT_PATH 0
-#define LIVE_PRINT_STATS 1
+#define LIVE_PRINT_PATH 1
+#define LIVE_PRINT_STATS 0
 
 // runs sqp a bunch of times before starting to track
 #define REMOVE_JITTERS  1

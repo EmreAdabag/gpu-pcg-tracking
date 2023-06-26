@@ -14,6 +14,65 @@ void gato_memcpy(T *dst, T *src, unsigned size_Ts){
 }
 
 
+template <typename T, bool store_ptr_ind=false>
+__device__
+void store_block_csr_lowertri(uint32_t bdim, uint32_t mdim, T *d_src, int32_t *d_row_ptr, int32_t *d_col_ind, float *d_val, bool col0, uint32_t bd_block_row, int32_t multiplier=1){
+
+    const int brow_val_ct = bdim*bdim + ((bdim+1)*bdim)/2;
+    int row, col, csr_row_offset, full_csr_offset, bd_row_len;
+    int write_len;
+    int cur_triangle_offset;
+
+    for(row = threadIdx.x; row < bdim; row += blockDim.x){
+
+
+        if(bd_block_row==0 && row==0){
+            d_row_ptr[0] = 0;
+        }
+        
+        cur_triangle_offset = ((row+1)*row)/2;
+        csr_row_offset = (bd_block_row>0)*((bdim+1)*bdim)/2 +                   // add triangle if not first block row
+                         (bd_block_row>0) * (bd_block_row-1)*brow_val_ct +      // add previous full block rows if not first block row
+                         (bd_block_row>0)*row*bdim +                            // 
+                         cur_triangle_offset;                                   // triangle offset
+
+
+        if (store_ptr_ind){
+            bd_row_len = (bd_block_row>0)*bdim + row+1;
+            d_row_ptr[bd_block_row*bdim + row+1] = csr_row_offset+bd_row_len;
+            
+            for(col = 0; col < bd_row_len; col++){
+                full_csr_offset = csr_row_offset + col;
+                d_col_ind[full_csr_offset] = (bd_block_row>0)*(bd_block_row-1)*bdim + col;
+            }
+        }
+        else{
+            write_len = (bd_block_row>0)*((col0)*(bdim)+(!col0)*(row+1)) + (col0)*(bd_block_row==0)*(row+1);
+            
+            for(col = 0; col<write_len; col++){
+                full_csr_offset = csr_row_offset + (bd_block_row>0)*(!col0)*bdim + col;
+                d_val[full_csr_offset] = static_cast<float>(d_src[row + col*bdim]) * multiplier;
+            }
+        }
+
+    }
+}
+
+
+__global__
+void prep_csr(uint32_t state_size, uint32_t knot_points, int32_t *d_col_ptr, int32_t *d_row_ind, float *d_val){
+    
+    float *unusedpfloat;
+    bool unusedbool;
+
+    for (uint32_t blockrow = blockIdx.x; blockrow < knot_points; blockrow+=gridDim.x)
+    {
+        store_block_csr_lowertri<float, true>(state_size, knot_points, unusedpfloat, d_col_ptr, d_row_ind, d_val, unusedbool, blockrow);    
+    }
+    
+}
+
+
 template <typename T>
 __device__
 void store_block_bd(uint32_t b_dim, uint32_t m_dim, T *src, T *dst, unsigned col, unsigned BLOCKNO, int multiplier=1, cooperative_groups::thread_group g = cooperative_groups::this_thread_block()){

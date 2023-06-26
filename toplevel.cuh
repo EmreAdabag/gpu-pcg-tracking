@@ -119,7 +119,6 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     /*   STREAM 1   */
     gpuErrchk(cudaMallocAsync(&d_dz,       DZ_SIZE_BYTES, streams[1]));
     gpuErrchk(cudaMallocAsync(&d_xs,       state_size*sizeof(T), streams[1]));
-    //EMRE should this be passed in instead?
     gpuErrchk(cudaMemcpyAsync(d_xs, d_xu,  state_size*sizeof(T), cudaMemcpyDeviceToDevice, streams[1]));
     gpuErrchk(cudaMallocAsync(&d_merit_news, 8*sizeof(T), streams[1]));     
     gpuErrchk(cudaMallocAsync(&d_merit_temp, 8*knot_points*sizeof(T), streams[1]));
@@ -151,7 +150,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
     double linsys_time;
     
-
+#if PCG_SOLVE
     // pcg things
     pcg_config config;
     config.pcg_block = PCG_NUM_THREADS;
@@ -175,7 +174,21 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         (void *)&config.pcg_exit_tol
     };
     size_t ppcg_kernel_smem_size = pcgSharedMemSize<T>(state_size, knot_points);
+#else // #if PCG_SOLVE
+    const int nnz = (knot_points-1)*states_sq + knot_points*((state_size+1)*state_size/2);
 
+    float h_lambda[state_size*knot_points];
+    float h_gamma[state_size*knot_points];
+    int32_t h_col_ptr[state_size*knot_points+1];
+    int32_t h_row_ind[nnz];
+    float h_val[nnz];
+    int32_t *d_row_ind, *d_col_ptr;
+    float *d_val;
+    gpuErrchk(cudaMalloc(&d_col_ptr, (state_size*knot_points+1)*sizeof(int32_t)));
+    gpuErrchk(cudaMalloc(&d_row_ind, nnz*sizeof(long long)));
+	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(double)));
+    prep_csr<<<knot_points, 64>>>(state_size, knot_points, d_col_ptr, d_row_ind, d_val);
+#endif // #if PCG_SOLVE
 
     //
     //      SQP LOOP
@@ -200,7 +213,8 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         if (sqpTimecheck()){ break; }
 
 
-        // form schur
+#if PCG_SOLVE
+
         form_schur(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c,
                    d_S, d_Pinv, d_gamma,
                    rho);
@@ -208,7 +222,6 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         if (sqpTimecheck()){ break; }
         
 
-#if PCG_SOLVE
     #if TIME_LINSYS    
         gpuErrchk(cudaDeviceSynchronize());
         if (sqpTimecheck()){ break; }
@@ -230,14 +243,35 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
 #else // #if PCG_SOLVE
 
+        form_schur_qdl<T>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_col_ptr, d_row_ind, d_val, d_gamma, rho);
+        std::cout << "schur formed\n";
+        if (sqpTimecheck()){ break; }
+        gpuErrchk(cudaPeekAtLastError());
+
         gpuErrchk(cudaDeviceSynchronize());
         if (sqpTimecheck()){ break; }
         clock_gettime(CLOCK_MONOTONIC, &linsys_start);
-        linsys_time = qdl::qdldl_solve_schur(state_size, knot_points, d_S, d_gamma, d_lambda);
+        
+        gpuErrchk(cudaMemcpy(h_col_ptr, d_col_ptr, (state_size*knot_points+1)*sizeof(int32_t), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(h_row_ind, d_row_ind, (nnz)*sizeof(int32_t), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(h_val, d_val, (nnz)*sizeof(float), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(h_gamma, d_gamma, (state_size*knot_points)*sizeof(float), cudaMemcpyDeviceToHost))
+        gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
+        
+        std::cout << "starting qdl\n";
+        // linsys_time = qdl::qdldl_solve_schur(state_size, knot_points, d_S, d_gamma, d_lambda);
+        qdl::qdldl_solve_schur(state_size, knot_points, h_col_ptr, h_row_ind, h_val, h_gamma, h_lambda);
+        std::cout << "finished qdll\n";
+        
+        gpuErrchk(cudaMemcpy(d_lambda, h_lambda, (state_size*knot_points)*sizeof(float), cudaMemcpyHostToDevice));
+        gpuErrchk(cudaDeviceSynchronize());
+        
         clock_gettime(CLOCK_MONOTONIC, &linsys_end);
+        std::cout << "finished finished\n";
 
-        sqp_omit_time += (time_delta_us_timespec(linsys_start, linsys_end) - linsys_time);
+        linsys_time = time_delta_us_timespec(linsys_start, linsys_end);
+
 #endif // #if PCG_SOLVE
         
         linsys_time_vec.push_back(linsys_time);
@@ -370,7 +404,14 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     gpuErrchk(cudaFree(d_gamma));
     gpuErrchk(cudaFree(d_dz));
     gpuErrchk(cudaFree(d_xs));
+
+#if PCG_SOLVE
     gpuErrchk(cudaFree(d_pcg_iters));
+#else
+    gpuErrchk(cudaFree(d_col_ptr));
+    gpuErrchk(cudaFree(d_row_ind));
+    gpuErrchk(cudaFree(d_val));
+#endif
 
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
