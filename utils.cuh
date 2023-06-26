@@ -14,6 +14,7 @@ void gato_memcpy(T *dst, T *src, unsigned size_Ts){
 }
 
 
+///TODO: this has maximum branching right now
 template <typename T>
 __device__
 void store_block_csr_lowertri(uint32_t bdim, uint32_t mdim, T *d_src, QDLDL_float *d_val, bool col1, uint32_t bd_block_row, int32_t multiplier=1){

@@ -23,7 +23,7 @@
 
 
 // if 1 sqp exits on time or rho, else sqp exits on max iters or rho
-#define CONST_UPDATE_FREQ   0
+#define CONST_UPDATE_FREQ   1
 
 #if CONST_UPDATE_FREQ 
 #define SQP_MAX_TIME_US 2100        // should be some buffer between sqp max time and simulation period there's probably a correct way to implement this
@@ -35,11 +35,11 @@
 
 
 
-#define TIME_LINSYS     0
+#define TIME_LINSYS     1
 
 
 #define PCG_NUM_THREADS     128
-#define PCG_EXIT_TOL        1e-5
+#define PCG_EXIT_TOL        1e-9
 #define PCG_MAX_ITER        500
 
 #define MERIT_THREADS       128
@@ -58,5 +58,5 @@
 #define REMOVE_JITTERS  1
 
 // where to store test results — manually create this directory
-#define SAVE_DATA   1
+#define SAVE_DATA   0
 #define DATA_DIRECTORY   "./testresults_qdl/"
