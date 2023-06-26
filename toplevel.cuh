@@ -25,7 +25,6 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     // data storage
     std::vector<int> pcg_iter_vec;
     std::vector<double> linsys_time_vec;
-    double sqp_omit_time = 0.0;                     // this is used to omit data transfer time when using qdl
     bool sqp_time_exit = 1;     // for data recording, not a flag
     
 
@@ -40,11 +39,11 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     const uint32_t states_p_controls = state_size * control_size;
     const uint32_t controls_sq = control_size * control_size;
     const uint32_t states_s_controls = state_size + control_size;
-    const uint32_t KKT_G_DENSE_SIZE_BYTES = (((states_sq+controls_sq)*knot_points-controls_sq)*sizeof(T));
-    const uint32_t KKT_C_DENSE_SIZE_BYTES = ((states_sq+states_p_controls)*(knot_points-1)*sizeof(T));
-    const uint32_t KKT_g_SIZE_BYTES       = (((state_size+control_size)*knot_points-control_size)*sizeof(T));
-    const uint32_t KKT_c_SIZE_BYTES       =   ((state_size*knot_points)*sizeof(T));     
-    const uint32_t DZ_SIZE_BYTES          =   ((states_s_controls*knot_points-control_size)*sizeof(T));
+    const uint32_t KKT_G_DENSE_SIZE_BYTES = static_cast<uint32_t>(((states_sq+controls_sq)*knot_points-controls_sq)*sizeof(T));
+    const uint32_t KKT_C_DENSE_SIZE_BYTES = static_cast<uint32_t>((states_sq+states_p_controls)*(knot_points-1)*sizeof(T));
+    const uint32_t KKT_g_SIZE_BYTES       = static_cast<uint32_t>(((state_size+control_size)*knot_points-control_size)*sizeof(T));
+    const uint32_t KKT_c_SIZE_BYTES       =   static_cast<uint32_t>((state_size*knot_points)*sizeof(T));     
+    const uint32_t DZ_SIZE_BYTES          =   static_cast<uint32_t>((states_s_controls*knot_points-control_size)*sizeof(T));
 
 
     // line search things
@@ -61,7 +60,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
     // streams n cublas init
     cudaStream_t streams[num_alphas];
-    for(int str = 0; str < num_alphas; str++){
+    for(uint32_t str = 0; str < num_alphas; str++){
         cudaStreamCreate(&streams[str]);
     }
     gpuErrchk(cudaPeekAtLastError());
@@ -77,7 +76,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     struct timespec sqp_cur;
     auto sqpTimecheck = [&]() {
         clock_gettime(CLOCK_MONOTONIC, &sqp_cur);
-        return time_delta_us_timespec(sqp_solve_start,sqp_cur) - sqp_omit_time > SQP_MAX_TIME_US;
+        return time_delta_us_timespec(sqp_solve_start,sqp_cur) > SQP_MAX_TIME_US;
     };
 #else
     auto sqpTimecheck = [&]() { return false; };
@@ -178,6 +177,8 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     
     const int nnz = (knot_points-1)*states_sq + knot_points*((state_size+1)*state_size/2);
 
+    float h_gamma_temp[state_size*knot_points];
+    float h_lambda_temp[state_size*knot_points];
     QDLDL_float h_lambda[state_size*knot_points];
     QDLDL_float h_gamma[state_size*knot_points];
     QDLDL_int h_col_ptr[state_size*knot_points+1];
@@ -190,7 +191,13 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     gpuErrchk(cudaMalloc(&d_row_ind, nnz*sizeof(QDLDL_int)));
 	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(QDLDL_float)));
 	gpuErrchk(cudaMalloc(&d_lambda_double, (state_size*knot_points)*sizeof(QDLDL_float)));
+    
+    // fill col ptr and row ind, these won't change
     prep_csr<<<knot_points, 64>>>(state_size, knot_points, d_col_ptr, d_row_ind);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
+    gpuErrchk(cudaMemcpy(h_col_ptr, d_col_ptr, (state_size*knot_points+1)*sizeof(QDLDL_int), cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(h_row_ind, d_row_ind, (nnz)*sizeof(QDLDL_int), cudaMemcpyDeviceToHost));
 
 #endif // #if PCG_SOLVE
 
@@ -225,6 +232,17 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         gpuErrchk(cudaPeekAtLastError());
         if (sqpTimecheck()){ break; }
         
+        float h_S[state_size*state_size*6];
+        gpuErrchk(cudaMemcpy(h_S, d_S, 6*state_size*state_size*sizeof(float), cudaMemcpyDeviceToHost));
+        for(int i = 0; i < state_size; i++){
+            for(int j = 0; j < 6*state_size; j++){
+                std::cout << h_S[j*state_size+i] << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        std::cout << std::endl;
+        exit(0);
 
     #if TIME_LINSYS    
         gpuErrchk(cudaDeviceSynchronize());
@@ -247,8 +265,8 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
 #else // #if PCG_SOLVE
 
-        form_schur_qdl<T>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_col_ptr, d_row_ind, d_val, d_gamma, rho);
-        std::cout << "schur formed\n";
+        form_schur_qdl<T>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_val, d_gamma, rho);
+
         if (sqpTimecheck()){ break; }
         gpuErrchk(cudaPeekAtLastError());
 
@@ -256,39 +274,33 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         if (sqpTimecheck()){ break; }
         clock_gettime(CLOCK_MONOTONIC, &linsys_start);
         
-        gpuErrchk(cudaMemcpy(h_col_ptr, d_col_ptr, (state_size*knot_points+1)*sizeof(int32_t), cudaMemcpyDeviceToHost));
-        gpuErrchk(cudaMemcpy(h_row_ind, d_row_ind, (nnz)*sizeof(int32_t), cudaMemcpyDeviceToHost));
-        gpuErrchk(cudaMemcpy(h_val, d_val, (nnz)*sizeof(float), cudaMemcpyDeviceToHost));
-        gpuErrchk(cudaMemcpy(h_gamma, d_gamma, (state_size*knot_points)*sizeof(float), cudaMemcpyDeviceToHost))
+        gpuErrchk(cudaMemcpy(h_val, d_val, (nnz)*sizeof(QDLDL_float), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(h_gamma_temp, d_gamma, (state_size*knot_points)*sizeof(T), cudaMemcpyDeviceToHost))
+        ///EMRE TODO: make this better probbale
+        for(int i = 0; i < state_size*knot_points; i++){
+            h_gamma[i] = static_cast<QDLDL_float>(h_gamma_temp[i]);
+        }
+
+        // for(int i = 0; i < 3*state_size*state_size; i++){
+        //     std::cout << h_val[i] << " ";
+        // }
+        // std::cout << std::endl;
+        // exit(0);
+
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
         
-        for(int i = 0; i < state_size*knot_points+1; i++){
-            h_col_ptr_big[i] = static_cast<long long>(h_col_ptr[i]);
-            if (i < state_size*knot_points){
-                h_gamma_big[i] = static_cast<double>(h_gamma[i]);
-            }
-        }
-        for(int i = 0; i < nnz; i++){
-            h_row_ind_big[i] = static_cast<long long>(h_row_ind[i]);
-            h_val_big[i] = static_cast<double>(h_val[i]);
-        }
-
-
-        std::cout << "starting qdl\n";
         // linsys_time = qdl::qdldl_solve_schur(state_size, knot_points, d_S, d_gamma, d_lambda);
-        qdl::qdldl_solve_schur(state_size, knot_points, h_col_ptr_big, h_row_ind_big, h_val_big, h_gamma_big, h_lambda_big);
-        std::cout << "finished qdll\n";
+        qdl::qdldl_solve_schur(state_size, knot_points, h_col_ptr, h_row_ind, h_val, h_gamma, h_lambda);
         
-        gpuErrchk(cudaMemcpy(d_lambda, h_lambda, (state_size*knot_points)*sizeof(float), cudaMemcpyHostToDevice));
+        for(int i = 0; i < state_size*knot_points; i++){
+            h_lambda_temp[i] = static_cast<T>(h_lambda[i]);
+        }
+        gpuErrchk(cudaMemcpy(d_lambda, h_lambda_temp, (state_size*knot_points)*sizeof(T), cudaMemcpyHostToDevice));
         gpuErrchk(cudaDeviceSynchronize());
 
-        for(int i = 0; i < state_size*knot_points; i++){
-            h_lambda[i] = static_cast<float>(h_lambda_big[i]);
-        }
         
         clock_gettime(CLOCK_MONOTONIC, &linsys_end);
-        std::cout << "finished finished\n";
 
         linsys_time = time_delta_us_timespec(linsys_start, linsys_end);
 
@@ -437,7 +449,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     gpuErrchk(cudaDeviceSynchronize());
     clock_gettime(CLOCK_MONOTONIC, &sqp_solve_end);
 
-    double sqp_solve_time = time_delta_us_timespec(sqp_solve_start, sqp_solve_end) - sqp_omit_time;
+    double sqp_solve_time = time_delta_us_timespec(sqp_solve_start, sqp_solve_end);
 
     return std::make_tuple(pcg_iter_vec, linsys_time_vec, sqp_solve_time, sqp_iter, sqp_time_exit);
 }
@@ -459,8 +471,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     double prev_simulation_time = 0;            // last simulation time
     double time_since_timestep = 0;             // time since last timestep of original trajectory
     bool shifted = false;                       // has xu been shifted
-    int traj_offset = 0;                        // current goal states of original trajectory
-    // double sqp_omit_time = 0;
+    uint32_t traj_offset = 0;                        // current goal states of original trajectory
 
 
     // vars for recording data
@@ -543,7 +554,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 #else
         simulation_time = sqp_solve_time_us;
 #endif
-
+        simulation_time = 2000;//EMRMEMREMRMEMRMREMMRE
         
 
         // simulate traj for current solve time, offset by previous solve time

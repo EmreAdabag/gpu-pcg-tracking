@@ -258,7 +258,7 @@ void bd_to_csr_lowertri(
 
 ///TODO: pass in allocated mem
 __host__
-void qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, long long *h_col_ptr, long long *h_row_ind, double *h_val, double *h_gamma, double *h_lambda){
+void qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, QDLDL_int *h_col_ptr, QDLDL_int *h_row_ind, QDLDL_float *h_val, QDLDL_float *h_gamma, QDLDL_float *h_lambda){
 
 	
 
@@ -323,7 +323,7 @@ void qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, long long *h_c
 	*---------------------------------*/
 
 	sumLnz = QDLDL_etree(An,Ap,Ai,iwork,Lnz,etree);
-	std::cout << "1\n";
+
 	/*--------------------------------
 	* LDL factorisation
 	*---------------------------------*/
@@ -334,7 +334,7 @@ void qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, long long *h_c
 
 	//now factor
 	QDLDL_factor(An,Ap,Ai,Ax,Lp,Li,Lx,D,Dinv,Lnz,etree,bwork,iwork,fwork);
-	std::cout << "2\n";
+
 	/*--------------------------------
 	* solve
 	*---------------------------------*/
@@ -342,10 +342,9 @@ void qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, long long *h_c
 
 	//when solving A\b, start with x = b
 	for(i=0;i < Ln; i++) x[i] = b[i];
-	std::cout << "2.5\n";
+
 
 	QDLDL_solve(Ln,Lp,Li,Lx,Dinv,x);
-	std::cout << "3\n";
 
 	/*--------------------------------
 	* print factors and solution

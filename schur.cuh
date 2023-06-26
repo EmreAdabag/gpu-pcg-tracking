@@ -7,7 +7,7 @@
 #include "merit.cuh"
 #include "oldschur.cuh"
 #include "integrator.cuh"
-
+#include "qdldl.h"
 
 template <typename T>
 __global__
@@ -63,9 +63,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
                             T *d_C,
                             T *d_g,
                             T *d_c,
-                            int32_t *d_col_ptr,
-                            int32_t *d_row_ind,
-                            float *d_val,
+                            QDLDL_float *d_val,
                             T *d_gamma,
                             T rho)
 {
@@ -149,7 +147,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             );
             __syncthreads();//----------------------------------------------------------------
             
-            store_block_csr_lowertri<T>(state_size, knot_points, s_Q0_i, d_col_ptr, d_row_ind, d_val, 1, blockrow, -1);
+            store_block_csr_lowertri<T>(state_size, knot_points, s_Q0_i, d_val, 1, blockrow, -1);
 
             // save -Q0_i in spot 00 in S
             // store_block_bd<float>( state_size, knot_points,
@@ -368,7 +366,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
 
             // // save phi_k into left off-diagonal of S, 
-            store_block_csr_lowertri<T>(state_size, knot_points, s_phi_k, d_col_ptr, d_row_ind, d_val, 0, blockrow, -1);
+            store_block_csr_lowertri<T>(state_size, knot_points, s_phi_k, d_val, 0, blockrow, -1);
             // store_block_bd<float>( state_size, knot_points,
             //     s_phi_k,                        // src             
             //     d_S,                            // dst             
@@ -380,7 +378,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
 
 
             // save -s_theta_k main diagonal S
-            store_block_csr_lowertri<T>(state_size, knot_points, s_theta_k, d_col_ptr, d_row_ind, d_val, 1, blockrow, -1);
+            store_block_csr_lowertri<T>(state_size, knot_points, s_theta_k, d_val, 1, blockrow, -1);
             // store_block_bd<float>( state_size, knot_points,
             //     s_theta_k,                                               
             //     d_S,                                                 
@@ -549,7 +547,7 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
 template <typename T>
 void form_schur_qdl(uint32_t state_size, uint32_t control_size, uint32_t knot_points,
                 T *d_G_dense, T *d_C_dense, T *d_g, T *d_c, 
-                int32_t *d_col_ptr, int32_t *d_row_ind, float *d_val, T *d_gamma,
+                QDLDL_float *d_val, T *d_gamma,
                 T rho)
 {
     const uint32_t s_temp_size =sizeof(T)*(8 * state_size*state_size+   
@@ -558,7 +556,7 @@ void form_schur_qdl(uint32_t state_size, uint32_t control_size, uint32_t knot_po
                                 3 * control_size + 2 * control_size * control_size + 3);
 
     // form Schur, Pinv
-    form_schur_qdl_kernel<T><<<knot_points, SCHUR_THREADS, s_temp_size>>>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_col_ptr, d_row_ind, d_val, d_gamma, rho);
+    form_schur_qdl_kernel<T><<<knot_points, SCHUR_THREADS, s_temp_size>>>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c, d_val, d_gamma, rho);
     
 }
 

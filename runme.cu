@@ -63,7 +63,7 @@ int main(){
     int start_state, goal_state;
     float *d_traj, *d_traj_lambdas, *d_xs;
 
-    for(int ind = 0; ind < start_goal_combinations; ind++){
+    for(uint32_t ind = 0; ind < start_goal_combinations; ind++){
 
         start_state = ind % recorded_states;
         goal_state = ind / recorded_states;
@@ -99,7 +99,7 @@ int main(){
             // gpuErrchk(cudaMemcpy(d_traj_lambdas, h_lambdas.data(), h_lambdas.size()*sizeof(float), cudaMemcpyHostToDevice));
 
 
-            track<float>(state_size, control_size, knot_points, traj2d.size(), timestep, d_traj, d_traj_lambdas, d_xs, start_state, goal_state, single_traj_test_iter);
+            track<float>(state_size, control_size, knot_points, static_cast<uint32_t>(traj2d.size()), timestep, d_traj, d_traj_lambdas, d_xs, start_state, goal_state, single_traj_test_iter);
 
             gpuErrchk(cudaPeekAtLastError());
             

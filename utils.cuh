@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cooperative_groups.h>
 #include "glass.cuh"
-
+#include "qdldl.h"
 
 template <typename T>
 __device__
@@ -14,22 +14,18 @@ void gato_memcpy(T *dst, T *src, unsigned size_Ts){
 }
 
 
-template <typename T, bool store_ptr_ind=false>
+template <typename T>
 __device__
-void store_block_csr_lowertri(uint32_t bdim, uint32_t mdim, T *d_src, int32_t *d_row_ptr, int32_t *d_col_ind, float *d_val, bool col0, uint32_t bd_block_row, int32_t multiplier=1){
-
+void store_block_csr_lowertri(uint32_t bdim, uint32_t mdim, T *d_src, QDLDL_float *d_val, bool col1, uint32_t bd_block_row, int32_t multiplier=1){
+    
     const int brow_val_ct = bdim*bdim + ((bdim+1)*bdim)/2;
-    int row, col, csr_row_offset, full_csr_offset, bd_row_len;
+    int row, col, csr_row_offset, full_csr_offset;
     int write_len;
     int cur_triangle_offset;
 
     for(row = threadIdx.x; row < bdim; row += blockDim.x){
 
 
-        if(bd_block_row==0 && row==0){
-            d_row_ptr[0] = 0;
-        }
-        
         cur_triangle_offset = ((row+1)*row)/2;
         csr_row_offset = (bd_block_row>0)*((bdim+1)*bdim)/2 +                   // add triangle if not first block row
                          (bd_block_row>0) * (bd_block_row-1)*brow_val_ct +      // add previous full block rows if not first block row
@@ -37,24 +33,12 @@ void store_block_csr_lowertri(uint32_t bdim, uint32_t mdim, T *d_src, int32_t *d
                          cur_triangle_offset;                                   // triangle offset
 
 
-        if (store_ptr_ind){
-            bd_row_len = (bd_block_row>0)*bdim + row+1;
-            d_row_ptr[bd_block_row*bdim + row+1] = csr_row_offset+bd_row_len;
-            
-            for(col = 0; col < bd_row_len; col++){
-                full_csr_offset = csr_row_offset + col;
-                d_col_ind[full_csr_offset] = (bd_block_row>0)*(bd_block_row-1)*bdim + col;
-            }
+        write_len = (bd_block_row>0)*((!col1)*(bdim)+(col1)*(row+1)) + (col1)*(bd_block_row==0)*(row+1);
+        
+        for(col = 0; col<write_len; col++){
+            full_csr_offset = csr_row_offset + (bd_block_row>0)*(col1)*bdim + col;
+            d_val[full_csr_offset] = static_cast<QDLDL_float>(d_src[row + col*bdim]) * multiplier;
         }
-        else{
-            write_len = (bd_block_row>0)*((col0)*(bdim)+(!col0)*(row+1)) + (col0)*(bd_block_row==0)*(row+1);
-            
-            for(col = 0; col<write_len; col++){
-                full_csr_offset = csr_row_offset + (bd_block_row>0)*(!col0)*bdim + col;
-                d_val[full_csr_offset] = static_cast<float>(d_src[row + col*bdim]) * multiplier;
-            }
-        }
-
     }
 }
 
@@ -62,14 +46,10 @@ void store_block_csr_lowertri(uint32_t bdim, uint32_t mdim, T *d_src, int32_t *d
 __global__
 void prep_csr(uint32_t state_size, uint32_t knot_points, QDLDL_int *d_col_ptr, QDLDL_int *d_row_ind){
     
-    float *unusedpfloat;
-    bool unusedbool;
-
     for (uint32_t blockrow = blockIdx.x; blockrow < knot_points; blockrow+=gridDim.x)
     {
         const int brow_val_ct = state_size*state_size + ((state_size+1)*state_size)/2;
         int row, col, csr_row_offset, full_csr_offset, bd_row_len;
-        int write_len;
         int cur_triangle_offset;
 
         for(row = threadIdx.x; row < state_size; row += blockDim.x){
