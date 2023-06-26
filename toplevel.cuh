@@ -175,19 +175,23 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     };
     size_t ppcg_kernel_smem_size = pcgSharedMemSize<T>(state_size, knot_points);
 #else // #if PCG_SOLVE
+    
     const int nnz = (knot_points-1)*states_sq + knot_points*((state_size+1)*state_size/2);
 
-    float h_lambda[state_size*knot_points];
-    float h_gamma[state_size*knot_points];
-    int32_t h_col_ptr[state_size*knot_points+1];
-    int32_t h_row_ind[nnz];
-    float h_val[nnz];
-    int32_t *d_row_ind, *d_col_ptr;
-    float *d_val;
-    gpuErrchk(cudaMalloc(&d_col_ptr, (state_size*knot_points+1)*sizeof(int32_t)));
-    gpuErrchk(cudaMalloc(&d_row_ind, nnz*sizeof(long long)));
-	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(double)));
-    prep_csr<<<knot_points, 64>>>(state_size, knot_points, d_col_ptr, d_row_ind, d_val);
+    QDLDL_float h_lambda[state_size*knot_points];
+    QDLDL_float h_gamma[state_size*knot_points];
+    QDLDL_int h_col_ptr[state_size*knot_points+1];
+    QDLDL_int h_row_ind[nnz];
+    QDLDL_float h_val[nnz];
+    
+    QDLDL_int *d_row_ind, *d_col_ptr;
+    QDLDL_float *d_val, *d_lambda_double;
+    gpuErrchk(cudaMalloc(&d_col_ptr, (state_size*knot_points+1)*sizeof(QDLDL_int)));
+    gpuErrchk(cudaMalloc(&d_row_ind, nnz*sizeof(QDLDL_int)));
+	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(QDLDL_float)));
+	gpuErrchk(cudaMalloc(&d_lambda_double, (state_size*knot_points)*sizeof(QDLDL_float)));
+    prep_csr<<<knot_points, 64>>>(state_size, knot_points, d_col_ptr, d_row_ind);
+
 #endif // #if PCG_SOLVE
 
     //
@@ -259,13 +263,29 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
         
+        for(int i = 0; i < state_size*knot_points+1; i++){
+            h_col_ptr_big[i] = static_cast<long long>(h_col_ptr[i]);
+            if (i < state_size*knot_points){
+                h_gamma_big[i] = static_cast<double>(h_gamma[i]);
+            }
+        }
+        for(int i = 0; i < nnz; i++){
+            h_row_ind_big[i] = static_cast<long long>(h_row_ind[i]);
+            h_val_big[i] = static_cast<double>(h_val[i]);
+        }
+
+
         std::cout << "starting qdl\n";
         // linsys_time = qdl::qdldl_solve_schur(state_size, knot_points, d_S, d_gamma, d_lambda);
-        qdl::qdldl_solve_schur(state_size, knot_points, h_col_ptr, h_row_ind, h_val, h_gamma, h_lambda);
+        qdl::qdldl_solve_schur(state_size, knot_points, h_col_ptr_big, h_row_ind_big, h_val_big, h_gamma_big, h_lambda_big);
         std::cout << "finished qdll\n";
         
         gpuErrchk(cudaMemcpy(d_lambda, h_lambda, (state_size*knot_points)*sizeof(float), cudaMemcpyHostToDevice));
         gpuErrchk(cudaDeviceSynchronize());
+
+        for(int i = 0; i < state_size*knot_points; i++){
+            h_lambda[i] = static_cast<float>(h_lambda_big[i]);
+        }
         
         clock_gettime(CLOCK_MONOTONIC, &linsys_end);
         std::cout << "finished finished\n";

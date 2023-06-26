@@ -57,208 +57,208 @@ void bd_to_csr_lowertri(
     }
 }
 
-__host__
-double qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, float *d_S, float *d_gamma, float *d_lambda){
+// __host__
+// double qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, float *d_S, float *d_gamma, float *d_lambda){
 
-    const uint32_t states_sq = state_size * state_size;
+//     const uint32_t states_sq = state_size * state_size;
 
-	float h_gamma_f[state_size*knot_points];
-	double h_gamma[state_size*knot_points];
-	gpuErrchk(cudaMemcpy(h_gamma_f, d_gamma, state_size*knot_points*sizeof(float), cudaMemcpyDeviceToHost));
-	for(int j = 0; j < state_size*knot_points; j++){
-		h_gamma[j] = h_gamma_f[j];
-    }
+// 	float h_gamma_f[state_size*knot_points];
+// 	double h_gamma[state_size*knot_points];
+// 	gpuErrchk(cudaMemcpy(h_gamma_f, d_gamma, state_size*knot_points*sizeof(float), cudaMemcpyDeviceToHost));
+// 	for(int j = 0; j < state_size*knot_points; j++){
+// 		h_gamma[j] = h_gamma_f[j];
+//     }
 
-	const int nnz = (knot_points-1)*states_sq + knot_points*((state_size+1)*state_size/2);
+// 	const int nnz = (knot_points-1)*states_sq + knot_points*((state_size+1)*state_size/2);
 
-	long long *d_col_ptr, *d_row_ind;
-	double *d_val;
+// 	long long *d_col_ptr, *d_row_ind;
+// 	double *d_val;
 
-	gpuErrchk(cudaMalloc(&d_col_ptr, (state_size*knot_points+1)*sizeof(long long)));
-	gpuErrchk(cudaMalloc(&d_row_ind, nnz*sizeof(long long)));
-	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(double)));
+// 	gpuErrchk(cudaMalloc(&d_col_ptr, (state_size*knot_points+1)*sizeof(long long)));
+// 	gpuErrchk(cudaMalloc(&d_row_ind, nnz*sizeof(long long)));
+// 	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(double)));
 
-	bd_to_csr_lowertri<long long, double><<<1,32*((knot_points/32)+1)>>>(state_size*knot_points, d_col_ptr, d_row_ind, d_val, d_S, state_size, knot_points);
+// 	bd_to_csr_lowertri<long long, double><<<1,32*((knot_points/32)+1)>>>(state_size*knot_points, d_col_ptr, d_row_ind, d_val, d_S, state_size, knot_points);
 	
 
-	long long h_col_ptr[state_size*knot_points+1];
-	long long h_row_ind[nnz];
-	double h_val[nnz];
+// 	long long h_col_ptr[state_size*knot_points+1];
+// 	long long h_row_ind[nnz];
+// 	double h_val[nnz];
 
 
-	gpuErrchk(cudaMemcpy(h_col_ptr, d_col_ptr, (state_size*knot_points+1)*sizeof(long long), cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(h_row_ind, d_row_ind, (nnz)*sizeof(long long), cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(h_val, d_val, (nnz)*sizeof(double), cudaMemcpyDeviceToHost));
+// 	gpuErrchk(cudaMemcpy(h_col_ptr, d_col_ptr, (state_size*knot_points+1)*sizeof(long long), cudaMemcpyDeviceToHost));
+// 	gpuErrchk(cudaMemcpy(h_row_ind, d_row_ind, (nnz)*sizeof(long long), cudaMemcpyDeviceToHost));
+// 	gpuErrchk(cudaMemcpy(h_val, d_val, (nnz)*sizeof(double), cudaMemcpyDeviceToHost));
 	
 
 	
 
-	struct timespec start, end;
-	clock_gettime(CLOCK_MONOTONIC,&start);
+// 	struct timespec start, end;
+// 	clock_gettime(CLOCK_MONOTONIC,&start);
 
 
 
-    const QDLDL_int An = state_size*knot_points;
-    const QDLDL_int *Ai = (QDLDL_int *) h_row_ind; 
-    const QDLDL_int *Ap = (QDLDL_int *) h_col_ptr;
-    const QDLDL_float *Ax = (QDLDL_float *)  h_val;
-    const QDLDL_float *b =  (QDLDL_float *) h_gamma;
+//     const QDLDL_int An = state_size*knot_points;
+//     const QDLDL_int *Ai = (QDLDL_int *) h_row_ind; 
+//     const QDLDL_int *Ap = (QDLDL_int *) h_col_ptr;
+//     const QDLDL_float *Ax = (QDLDL_float *)  h_val;
+//     const QDLDL_float *b =  (QDLDL_float *) h_gamma;
 
 
 
-    QDLDL_int i;
+//     QDLDL_int i;
 
-    //data for L and D factors
-	QDLDL_int Ln = An;
-	QDLDL_int *Lp;
-	QDLDL_int *Li;
-	QDLDL_float *Lx;
-	QDLDL_float *D;
-	QDLDL_float *Dinv;
+//     //data for L and D factors
+// 	QDLDL_int Ln = An;
+// 	QDLDL_int *Lp;
+// 	QDLDL_int *Li;
+// 	QDLDL_float *Lx;
+// 	QDLDL_float *D;
+// 	QDLDL_float *Dinv;
 
-	//data for elim tree calculation
-	QDLDL_int *etree;
-	QDLDL_int *Lnz;
-	QDLDL_int  sumLnz;
+// 	//data for elim tree calculation
+// 	QDLDL_int *etree;
+// 	QDLDL_int *Lnz;
+// 	QDLDL_int  sumLnz;
 
-	//working data for factorisation
-	QDLDL_int   *iwork;
-	QDLDL_bool  *bwork;
-	QDLDL_float *fwork;
-	//Data for results of A\b
-	QDLDL_float *x;
-
-
-	/*--------------------------------
-	* pre-factorisation memory allocations
-	*---------------------------------*/
-
-	//These can happen *before* the etree is calculated
-	//since the sizes are not sparsity pattern specific
-
-	//For the elimination tree
-	etree = (QDLDL_int*)malloc(sizeof(QDLDL_int)*An);
-	Lnz   = (QDLDL_int*)malloc(sizeof(QDLDL_int)*An);
-
-	//For the L factors.   Li and Lx are sparsity dependent
-	//so must be done after the etree is constructed
-	Lp    = (QDLDL_int*)malloc(sizeof(QDLDL_int)*(An+1));
-	D     = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
-	Dinv  = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
-
-	//Working memory.  Note that both the etree and factor
-	//calls requires a working vector of QDLDL_int, with
-	//the factor function requiring 3*An elements and the
-	//etree only An elements.   Just allocate the larger
-	//amount here and use it in both places
-	iwork = (QDLDL_int*)malloc(sizeof(QDLDL_int)*(3*An));
-	bwork = (QDLDL_bool*)malloc(sizeof(QDLDL_bool)*An);
-	fwork = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
-	/*--------------------------------
-	* elimination tree calculation
-	*---------------------------------*/
-
-	sumLnz = QDLDL_etree(An,Ap,Ai,iwork,Lnz,etree);
-
-	/*--------------------------------
-	* LDL factorisation
-	*---------------------------------*/
-
-	//First allocate memory for Li and Lx
-	Li    = (QDLDL_int*)malloc(sizeof(QDLDL_int)*sumLnz);
-	Lx    = (QDLDL_float*)malloc(sizeof(QDLDL_float)*sumLnz);
-
-	//now factor
-	QDLDL_factor(An,Ap,Ai,Ax,Lp,Li,Lx,D,Dinv,Lnz,etree,bwork,iwork,fwork);
-	/*--------------------------------
-	* solve
-	*---------------------------------*/
-	x = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
-
-	//when solving A\b, start with x = b
-	for(i=0;i < Ln; i++) x[i] = b[i];
-
-	QDLDL_solve(Ln,Lp,Li,Lx,Dinv,x);
-
-	/*--------------------------------
-	* print factors and solution
-	*---------------------------------*/
-/*	printf("\n");
-	printf("A (CSC format):\n");
-	print_line();
-	print_arrayi(Ap, An + 1, "A.p");
-	print_arrayi(Ai, Ap[An], "A.i");
-	print_arrayf(Ax, Ap[An], "A.x");
-	printf("\n\n");
-
-	printf("elimination tree:\n");
-	print_line();
-	print_arrayi(etree, Ln, "etree");
-	print_arrayi(Lnz, Ln, "Lnz");
-	printf("\n\n");
-
-	printf("L (CSC format):\n");
-	print_line();
-	print_arrayi(Lp, Ln + 1, "L.p");
-	print_arrayi(Li, Lp[Ln], "L.i");
-	print_arrayf(Lx, Lp[Ln], "L.x");
-	printf("\n\n");
-
-	printf("D:\n");
-	print_line();
-	print_arrayf(D, An,    "diag(D)     ");
-	print_arrayf(Dinv, An, "diag(D^{-1})");
-	printf("\n\n");
-
-	printf("solve results:\n");
-	print_line();
-	print_arrayf(b, An, "b");
-	print_arrayf(x, An, "A\\b");
-	printf("\n\n");
-*/
-
-	// TIMER ENDS HERE
-	clock_gettime(CLOCK_MONOTONIC,&end);
-	double qdldl_time_us = time_delta_us_timespec(start,end);
+// 	//working data for factorisation
+// 	QDLDL_int   *iwork;
+// 	QDLDL_bool  *bwork;
+// 	QDLDL_float *fwork;
+// 	//Data for results of A\b
+// 	QDLDL_float *x;
 
 
-	for(int j = 0; j < state_size*knot_points; j++){
-		h_gamma_f[j] = (float) x[j];
-    }
+// 	/*--------------------------------
+// 	* pre-factorisation memory allocations
+// 	*---------------------------------*/
 
-	/*--------------------------------
-	* clean up
-	*---------------------------------*/
-	free(Lp);
-	free(Li);
-	free(Lx);
-	free(D);
-	free(Dinv);
-	free(etree);
-	free(Lnz);
-	free(iwork);
-	free(bwork);
-	free(fwork);
-	free(x);
+// 	//These can happen *before* the etree is calculated
+// 	//since the sizes are not sparsity pattern specific
+
+// 	//For the elimination tree
+// 	etree = (QDLDL_int*)malloc(sizeof(QDLDL_int)*An);
+// 	Lnz   = (QDLDL_int*)malloc(sizeof(QDLDL_int)*An);
+
+// 	//For the L factors.   Li and Lx are sparsity dependent
+// 	//so must be done after the etree is constructed
+// 	Lp    = (QDLDL_int*)malloc(sizeof(QDLDL_int)*(An+1));
+// 	D     = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
+// 	Dinv  = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
+
+// 	//Working memory.  Note that both the etree and factor
+// 	//calls requires a working vector of QDLDL_int, with
+// 	//the factor function requiring 3*An elements and the
+// 	//etree only An elements.   Just allocate the larger
+// 	//amount here and use it in both places
+// 	iwork = (QDLDL_int*)malloc(sizeof(QDLDL_int)*(3*An));
+// 	bwork = (QDLDL_bool*)malloc(sizeof(QDLDL_bool)*An);
+// 	fwork = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
+// 	/*--------------------------------
+// 	* elimination tree calculation
+// 	*---------------------------------*/
+
+// 	sumLnz = QDLDL_etree(An,Ap,Ai,iwork,Lnz,etree);
+
+// 	/*--------------------------------
+// 	* LDL factorisation
+// 	*---------------------------------*/
+
+// 	//First allocate memory for Li and Lx
+// 	Li    = (QDLDL_int*)malloc(sizeof(QDLDL_int)*sumLnz);
+// 	Lx    = (QDLDL_float*)malloc(sizeof(QDLDL_float)*sumLnz);
+
+// 	//now factor
+// 	QDLDL_factor(An,Ap,Ai,Ax,Lp,Li,Lx,D,Dinv,Lnz,etree,bwork,iwork,fwork);
+// 	/*--------------------------------
+// 	* solve
+// 	*---------------------------------*/
+// 	x = (QDLDL_float*)malloc(sizeof(QDLDL_float)*An);
+
+// 	//when solving A\b, start with x = b
+// 	for(i=0;i < Ln; i++) x[i] = b[i];
+
+// 	QDLDL_solve(Ln,Lp,Li,Lx,Dinv,x);
+
+// 	/*--------------------------------
+// 	* print factors and solution
+// 	*---------------------------------*/
+// /*	printf("\n");
+// 	printf("A (CSC format):\n");
+// 	print_line();
+// 	print_arrayi(Ap, An + 1, "A.p");
+// 	print_arrayi(Ai, Ap[An], "A.i");
+// 	print_arrayf(Ax, Ap[An], "A.x");
+// 	printf("\n\n");
+
+// 	printf("elimination tree:\n");
+// 	print_line();
+// 	print_arrayi(etree, Ln, "etree");
+// 	print_arrayi(Lnz, Ln, "Lnz");
+// 	printf("\n\n");
+
+// 	printf("L (CSC format):\n");
+// 	print_line();
+// 	print_arrayi(Lp, Ln + 1, "L.p");
+// 	print_arrayi(Li, Lp[Ln], "L.i");
+// 	print_arrayf(Lx, Lp[Ln], "L.x");
+// 	printf("\n\n");
+
+// 	printf("D:\n");
+// 	print_line();
+// 	print_arrayf(D, An,    "diag(D)     ");
+// 	print_arrayf(Dinv, An, "diag(D^{-1})");
+// 	printf("\n\n");
+
+// 	printf("solve results:\n");
+// 	print_line();
+// 	print_arrayf(b, An, "b");
+// 	print_arrayf(x, An, "A\\b");
+// 	printf("\n\n");
+// */
+
+// 	// TIMER ENDS HERE
+// 	clock_gettime(CLOCK_MONOTONIC,&end);
+// 	double qdldl_time_us = time_delta_us_timespec(start,end);
 
 
+// 	for(int j = 0; j < state_size*knot_points; j++){
+// 		h_gamma_f[j] = (float) x[j];
+//     }
+
+// 	/*--------------------------------
+// 	* clean up
+// 	*---------------------------------*/
+// 	free(Lp);
+// 	free(Li);
+// 	free(Lx);
+// 	free(D);
+// 	free(Dinv);
+// 	free(etree);
+// 	free(Lnz);
+// 	free(iwork);
+// 	free(bwork);
+// 	free(fwork);
+// 	free(x);
 
 
 
-    gpuErrchk(cudaMemcpy(d_lambda, h_gamma_f, state_size*knot_points*sizeof(float), cudaMemcpyHostToDevice));
-
-	gpuErrchk(cudaFree(d_col_ptr));
-	gpuErrchk(cudaFree(d_row_ind));
-	gpuErrchk(cudaFree(d_val));
 
 
-    return qdldl_time_us;
+//     gpuErrchk(cudaMemcpy(d_lambda, h_gamma_f, state_size*knot_points*sizeof(float), cudaMemcpyHostToDevice));
 
-}
+// 	gpuErrchk(cudaFree(d_col_ptr));
+// 	gpuErrchk(cudaFree(d_row_ind));
+// 	gpuErrchk(cudaFree(d_val));
+
+
+//     return qdldl_time_us;
+
+// }
 
 ///TODO: pass in allocated mem
 __host__
-void qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, int *h_col_ptr, int *h_row_ind, float *h_val, float *h_gamma, float *h_lambda){
+void qdldl_solve_schur(uint32_t state_size, uint32_t knot_points, long long *h_col_ptr, long long *h_row_ind, double *h_val, double *h_gamma, double *h_lambda){
 
 	
 

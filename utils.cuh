@@ -60,14 +60,41 @@ void store_block_csr_lowertri(uint32_t bdim, uint32_t mdim, T *d_src, int32_t *d
 
 
 __global__
-void prep_csr(uint32_t state_size, uint32_t knot_points, int32_t *d_col_ptr, int32_t *d_row_ind, float *d_val){
+void prep_csr(uint32_t state_size, uint32_t knot_points, QDLDL_int *d_col_ptr, QDLDL_int *d_row_ind){
     
     float *unusedpfloat;
     bool unusedbool;
 
     for (uint32_t blockrow = blockIdx.x; blockrow < knot_points; blockrow+=gridDim.x)
     {
-        store_block_csr_lowertri<float, true>(state_size, knot_points, unusedpfloat, d_col_ptr, d_row_ind, d_val, unusedbool, blockrow);    
+        const int brow_val_ct = state_size*state_size + ((state_size+1)*state_size)/2;
+        int row, col, csr_row_offset, full_csr_offset, bd_row_len;
+        int write_len;
+        int cur_triangle_offset;
+
+        for(row = threadIdx.x; row < state_size; row += blockDim.x){
+
+
+            if(blockrow==0 && row==0){
+                d_col_ptr[0] = 0;
+            }
+            
+            cur_triangle_offset = ((row+1)*row)/2;
+            csr_row_offset = (blockrow>0)*((state_size+1)*state_size)/2 +                   // add triangle if not first block row
+                            (blockrow>0) * (blockrow-1)*brow_val_ct +      // add previous full block rows if not first block row
+                            (blockrow>0)*row*state_size +                            // 
+                            cur_triangle_offset;                                   // triangle offset
+
+
+            bd_row_len = (blockrow>0)*state_size + row+1;
+            d_col_ptr[blockrow*state_size + row+1] = csr_row_offset+bd_row_len;
+            
+            for(col = 0; col < bd_row_len; col++){
+                full_csr_offset = csr_row_offset + col;
+                d_row_ind[full_csr_offset] = (blockrow>0)*(blockrow-1)*state_size + col;
+            }
+
+        }
     }
     
 }
