@@ -1,6 +1,6 @@
 #pragma once
 
-#define KNOT_POINTS 256 
+#define KNOT_POINTS 256
 #define STATE_SIZE  14
 
 
@@ -34,21 +34,21 @@ typedef float pcg_t;
 #define CONST_UPDATE_FREQ   1
 
 #if CONST_UPDATE_FREQ 
-#define SQP_MAX_TIME_US 3600        // should be some buffer between sqp max time and simulation period there's probably a correct way to implement this
-#define SIMULATION_PERIOD 4000
-#define SQP_MAX_ITER    100
+#define SQP_MAX_TIME_US 1000
+#define SIMULATION_PERIOD 1000
+#define SQP_MAX_ITER    1
 #else
 #define SQP_MAX_ITER    1
 #endif
 
 
 
-#define TIME_LINSYS     1
+#define TIME_LINSYS     0
 
 
 #define PCG_NUM_THREADS     128
-#define PCG_EXIT_TOL        1e-5
-#define PCG_MAX_ITER        500
+#define PCG_EXIT_TOL        1e-9
+#define PCG_MAX_ITER        200
 
 #define MERIT_THREADS       128
 #define SCHUR_THREADS       128
@@ -60,11 +60,11 @@ typedef float pcg_t;
 
 // prints state while tracking
 #define LIVE_PRINT_PATH 0
-#define LIVE_PRINT_STATS 0
+#define LIVE_PRINT_STATS 1
 
 // runs sqp a bunch of times before starting to track
 #define REMOVE_JITTERS  1
 
 // where to store test results — manually create this directory
-#define SAVE_DATA   0
+#define SAVE_DATA   1
 #define DATA_DIRECTORY   "./testresults_qdl/"

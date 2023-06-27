@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <algorithm>
 #include <cstdint>
 #include <cublas_v2.h>
 #include <math.h>
@@ -20,18 +21,15 @@
 
 
 template <typename T>
-std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_traj, T *d_lambda, T *d_xu, void *d_dynMem_const){
+auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_traj, T *d_lambda, T *d_xu, void *d_dynMem_const, pcg_config& config){
     
     // data storage
     std::vector<int> pcg_iter_vec;
+    std::vector<bool> pcg_exit_vec;
     std::vector<double> linsys_time_vec;
     bool sqp_time_exit = 1;     // for data recording, not a flag
     
 
-#if TIME_LINSYS
-    struct timespec linsys_start, linsys_end;
-    double linsys_time;
-#endif
 
     // sqp timing
     struct timespec sqp_solve_start, sqp_solve_end;
@@ -78,15 +76,6 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
     uint32_t sqp_iter = 0;
 
-#if CONST_UPDATE_FREQ
-    struct timespec sqp_cur;
-    auto sqpTimecheck = [&]() {
-        clock_gettime(CLOCK_MONOTONIC, &sqp_cur);
-        return time_delta_us_timespec(sqp_solve_start,sqp_cur) > SQP_MAX_TIME_US;
-    };
-#else
-    auto sqpTimecheck = [&]() { return false; };
-#endif
 
 
     T *d_merit_initial, *d_merit_news, *d_merit_temp,
@@ -142,14 +131,14 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     gpuErrchk(cudaMalloc(&d_eta_new_temp, knot_points*sizeof(T)));
     
     
-    pcg_config config;
-    config.pcg_block = PCG_NUM_THREADS;
-    config.pcg_exit_tol = PCG_EXIT_TOL;
-    config.pcg_max_iter = PCG_MAX_ITER;
+    
     void *pcg_kernel = (void *) pcg<T, STATE_SIZE, KNOT_POINTS>;
     uint32_t pcg_iters;
     uint32_t *d_pcg_iters;
     gpuErrchk(cudaMalloc(&d_pcg_iters, sizeof(uint32_t)));
+    bool pcg_exit;
+    bool *d_pcg_exit;
+    gpuErrchk(cudaMalloc(&d_pcg_exit, sizeof(bool)));
     
     void *pcgKernelArgs[] = {
         (void *)&d_S,
@@ -161,6 +150,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         (void *)&d_v_temp,
         (void *)&d_eta_new_temp,
         (void *)&d_pcg_iters,
+        (void *)&d_pcg_exit,
         (void *)&config.pcg_max_iter,
         (void *)&config.pcg_exit_tol
     };
@@ -226,6 +216,19 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
+#if TIME_LINSYS
+    struct timespec linsys_start, linsys_end;
+    double linsys_time;
+#endif
+#if CONST_UPDATE_FREQ
+    struct timespec sqp_cur;
+    auto sqpTimecheck = [&]() {
+        clock_gettime(CLOCK_MONOTONIC, &sqp_cur);
+        return time_delta_us_timespec(sqp_solve_start,sqp_cur) > SQP_MAX_TIME_US;
+    };
+#else
+    auto sqpTimecheck = [&]() { return false; };
+#endif
 
 
     ///TODO: atomic race conditions here aren't fixed but don't seem to be problematic
@@ -283,6 +286,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
         gpuErrchk(cudaLaunchCooperativeKernel(pcg_kernel, knot_points, PCG_NUM_THREADS, pcgKernelArgs, ppcg_kernel_smem_size));    
         gpuErrchk(cudaMemcpy(&pcg_iters, d_pcg_iters, sizeof(uint32_t), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(&pcg_exit, d_pcg_exit, sizeof(bool), cudaMemcpyDeviceToHost));
         gpuErrchk(cudaPeekAtLastError());
 
     #if TIME_LINSYS
@@ -294,6 +298,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     #endif // #if TIME_LINSYS
 
         pcg_iter_vec.push_back(pcg_iters);
+        pcg_exit_vec.push_back(pcg_exit);
 
 #else // #if PCG_SOLVE
 
@@ -432,6 +437,10 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         h_merit_initial = min_merit;
     
     }
+    
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
+    clock_gettime(CLOCK_MONOTONIC, &sqp_solve_end);
 
     cublasDestroy(handle);
 
@@ -456,6 +465,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
 #if PCG_SOLVE
     gpuErrchk(cudaFree(d_pcg_iters));
+    gpuErrchk(cudaFree(d_pcg_exit));
     gpuErrchk(cudaFree(d_Pinv));
     gpuErrchk(cudaFree(d_r));
     gpuErrchk(cudaFree(d_p));
@@ -479,13 +489,10 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
 #endif
 
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
-    clock_gettime(CLOCK_MONOTONIC, &sqp_solve_end);
 
     double sqp_solve_time = time_delta_us_timespec(sqp_solve_start, sqp_solve_end);
 
-    return std::make_tuple(pcg_iter_vec, linsys_time_vec, sqp_solve_time, sqp_iter, sqp_time_exit);
+    return std::make_tuple(pcg_iter_vec, linsys_time_vec, sqp_solve_time, sqp_iter, sqp_time_exit, pcg_exit_vec);
 }
 
 
@@ -515,10 +522,12 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     std::vector<double> sqp_times;
     std::vector<uint32_t> sqp_iters;
     std::vector<bool> sqp_exits;
+    std::vector<bool> pcg_exits;
     std::vector<T> tracking_errors;
     std::vector<int> cur_pcg_iters;
+    std::vector<bool> cur_pcg_exits;
     std::vector<double> cur_linsys_times;
-    std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqp_stats;
+    std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool, std::vector<bool>> sqp_stats;
     uint32_t cur_sqp_iters;
     T cur_tracking_error;
     int control_update_step;
@@ -544,11 +553,20 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
     tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));    
     gpuErrchk(cudaPeekAtLastError());
-    
+
+#define DONTFORGETME    1
+
+#if DONTFORGETME
+#pragma message("don't forget you're doing pcg max iter shenanigans")
+    pcg_config config;
+    config.pcg_block = PCG_NUM_THREADS;
+    config.pcg_exit_tol = PCG_EXIT_TOL;
+    config.pcg_max_iter = PCG_MAX_ITER;
+#endif
 
 #if REMOVE_JITTERS
     for(int j = 0; j < 100; j++){
-        sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem);
+        sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem, config);
         gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
     }
 #endif // #if REMOVE_JITTERS
@@ -573,14 +591,16 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
         
 
-        sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem);
+        sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem, config);
 
 
         cur_pcg_iters = std::get<0>(sqp_stats);
         cur_linsys_times = std::get<1>(sqp_stats);
-        sqp_solve_time_us = std::get<2>(sqp_stats);
-        cur_sqp_iters = std::get<3>(sqp_stats);
+        sqp_times.push_back(std::get<2>(sqp_stats));
+        sqp_iters.push_back(std::get<3>(sqp_stats));
         sqp_exits.push_back(std::get<4>(sqp_stats));
+        cur_pcg_exits = std::get<5>(sqp_stats);
+
 
 #if CONST_UPDATE_FREQ
         simulation_time = SIMULATION_PERIOD;
@@ -602,6 +622,9 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         // if shift_threshold% through timestep
         if (!shifted && time_since_timestep > shift_threshold){
             
+            // record tracking error
+            cur_tracking_error = compute_tracking_error<T>(state_size, d_xu_goal, d_xs);            //is this the right place to do this?
+            tracking_errors.push_back(cur_tracking_error);                                            
             
             traj_offset++;
 
@@ -629,9 +652,6 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
                 gpuErrchk(cudaMemset(&d_xu_goal[(knot_points-1)*(state_size+control_size) + state_size / 2], 0, (state_size/2) * sizeof(T)));
             }
             
-            // record tracking error
-            cur_tracking_error = compute_tracking_error<T>(state_size, d_xu_goal, d_xs);            //is this the right place to do this?
-            tracking_errors.push_back(cur_tracking_error);                                            
             
             shifted = true;
         }
@@ -657,10 +677,16 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         // record data
         pcg_iters.insert(pcg_iters.end(), cur_pcg_iters.begin(), cur_pcg_iters.end());                      // pcg iters
         linsys_times.insert(linsys_times.end(), cur_linsys_times.begin(), cur_linsys_times.end());          // linsys times
-        sqp_times.push_back(sqp_solve_time_us);                                                            // sqp time
-        sqp_iters.push_back(cur_sqp_iters);                                                                 // sqp iters
+        pcg_exits.insert(pcg_exits.end(), cur_pcg_exits.begin(), cur_pcg_exits.end());
         gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
         tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));                                   // next state
+
+
+#if DONTFORGETME
+        // if(cur_sqp_iters==0 && !cur_pcg_iters.empty()){
+        //     config.pcg_max_iter = *std::max_element(cur_pcg_iters.begin(), cur_pcg_iters.end());
+        // }
+#endif
 
 
 #if LIVE_PRINT_STATS
@@ -668,11 +694,16 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
             for (int i = 0; i < state_size; i++){
                 std::cout << h_xs[i] << (i < state_size-1 ? " " : "\n");
             }
+    #if TIME_LINSYS
             std::cout << "linear system solve time:" << std::endl;
             printStats<double>(&linsys_times);
+    #endif // #if TIME_LINSYS
             std::cout << "sqp iters" << std::endl;
             printStats<uint32_t>(&sqp_iters);
+            std::cout << "sqp times" << std::endl;
+            printStats<double>(&sqp_times);
             std::cout << "avg tracking error: " << std::accumulate(tracking_errors.begin(), tracking_errors.end(), 0.0f) / traj_steps << " current error: " << cur_tracking_error << "\n";
+            std::cout << std::endl;
         }
 
 #endif
@@ -680,7 +711,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
     }
 #if SAVE_DATA
-    dump_tracking_data(&pcg_iters, &linsys_times, &sqp_times, &sqp_iters, &sqp_exits, &tracking_errors, &tracking_path, traj_offset, control_update_step, start_state_ind, goal_state_ind, test_iter);
+    dump_tracking_data(&pcg_iters, &pcg_exits, &linsys_times, &sqp_times, &sqp_iters, &sqp_exits, &tracking_errors, &tracking_path, traj_offset, control_update_step, start_state_ind, goal_state_ind, test_iter);
 #endif
     
 #if TIME_LINSYS
