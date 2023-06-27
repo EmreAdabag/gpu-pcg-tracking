@@ -1,6 +1,6 @@
 #pragma once
 
-#define KNOT_POINTS 32
+#define KNOT_POINTS 256 
 #define STATE_SIZE  14
 
 
@@ -8,10 +8,10 @@
 
 
 // qdldl if 0
-#define PCG_SOLVE       1
+#define PCG_SOLVE       0
 
 // doubles if 1, floats if 0
-#define USE_DOUBLES 1
+#define USE_DOUBLES 0
 
 #if USE_DOUBLES
 typedef double pcg_t;
@@ -34,8 +34,8 @@ typedef float pcg_t;
 #define CONST_UPDATE_FREQ   1
 
 #if CONST_UPDATE_FREQ 
-#define SQP_MAX_TIME_US 2100        // should be some buffer between sqp max time and simulation period there's probably a correct way to implement this
-#define SIMULATION_PERIOD 2500
+#define SQP_MAX_TIME_US 3600        // should be some buffer between sqp max time and simulation period there's probably a correct way to implement this
+#define SIMULATION_PERIOD 4000
 #define SQP_MAX_ITER    100
 #else
 #define SQP_MAX_ITER    1
@@ -47,7 +47,7 @@ typedef float pcg_t;
 
 
 #define PCG_NUM_THREADS     128
-#define PCG_EXIT_TOL        1e-7
+#define PCG_EXIT_TOL        1e-5
 #define PCG_MAX_ITER        500
 
 #define MERIT_THREADS       128

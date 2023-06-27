@@ -93,7 +93,7 @@ void ls_gato_compute_merit(uint32_t state_size,
 // cost compute for non line search
 template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
 __global__
-void compute_merit(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu, T *d_xu_traj, T mu, float dt, void *d_dynMem_const, T *d_merit_out)
+void compute_merit(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu, T *d_xu_traj, T mu, T dt, void *d_dynMem_const, T *d_merit_out)
 {
     const cooperative_groups::thread_block block = cooperative_groups::this_thread_block();
     const uint32_t thread_id = threadIdx.x;

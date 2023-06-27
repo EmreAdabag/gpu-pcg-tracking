@@ -10,7 +10,7 @@
 
 template <typename T>
 __global__
-void addNoiseKernel(uint32_t state_size, T *d_x, float freq, float q_factor, float qd_factor, unsigned long long seed){
+void addNoiseKernel(uint32_t state_size, T *d_x, T freq, T q_factor, T qd_factor, unsigned long long seed){
     curandState_t state;
     curand_init(seed, threadIdx.x, 0, &state);
     for(int ind = threadIdx.x; ind < state_size; ind+=blockDim.x){
@@ -21,7 +21,7 @@ void addNoiseKernel(uint32_t state_size, T *d_x, float freq, float q_factor, flo
 }
 
 template <typename T>
-void addNoise(uint32_t state_size, T *d_x, float frequency, float q_factor, float qd_factor){
+void addNoise(uint32_t state_size, T *d_x, T frequency, T q_factor, T qd_factor){
     const unsigned long long seed = 12345;
     addNoiseKernel<<<1,32>>>(state_size, d_x, frequency, q_factor, qd_factor, seed);
 }

@@ -96,11 +96,11 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
           *d_xs;
 
     
-    float drho = 1.0;
-    float rho = 1e-3;
-    float rho_factor = 4;
-    float rho_max = 1e3;
-    float rho_min = 1e-3;
+    T drho = 1.0;
+    T rho = 1e-3;
+    T rho_factor = 4;
+    T rho_max = 1e3;
+    T rho_min = 1e-3;
 
     
 
@@ -171,8 +171,6 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
     const int nnz = (knot_points-1)*states_sq + knot_points*((state_size+1)*state_size/2);
 
-    T h_gamma_temp[state_size*knot_points];
-    T h_lambda_temp[state_size*knot_points];
     QDLDL_float h_lambda[state_size*knot_points];
     QDLDL_float h_gamma[state_size*knot_points];
     QDLDL_int h_col_ptr[state_size*knot_points+1];
@@ -186,7 +184,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(QDLDL_float)));
 	gpuErrchk(cudaMalloc(&d_lambda_double, (state_size*knot_points)*sizeof(QDLDL_float)));
     
-    // fill col ptr and row ind, these won't change
+    // fill col ptr and row ind, these won't change 
     prep_csr<<<knot_points, 64>>>(state_size, knot_points, d_col_ptr, d_row_ind);
     gpuErrchk(cudaMemcpy(h_col_ptr, d_col_ptr, (state_size*knot_points+1)*sizeof(QDLDL_int), cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(h_row_ind, d_row_ind, (nnz)*sizeof(QDLDL_int), cudaMemcpyDeviceToHost));
@@ -309,19 +307,14 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         clock_gettime(CLOCK_MONOTONIC, &linsys_start);
     #endif // #if TIME_LINSYS
 
-        gpuErrchk(cudaMemcpy(h_val, d_val, (nnz)*sizeof(QDLDL_float), cudaMemcpyDeviceToHost));
-        gpuErrchk(cudaMemcpy(h_gamma_temp, d_gamma, (state_size*knot_points)*sizeof(T), cudaMemcpyDeviceToHost))
-        ///EMRE TODO: make this better probbale
-        for(int i = 0; i < state_size*knot_points; i++){
-            h_gamma[i] = static_cast<QDLDL_float>(h_gamma_temp[i]);
-        }
+
+        gpuErrchk(cudaMemcpy(h_val, d_val, (nnz)*sizeof(T), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(h_gamma, d_gamma, (state_size*knot_points)*sizeof(T), cudaMemcpyDeviceToHost))
 
         qdl::qdldl_solve_schur(An, h_col_ptr, h_row_ind, h_val, h_gamma, h_lambda, Lp, Li, Lx, D, Dinv, Lnz, etree, bwork, iwork, fwork);
         
-        for(int i = 0; i < state_size*knot_points; i++){
-            h_lambda_temp[i] = static_cast<T>(h_lambda[i]);
-        }
-        gpuErrchk(cudaMemcpy(d_lambda, h_lambda_temp, (state_size*knot_points)*sizeof(T), cudaMemcpyHostToDevice));
+        gpuErrchk(cudaMemcpy(d_lambda, h_lambda, (state_size*knot_points)*sizeof(T), cudaMemcpyHostToDevice));
+
 
     #if TIME_LINSYS
         gpuErrchk(cudaDeviceSynchronize());
@@ -442,7 +435,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
     cublasDestroy(handle);
 
-    for(int st=0; st < num_alphas; st++){
+    for(uint32_t st=0; st < num_alphas; st++){
         gpuErrchk(cudaStreamDestroy(streams[st]));
     }
 
@@ -473,16 +466,16 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     gpuErrchk(cudaFree(d_row_ind));
     gpuErrchk(cudaFree(d_val));
     gpuErrchk(cudaFree(d_lambda_double));
-    free(Lp);
-	free(Li);
-	free(Lx);
-	free(D);
-	free(Dinv);
 	free(etree);
 	free(Lnz);
+    free(Lp);
+	free(D);
+	free(Dinv);
 	free(iwork);
 	free(bwork);
 	free(fwork);
+	free(Li);
+	free(Lx);
 
 #endif
 
@@ -498,11 +491,11 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
 
 template <typename T>
-void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float timestep, T *d_traj, T *d_traj_lambdas, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
+void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float timestep, T *d_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
 
     const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
 
-    const float shift_threshold = SHIFT_THRESHOLD;
+    const T shift_threshold = SHIFT_THRESHOLD;
     const int max_control_updates = 100000;
     
     
@@ -522,12 +515,12 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     std::vector<double> sqp_times;
     std::vector<uint32_t> sqp_iters;
     std::vector<bool> sqp_exits;
-    std::vector<float> tracking_errors;
+    std::vector<T> tracking_errors;
     std::vector<int> cur_pcg_iters;
     std::vector<double> cur_linsys_times;
     std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqp_stats;
     uint32_t cur_sqp_iters;
-    float cur_tracking_error;
+    T cur_tracking_error;
     int control_update_step;
 
 
@@ -537,7 +530,6 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaMalloc(&d_xu, traj_len*sizeof(T)));
     gpuErrchk(cudaMalloc(&d_xu_old, traj_len*sizeof(T)));
     gpuErrchk(cudaMalloc(&d_xu_goal, traj_len*sizeof(T)));
-    // gpuErrchk(cudaMemcpy(d_lambda, d_traj_lambdas, state_size*knot_points*sizeof(T), cudaMemcpyDeviceToDevice));
     gpuErrchk(cudaMemset(d_lambda, 0, state_size*knot_points*sizeof(T)));
     gpuErrchk(cudaMemcpy(d_xu_goal, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
     gpuErrchk(cudaMemcpy(d_xu_old, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));

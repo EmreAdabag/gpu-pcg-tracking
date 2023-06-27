@@ -24,7 +24,7 @@ T angleWrap(T input){
 
 template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
 __device__ 
-void exec_integrator_error(uint32_t state_size, T *s_err, T *s_qkp1, T *s_qdkp1, T *s_q, T *s_qd, T *s_qdd, float dt, cgrps::thread_block block, bool absval = false){
+void exec_integrator_error(uint32_t state_size, T *s_err, T *s_qkp1, T *s_qdkp1, T *s_q, T *s_qd, T *s_qdd, T dt, cgrps::thread_block block, bool absval = false){
     T new_qkp1; T new_qdkp1;
     for (unsigned ind = threadIdx.x; ind < state_size/2; ind += blockDim.x){
         // euler xk = xk + dt *dxk
@@ -186,7 +186,7 @@ void integratorAndGradient(uint32_t state_size, uint32_t control_size, T *s_xux,
 // s_temp of size 3*state_size/2 + DYNAMICS_TEMP
 template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
 __device__ 
-T integratorError(uint32_t state_size, T *s_xuk, T *s_xkp1, T *s_temp, void *d_dynMem_const, float dt, cgrps::thread_block block){
+T integratorError(uint32_t state_size, T *s_xuk, T *s_xkp1, T *s_temp, void *d_dynMem_const, T dt, cgrps::thread_block block){
 
     // first compute qdd
     T *s_q = s_xuk; 					
@@ -279,28 +279,6 @@ void integrator_host(uint32_t state_size, uint32_t control_size, T *d_xs, T *d_x
     // gpuErrchk(cudaFree(d_xu));
     // gpuErrchk(cudaFree(d_xs_new));
 }
-/*
-//TODO - xs_new, xs_end can be done together concurrently
-template <typename T>
-void shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float traj_timestep){
-    
-    const uint32_t states_s_controls = state_size + control_size;
-    uint32_t stepsize;
-
-    ///TODO: this is stupid, don't use in timed code
-    for (int knot = 0; knot < knot_points-1; knot++){
-        stepsize = (state_size+(knot<knot_points-2)*control_size);
-        gpuErrchk(cudaMemcpy(&d_xu[knot*states_s_controls], &d_xu[knot*states_s_controls+stepsize], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
-    }
-    gpuErrchk(cudaMemcpy(d_xu, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToDevice));
-
-    // Fill in the end
-    unsigned last_step = (knot_points-1)*states_s_controls;
-    unsigned integrator_step = (knot_points-2)*states_s_controls;
-    integrator_host<T>(state_size, control_size, d_xu + last_step, d_xu + integrator_step, d_dynMem_const, traj_timestep);
-    
-}
-*/
 
 template <typename T>
 void just_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu){
@@ -309,58 +287,11 @@ void just_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points
         gpuErrchk(cudaMemcpy(&d_xu[knot*(state_size+control_size)], &d_xu[(knot+1)*(state_size+control_size)], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
     }
 }
-/*
-template <typename T>
-void integrator_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float traj_timestep, float time_offset, float simulation_time){
 
-    float time_offset_left = time_offset;
-    float simulation_time_left = simulation_time;
-    float simulation_iter_time;
-
-    if (time_offset != 0){
-        // STARTS AT 1 KNOT IN
-        integrator_host<T>(state_size, control_size, d_xs, &d_xu[state_size+control_size], d_dynMem_const, traj_timestep);
-        shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
-        shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
-    }
-    else{
-        integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, traj_timestep);
-        shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
-    }
-
-
-    // shifts over unused timesteps
-    // while (time_offset_left > traj_timestep){
-    //     shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
-    //     time_offset_left -= traj_timestep;
-    // }
-    
-    // // simulate half-used timestep
-    // integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, traj_timestep-time_offset_left);
-    // shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
-
-    // simulation_time_left -= traj_timestep-time_offset_left;
-
-
-    // while(simulation_time_left > 0){
-        
-    //     simulation_iter_time = fminf(simulation_time_left, traj_timestep);
-
-    //     integrator_host<T>(state_size, control_size, d_xs, d_xu, d_dynMem_const, simulation_iter_time);
-        
-        
-    //     if (simulation_iter_time == traj_timestep){
-    //         shift<T>(state_size, control_size, knot_points, d_xs, d_xu, d_dynMem_const, traj_timestep);
-    //     }
-
-    //     simulation_time_left -= simulation_iter_time;
-    // }
-}
-*/
 
 template <typename T>
 __global__
-void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, float dt){
+void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, T dt){
 
 
     extern __shared__ T s_mem[];
@@ -387,54 +318,39 @@ void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x
     }
 }
 
-///TODO: edge case where all knots are used, shift at some point
-template <typename T>
-void simple_integrator(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, float timestep, float time_offset, float simulation_time){
+// ///TODO: edge case where all knots are used, shift at some point
+// template <typename T>
+// void simple_integrator(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, T timestep, T time_offset, T simulation_time){
 
-    const float epsilon = .0001; // this is to prevent float error from messing up floor
-    const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
-    const uint32_t states_s_controls = state_size + control_size;
-    float time_since_traj_start = time_offset;
-    float simulation_time_left = simulation_time;
-    uint32_t prev_knot = static_cast<uint32_t>(floorf(time_since_traj_start / timestep + epsilon));
-    float simulation_iter_time;
+//     const T epsilon = .0001; // this is to prevent float error from messing up floor
+//     const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+//     const uint32_t states_s_controls = state_size + control_size;
+//     T time_since_traj_start = time_offset;
+//     T simulation_time_left = simulation_time;
+//     uint32_t prev_knot = static_cast<uint32_t>(floorf(time_since_traj_start / timestep + epsilon));
+//     T simulation_iter_time;
 
-    simulation_iter_time = std::min(simulation_time, std::min(timestep, timestep - time_offset));  //EMRE verify this
+//     simulation_iter_time = std::min(simulation_time, std::min(timestep, timestep - time_offset));  //EMRE verify this
 
-    // std::cout << "simulation iter time: " << simulation_iter_time << " prev knot: " << prev_knot << std::endl;
+//     // simulate half-used timestep
+//     simple_integrator_kernel<T><<< 1, 1, simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, &d_xu[prev_knot*states_s_controls + state_size], d_dynMem_const, simulation_iter_time);
 
-    // float h_temp[21];
-    // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
-    // gpuErrchk(cudaMemcpy(&h_temp[14], &d_xu[prev_knot*states_s_controls + 14], 7*sizeof(float), cudaMemcpyDeviceToHost));
-    // for (int i = 0; i < 14; i++){
-    //     std::cout << std::setprecision(std::numeric_limits<float>::max_digits10+1) << h_temp[i] << " ";
-    // }
-    // std::cout <<"\n";
-    // for (int i = 0; i < 7; i++){
-    //     std::cout << std::setprecision(std::numeric_limits<float>::max_digits10+1) << h_temp[14 + i] << " ";
-    // }
-    // std::cout <<"\n\n";
+//     simulation_time_left -= simulation_iter_time;
+//     time_since_traj_start += simulation_iter_time;
 
-
-    // simulate half-used timestep
-    simple_integrator_kernel<T><<< 1, 1, simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, &d_xu[prev_knot*states_s_controls + state_size], d_dynMem_const, simulation_iter_time);
-
-    simulation_time_left -= simulation_iter_time;
-    time_since_traj_start += simulation_iter_time;
-
-    // simulate remaining full timesteps and partial timestep at end (if applicable)
-    while(simulation_time_left > 0.001){
+//     // simulate remaining full timesteps and partial timestep at end (if applicable)
+//     while(simulation_time_left > 0.001){
         
-        simulation_iter_time = std::min(simulation_time_left, timestep);
+//         simulation_iter_time = std::min(simulation_time_left, timestep);
         
-        prev_knot = static_cast<uint32_t>(floorf(time_since_traj_start / timestep + epsilon));
+//         prev_knot = static_cast<uint32_t>(floorf(time_since_traj_start / timestep + epsilon));
 
-        simple_integrator_kernel<T><<< 1, 1, simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, &d_xu[prev_knot*states_s_controls + state_size], d_dynMem_const, simulation_iter_time);
+//         simple_integrator_kernel<T><<< 1, 1, simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, &d_xu[prev_knot*states_s_controls + state_size], d_dynMem_const, simulation_iter_time);
 
-        simulation_time_left -= simulation_iter_time;
-        time_since_traj_start += simulation_iter_time;
-    }
-}
+//         simulation_time_left -= simulation_iter_time;
+//         time_since_traj_start += simulation_iter_time;
+//     }
+// }
 
 
 template <typename T>
@@ -446,7 +362,7 @@ void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_p
     double time_offset = time_offset_us * 1e-6;
     double sim_time = sim_time_us * 1e-6;
 
-    const float sim_step_time = 2e-4;
+    const T sim_step_time = 2e-4;
     const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
     const uint32_t states_s_controls = state_size + control_size;
     uint32_t control_offset;
@@ -457,14 +373,14 @@ void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_p
 
 
 
-    for(int step = 0; step < sim_steps_needed; step++){
+    for(uint32_t step = 0; step < sim_steps_needed; step++){
         control_offset = static_cast<uint32_t>((time_offset + step * sim_step_time) / timestep);
         control = &d_xu[control_offset * states_s_controls + state_size];
 
         simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time);
     }
 
-    float half_sim_step_time = fmod(sim_time, sim_step_time);
+    T half_sim_step_time = fmod(sim_time, sim_step_time);
 
     // half sim step — this one adds noise if ADD_NOISE is enabled
     simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, half_sim_step_time);

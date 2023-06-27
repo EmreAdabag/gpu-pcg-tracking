@@ -10,9 +10,9 @@
 ///TODO: is tracking error q & qd, also just current state?
 template <typename T>
 __global__
-void compute_tracking_error_kernel(float *d_tracking_error, uint32_t state_size, T *d_xu_goal, T *d_xs){
+void compute_tracking_error_kernel(T *d_tracking_error, uint32_t state_size, T *d_xu_goal, T *d_xs){
     
-    float err;
+    T err;
     
     for(int ind = threadIdx.x; ind < state_size/2; ind += blockDim.x){              // just comparing q
         err = abs(d_xs[ind] - d_xu_goal[ind]);
@@ -23,25 +23,25 @@ void compute_tracking_error_kernel(float *d_tracking_error, uint32_t state_size,
 
 
 template <typename T>
-float compute_tracking_error(uint32_t state_size, T *d_xu_goal, T *d_xs){
+T compute_tracking_error(uint32_t state_size, T *d_xu_goal, T *d_xs){
 
-    float h_tracking_error = 0.0f;
-    float *d_tracking_error;
-    gpuErrchk(cudaMalloc(&d_tracking_error, sizeof(float)));
-    gpuErrchk(cudaMemcpy(d_tracking_error, &h_tracking_error, sizeof(float), cudaMemcpyHostToDevice));
+    T h_tracking_error = 0.0f;
+    T *d_tracking_error;
+    gpuErrchk(cudaMalloc(&d_tracking_error, sizeof(T)));
+    gpuErrchk(cudaMemcpy(d_tracking_error, &h_tracking_error, sizeof(T), cudaMemcpyHostToDevice));
 
     compute_tracking_error_kernel<T><<<1,32>>>(d_tracking_error, state_size, d_xu_goal, d_xs);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    gpuErrchk(cudaMemcpy(&h_tracking_error, d_tracking_error, sizeof(float), cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(&h_tracking_error, d_tracking_error, sizeof(T), cudaMemcpyDeviceToHost));
     gpuErrchk(cudaFree(d_tracking_error));
     return h_tracking_error;
 }
 
 
 template <typename T>
-void dump_tracking_data(std::vector<int> *pcg_iters, std::vector<double> *linsys_times, std::vector<double> *sqp_times, std::vector<uint32_t> *sqp_iters, std::vector<bool> *sqp_exits, std::vector<float> *tracking_errors, std::vector<std::vector<T>> *tracking_path, uint32_t timesteps_taken, uint32_t control_updates_taken, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
+void dump_tracking_data(std::vector<int> *pcg_iters, std::vector<double> *linsys_times, std::vector<double> *sqp_times, std::vector<uint32_t> *sqp_iters, std::vector<bool> *sqp_exits, std::vector<T> *tracking_errors, std::vector<std::vector<T>> *tracking_path, uint32_t timesteps_taken, uint32_t control_updates_taken, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
     // Helper function to create file names
     auto createFileName = [&](const std::string& data_type) {
         std::string filename = DATA_DIRECTORY + std::to_string(start_state_ind) + "_" + std::to_string(goal_state_ind) + "_" + std::to_string(test_iter) + "_" + data_type + ".result";
