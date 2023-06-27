@@ -13,8 +13,9 @@
 
 
 
-std::vector<std::vector<float>> readCSVToVecVec(const std::string& filename) {
-    std::vector<std::vector<float>> data;
+template <typename T>
+std::vector<std::vector<T>> readCSVToVecVec(const std::string& filename) {
+    std::vector<std::vector<T>> data;
     std::ifstream infile(filename);
 
     if (!infile.is_open()) {
@@ -24,7 +25,7 @@ std::vector<std::vector<float>> readCSVToVecVec(const std::string& filename) {
 
 
         while (std::getline(infile, line)) {
-            std::vector<float> row;
+            std::vector<T> row;
             std::stringstream ss(line);
             std::string val;
 
@@ -42,7 +43,9 @@ std::vector<std::vector<float>> readCSVToVecVec(const std::string& filename) {
 
 
 
+
 int main(){
+
     const uint32_t state_size = grid::NUM_JOINTS*2;
     const uint32_t control_size = grid::NUM_JOINTS;
     const uint32_t knot_points = KNOT_POINTS;
@@ -51,7 +54,7 @@ int main(){
     const uint32_t traj_test_iters = 1;
 
     // checks if enough GPU space for pcg
-    checkPcgOccupancy<float>((void *) pcg<float, state_size, knot_points>, PCG_NUM_THREADS, state_size, knot_points);
+    checkPcgOccupancy<pcg_t>((void *) pcg<pcg_t, state_size, knot_points>, PCG_NUM_THREADS, state_size, knot_points);
     print_test_config();
 
     const uint32_t recorded_states = 5;
@@ -61,7 +64,7 @@ int main(){
     // char lambda_file_name[100];
 
     int start_state, goal_state;
-    float *d_traj, *d_traj_lambdas, *d_xs;
+    pcg_t *d_traj, *d_traj_lambdas, *d_xs;
 
     for(uint32_t ind = 0; ind < start_goal_combinations; ind++){
 
@@ -75,12 +78,12 @@ int main(){
             // read in traj, lambdas
             snprintf(traj_file_name, sizeof(traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
             // snprintf(lambda_file_name, sizeof(lambda_file_name), "testfiles/%d_%d_lambdas.csv", start_state, goal_state);
-            std::vector<std::vector<float>> traj2d = readCSVToVecVec(traj_file_name);
+            std::vector<std::vector<pcg_t>> traj2d = readCSVToVecVec<pcg_t>(traj_file_name);
             // std::vector<std::vector<float>> lambdas2d = readCSVToVecVec(lambda_file_name);
 
             if(traj2d.size() < knot_points){std::cout << "precomputed traj length < knot points, not implemented\n"; continue; }
 
-            std::vector<float> h_traj;
+            std::vector<pcg_t> h_traj;
             for (const auto& vec : traj2d) {
                 h_traj.insert(h_traj.end(), vec.begin(), vec.end());
             }
@@ -89,17 +92,17 @@ int main(){
             //     h_lambdas.insert(h_lambdas.end(), vec.begin(), vec.end());
             // }
 
-            gpuErrchk(cudaMalloc(&d_traj, h_traj.size()*sizeof(float)));
-            gpuErrchk(cudaMemcpy(d_traj, h_traj.data(), h_traj.size()*sizeof(float), cudaMemcpyHostToDevice));
+            gpuErrchk(cudaMalloc(&d_traj, h_traj.size()*sizeof(pcg_t)));
+            gpuErrchk(cudaMemcpy(d_traj, h_traj.data(), h_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
             
-            gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(float)));
-            gpuErrchk(cudaMemcpy(d_xs, h_traj.data(), state_size*sizeof(float), cudaMemcpyHostToDevice));
+            gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(pcg_t)));
+            gpuErrchk(cudaMemcpy(d_xs, h_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
             
             // gpuErrchk(cudaMalloc(&d_traj_lambdas, h_lambdas.size() *sizeof(float)));
             // gpuErrchk(cudaMemcpy(d_traj_lambdas, h_lambdas.data(), h_lambdas.size()*sizeof(float), cudaMemcpyHostToDevice));
 
 
-            track<float>(state_size, control_size, knot_points, static_cast<uint32_t>(traj2d.size()), timestep, d_traj, d_traj_lambdas, d_xs, start_state, goal_state, single_traj_test_iter);
+            track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(traj2d.size()), timestep, d_traj, d_traj_lambdas, d_xs, start_state, goal_state, single_traj_test_iter);
 
             gpuErrchk(cudaPeekAtLastError());
             

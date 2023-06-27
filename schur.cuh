@@ -33,7 +33,7 @@ void gato_form_schur_jacobi(uint32_t state_size,
     for(unsigned blockrow=blockIdx.x; blockrow<knot_points; blockrow+=num_blocks){
 
 
-        oldschur::gato_form_schur_jacobi_inner(state_size, control_size, knot_points, d_G, d_C, d_g, d_c, d_S, d_Pinv, d_gamma, rho, s_temp, blockrow);
+        oldschur::gato_form_schur_jacobi_inner<T>(state_size, control_size, knot_points, d_G, d_C, d_g, d_c, d_S, d_Pinv, d_gamma, rho, s_temp, blockrow);
         // gato_form_schur_jacobi_inner(
         //     state_size,
         //     control_size,
@@ -82,11 +82,11 @@ void form_schur_qdl_kernel(uint32_t state_size,
         //  SPACE ALLOCATION IN SHARED MEM
         //  | phi_k | theta_k | thetaInv_k | gamma_k | block-specific...
         //     s^2      s^2         s^2         s
-        float *s_phi_k = s_temp; 	                            	    // phi_k        states^2
-        float *s_theta_k = s_phi_k + states_sq; 			            // theta_k      states^2
-        float *s_thetaInv_k = s_theta_k + states_sq; 			        // thetaInv_k   states^2
-        float *s_gamma_k = s_thetaInv_k + states_sq;                       // gamma_k      states
-        float *s_end_main = s_gamma_k + state_size;                               
+        T *s_phi_k = s_temp; 	                            	    // phi_k        states^2
+        T *s_theta_k = s_phi_k + states_sq; 			            // theta_k      states^2
+        T *s_thetaInv_k = s_theta_k + states_sq; 			        // thetaInv_k   states^2
+        T *s_gamma_k = s_thetaInv_k + states_sq;                       // gamma_k      states
+        T *s_end_main = s_gamma_k + state_size;                               
 
         if(blockrow==0){
 
@@ -94,18 +94,18 @@ void form_schur_qdl_kernel(uint32_t state_size,
             //  ...gamma_k | . | Q_N_I | q_N | . | Q_0_I | q_0 | scatch
             //              s^2   s^2     s   s^2   s^2     s      ? 
         
-            float *s_QN = s_end_main;
-            float *s_QN_i = s_QN + state_size * state_size;
-            float *s_qN = s_QN_i + state_size * state_size;
-            float *s_Q0 = s_qN + state_size;
-            float *s_Q0_i = s_Q0 + state_size * state_size;
-            float *s_q0 = s_Q0_i + state_size * state_size;
-            float *s_end = s_q0 + state_size;
+            T *s_QN = s_end_main;
+            T *s_QN_i = s_QN + state_size * state_size;
+            T *s_qN = s_QN_i + state_size * state_size;
+            T *s_Q0 = s_qN + state_size;
+            T *s_Q0_i = s_Q0 + state_size * state_size;
+            T *s_q0 = s_Q0_i + state_size * state_size;
+            T *s_end = s_q0 + state_size;
 
             // scratch space
-            float *s_R_not_needed = s_end;
-            float *s_r_not_needed = s_R_not_needed + control_size * control_size;
-            float *s_extra_temp = s_r_not_needed + control_size * control_size;
+            T *s_R_not_needed = s_end;
+            T *s_r_not_needed = s_R_not_needed + control_size * control_size;
+            T *s_extra_temp = s_r_not_needed + control_size * control_size;
 
             __syncthreads();//----------------------------------------------------------------
 
@@ -116,8 +116,8 @@ void form_schur_qdl_kernel(uint32_t state_size,
 
             __syncthreads();//----------------------------------------------------------------
 
-            oldschur::add_identity(s_Q0, state_size, rho);
-            oldschur::add_identity(s_QN, state_size, rho);
+            oldschur::add_identity<T>(s_Q0, state_size, rho);
+            oldschur::add_identity<T>(s_QN, state_size, rho);
             
             __syncthreads();//----------------------------------------------------------------
             
@@ -128,9 +128,9 @@ void form_schur_qdl_kernel(uint32_t state_size,
 
 
             // invert Q_N, Q_0
-            oldschur::loadIdentity( state_size,state_size,s_Q0_i, s_QN_i);
+            oldschur::loadIdentity<T>( state_size,state_size,s_Q0_i, s_QN_i);
             __syncthreads();//----------------------------------------------------------------
-            oldschur::invertMatrix( state_size,state_size,state_size,s_Q0, s_QN, s_extra_temp);
+            oldschur::invertMatrix<T>( state_size,state_size,state_size,s_Q0, s_QN, s_extra_temp);
             
             __syncthreads();//----------------------------------------------------------------
 
@@ -140,7 +140,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             
 
             // compute gamma
-            oldschur::mat_vec_prod( state_size, state_size,
+            oldschur::mat_vec_prod<T>( state_size, state_size,
                 s_Q0_i,                                    
                 s_q0,                                       
                 s_gamma_k 
@@ -161,7 +161,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
 
 
             // compute Q0^{-1}q0
-            oldschur::mat_vec_prod( state_size, state_size,
+            oldschur::mat_vec_prod<T>( state_size, state_size,
                 s_Q0_i,
                 s_q0,
                 s_Q0
@@ -175,7 +175,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
 
             // save -Q0^{-1}q0 in spot 0 in gamma
             for(unsigned ind = threadIdx.x; ind < state_size; ind += blockDim.x){
-                d_gamma[ind] = static_cast<float>(-s_Q0[ind]);
+                d_gamma[ind] = -s_Q0[ind];
             }
             __syncthreads();//----------------------------------------------------------------
 
@@ -190,21 +190,21 @@ void form_schur_qdl_kernel(uint32_t state_size,
             //  ...gamma_k | A_k | B_k | . | Q_k_I | . | Q_k+1_I | . | R_k_I | q_k | q_k+1 | r_k | integrator_error | extra_temp
             //               s^2   s*c  s^2   s^2   s^2    s^2    s^2   s^2     s      s      s          s                <s^2?
 
-            float *s_Ak = s_end_main; 								
-            float *s_Bk = s_Ak +        states_sq;
-            float *s_Qk = s_Bk +        states_p_controls; 	
-            float *s_Qk_i = s_Qk +      states_sq;	
-            float *s_Qkp1 = s_Qk_i +    states_sq;
-            float *s_Qkp1_i = s_Qkp1 +  states_sq;
-            float *s_Rk = s_Qkp1_i +    states_sq;
-            float *s_Rk_i = s_Rk +      controls_sq;
-            float *s_qk = s_Rk_i +      controls_sq; 	
-            float *s_qkp1 = s_qk +      state_size; 			
-            float *s_rk = s_qkp1 +      state_size;
-            float *s_end = s_rk +       control_size;
+            T *s_Ak = s_end_main; 								
+            T *s_Bk = s_Ak +        states_sq;
+            T *s_Qk = s_Bk +        states_p_controls; 	
+            T *s_Qk_i = s_Qk +      states_sq;	
+            T *s_Qkp1 = s_Qk_i +    states_sq;
+            T *s_Qkp1_i = s_Qkp1 +  states_sq;
+            T *s_Rk = s_Qkp1_i +    states_sq;
+            T *s_Rk_i = s_Rk +      controls_sq;
+            T *s_qk = s_Rk_i +      controls_sq; 	
+            T *s_qkp1 = s_qk +      state_size; 			
+            T *s_rk = s_qkp1 +      state_size;
+            T *s_end = s_rk +       control_size;
             
             // scratch
-            float *s_extra_temp = s_end;
+            T *s_extra_temp = s_end;
             
 
             __syncthreads();//----------------------------------------------------------------
@@ -220,18 +220,18 @@ void form_schur_qdl_kernel(uint32_t state_size,
 
             __syncthreads();//----------------------------------------------------------------
 
-            oldschur::add_identity(s_Qk, state_size, rho);
-            oldschur::add_identity(s_Qkp1, state_size, rho);
-            oldschur::add_identity(s_Rk, control_size, rho);
+            oldschur::add_identity<T>(s_Qk, state_size, rho);
+            oldschur::add_identity<T>(s_Qkp1, state_size, rho);
+            oldschur::add_identity<T>(s_Rk, control_size, rho);
             
             // Invert Q, Qp1, R 
-            oldschur::loadIdentity( state_size,state_size,control_size,
+            oldschur::loadIdentity<T>( state_size,state_size,control_size,
                 s_Qk_i, 
                 s_Qkp1_i, 
                 s_Rk_i
             );
             __syncthreads();//----------------------------------------------------------------
-            oldschur::invertMatrix( state_size,state_size,control_size,state_size,
+            oldschur::invertMatrix<T>( state_size,state_size,control_size,state_size,
                 s_Qk, 
                 s_Qkp1, 
                 s_Rk, 
@@ -264,7 +264,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
 
             // Compute -AQ^{-1} in phi
-            oldschur::mat_mat_prod(
+            oldschur::mat_mat_prod<T>(
                 s_phi_k,
                 s_Ak,
                 s_Qk_i,
@@ -277,7 +277,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
 
             // Compute -BR^{-1} in Qkp1
-            oldschur::mat_mat_prod(
+            oldschur::mat_mat_prod<T>(
                 s_Qkp1,
                 s_Bk,
                 s_Rk_i,
@@ -290,7 +290,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
 
             // compute Q_{k+1}^{-1}q_{k+1} - IntegratorError in gamma
-            oldschur::mat_vec_prod( state_size, state_size,
+            oldschur::mat_vec_prod<T>( state_size, state_size,
                 s_Qkp1_i,
                 s_qkp1,
                 s_gamma_k
@@ -301,7 +301,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
 
             // compute -AQ^{-1}q for gamma         temp storage in extra temp
-            oldschur::mat_vec_prod( state_size, state_size,
+            oldschur::mat_vec_prod<T>( state_size, state_size,
                 s_phi_k,
                 s_qk,
                 s_extra_temp
@@ -311,7 +311,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
             
             // compute -BR^{-1}r for gamma           temp storage in extra temp + states
-            oldschur::mat_vec_prod( state_size, control_size,
+            oldschur::mat_vec_prod<T>( state_size, control_size,
                 s_Qkp1,
                 s_rk,
                 s_extra_temp + state_size
@@ -326,7 +326,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
 
             // compute AQ^{-1}AT   -   Qkp1^{-1} for theta
-            oldschur::mat_mat_prod(
+            oldschur::mat_mat_prod<T>(
                 s_theta_k,
                 s_phi_k,
                 s_Ak,
@@ -347,7 +347,7 @@ void form_schur_qdl_kernel(uint32_t state_size,
             __syncthreads();//----------------------------------------------------------------
 
             // compute BR^{-1}BT for theta            temp storage in QKp1{-1}
-            oldschur::mat_mat_prod(
+            oldschur::mat_mat_prod<T>(
                 s_Qkp1_i,
                 s_Qkp1,
                 s_Bk,
@@ -585,43 +585,43 @@ void compute_dz(uint32_t state_size, uint32_t control_size, uint32_t knot_points
 }
 
 
-void parallel_line_search(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_xs, float *d_xu, float *d_xu_traj, void *d_dynMem_const, float *d_dz, float timestep, float *d_merits_out, float *d_merit_temp)
-{
+// void parallel_line_search(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float *d_xs, float *d_xu, float *d_xu_traj, void *d_dynMem_const, float *d_dz, float timestep, float *d_merits_out, float *d_merit_temp)
+// {
 
-    int alphas = 8;
+//     int alphas = 8;
     
-    cudaStream_t streams[alphas];
-    for(int st = 0; st < alphas; st++){
-        gpuErrchk(cudaStreamCreate(&streams[st]));
-    }
+//     cudaStream_t streams[alphas];
+//     for(int st = 0; st < alphas; st++){
+//         gpuErrchk(cudaStreamCreate(&streams[st]));
+//     }
 
 
-    void *ls_merit_kernel = (void *) ls_gato_compute_merit<float>;
+//     void *ls_merit_kernel = (void *) ls_gato_compute_merit<T>;
     
-    float mu = 10.0f;
+//     float mu = 10.0f;
 
-    for(int p = 0; p < alphas; p++){
-        void *kernelArgs[] = {
-            (void *)&state_size,
-            (void *)&control_size,
-            (void *)&knot_points,
-            (void *)&d_xs,
-            (void *)&d_xu,
-            (void *)&d_xu_traj,
-            (void *)&mu, 
-            (void *)&timestep,
-            (void *)&d_dynMem_const,
-            (void *)&d_dz,
-            (void *)&p,
-            (void *)&d_merits_out,
-            (void *)&d_merit_temp
-        };
-        gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, MERIT_THREADS, kernelArgs, get_merit_smem_size<float>(state_size, knot_points), streams[p]));
-    }
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
+//     for(int p = 0; p < alphas; p++){
+//         void *kernelArgs[] = {
+//             (void *)&state_size,
+//             (void *)&control_size,
+//             (void *)&knot_points,
+//             (void *)&d_xs,
+//             (void *)&d_xu,
+//             (void *)&d_xu_traj,
+//             (void *)&mu, 
+//             (void *)&timestep,
+//             (void *)&d_dynMem_const,
+//             (void *)&d_dz,
+//             (void *)&p,
+//             (void *)&d_merits_out,
+//             (void *)&d_merit_temp
+//         };
+//         gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, MERIT_THREADS, kernelArgs, get_merit_smem_size<float>(state_size, knot_points), streams[p]));
+//     }
+//     gpuErrchk(cudaPeekAtLastError());
+//     gpuErrchk(cudaDeviceSynchronize());
 
-    for(int st=0; st < alphas; st++){
-        gpuErrchk(cudaStreamDestroy(streams[st]));
-    }
-}
+//     for(int st=0; st < alphas; st++){
+//         gpuErrchk(cudaStreamDestroy(streams[st]));
+//     }
+// }

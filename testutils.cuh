@@ -99,6 +99,7 @@ void dump_tracking_data(std::vector<int> *pcg_iters, std::vector<double> *linsys
 
 void print_test_config(){
     std::cout << "knot points: " << KNOT_POINTS << "\n";
+    std::cout << "datatype: " << (USE_DOUBLES ? "DOUBLE" : "FLOAT") << "\n";
     std::cout << "noise: " << (ADD_NOISE ? "ON" : "OFF") << "\n";
     std::cout << "sqp exits condition: " << (CONST_UPDATE_FREQ ? "CONSTANT TIME" : "CONSTANT ITERS") << "\n";
 #if CONST_UPDATE_FREQ
