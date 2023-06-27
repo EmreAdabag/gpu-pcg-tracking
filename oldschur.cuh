@@ -95,16 +95,6 @@ namespace oldschur{
         }
     }
 
-    template <unsigned m, unsigned n>
-    __device__
-    void printMat(float *mat, int asdf){
-        for(int i = 0; i < m; i++){
-            for(int j = 0; j < n; j++){
-                printf("%f ", mat[j*m+i]);
-            }
-            printf("\n");
-        }
-    }
 
     ///TODO: this could be more better
     template <typename T>

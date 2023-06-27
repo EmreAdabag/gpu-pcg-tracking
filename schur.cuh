@@ -147,16 +147,9 @@ void form_schur_qdl_kernel(uint32_t state_size,
             );
             __syncthreads();//----------------------------------------------------------------
             
+            // save -Q0_i in spot 00 in S
             store_block_csr_lowertri<T>(state_size, knot_points, s_Q0_i, d_val, 1, blockrow, -1);
 
-            // save -Q0_i in spot 00 in S
-            // store_block_bd<float>( state_size, knot_points,
-            //     s_Q0_i,                         // src             
-            //     d_S,                            // dst              
-            //     1,                              // col   
-            //     blockrow,                        // blockrow         
-            //     -1                              //  multiplier   
-            // );
             __syncthreads();//----------------------------------------------------------------
 
 
@@ -367,25 +360,13 @@ void form_schur_qdl_kernel(uint32_t state_size,
 
             // // save phi_k into left off-diagonal of S, 
             store_block_csr_lowertri<T>(state_size, knot_points, s_phi_k, d_val, 0, blockrow, -1);
-            // store_block_bd<float>( state_size, knot_points,
-            //     s_phi_k,                        // src             
-            //     d_S,                            // dst             
-            //     0,                              // col
-            //     blockrow,                        // blockrow    
-            //     -1
-            // );
+            
             __syncthreads();//----------------------------------------------------------------
 
 
             // save -s_theta_k main diagonal S
             store_block_csr_lowertri<T>(state_size, knot_points, s_theta_k, d_val, 1, blockrow, -1);
-            // store_block_bd<float>( state_size, knot_points,
-            //     s_theta_k,                                               
-            //     d_S,                                                 
-            //     1,                                               
-            //     blockrow,
-            //     -1                                             
-            // );          
+            
             __syncthreads();//----------------------------------------------------------------
 
             // save gamma_k in gamma
@@ -411,7 +392,7 @@ template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
 __global__
 void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_points,
                    T *d_G_dense, T *d_C_dense, T *d_g, T *d_c,
-                   void *d_dynMem_const, float timestep,
+                   void *d_dynMem_const, T timestep,
                    T *d_xu_traj, T *d_xs, T *d_xu)
 {
 
