@@ -54,12 +54,13 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     // line search things
     const float mu = 10.0f;
     const uint32_t num_alphas = 8;
-    float h_merit_news[num_alphas];
-    void *ls_merit_kernel = (void *) ls_gato_compute_merit<float>;
+    T h_merit_news[num_alphas];
+    void *ls_merit_kernel = (void *) ls_gato_compute_merit<T>;
     const size_t merit_smem_size = get_merit_smem_size<T>(state_size, control_size);
-    float h_merit_initial, alphafinal, min_merit;
-    float delta_merit_iter = 0;
-    float delta_merit_total = 0;
+    T h_merit_initial, min_merit;
+    T alphafinal;
+    T delta_merit_iter = 0;
+    T delta_merit_total = 0;
     uint32_t line_search_step = 0;
 
 
@@ -170,8 +171,8 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
     const int nnz = (knot_points-1)*states_sq + knot_points*((state_size+1)*state_size/2);
 
-    float h_gamma_temp[state_size*knot_points];
-    float h_lambda_temp[state_size*knot_points];
+    T h_gamma_temp[state_size*knot_points];
+    T h_lambda_temp[state_size*knot_points];
     QDLDL_float h_lambda[state_size*knot_points];
     QDLDL_float h_gamma[state_size*knot_points];
     QDLDL_int h_col_ptr[state_size*knot_points+1];
@@ -225,11 +226,12 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
 #endif // #if PCG_SOLVE
 
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
 
 
-    
     ///TODO: atomic race conditions here aren't fixed but don't seem to be problematic
-    compute_merit<float><<<knot_points, MERIT_THREADS, merit_smem_size*5>>>(
+    compute_merit<T><<<knot_points, MERIT_THREADS, merit_smem_size>>>(
         state_size, control_size, knot_points,
         d_xu, 
         d_traj, 
@@ -248,7 +250,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
     //
     for(uint32_t sqpiter = 0; sqpiter < SQP_MAX_ITER; sqpiter++){
         
-        gato_form_kkt<float><<<knot_points, KKT_THREADS, oldschur::get_kkt_smem_size<T>(state_size, control_size)>>>(
+        gato_form_kkt<T><<<knot_points, KKT_THREADS, oldschur::get_kkt_smem_size<T>(state_size, control_size)>>>(
             state_size,
             control_size,
             knot_points,
@@ -268,7 +270,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
 
 #if PCG_SOLVE
 
-        form_schur(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c,
+        form_schur<T>(state_size, control_size, knot_points, d_G_dense, d_C_dense, d_g, d_c,
                    d_S, d_Pinv, d_gamma,
                    rho);
         gpuErrchk(cudaPeekAtLastError());
@@ -365,7 +367,7 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
                 (void *)&d_merit_news,
                 (void *)&d_merit_temp
             };
-            gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, MERIT_THREADS, kernelArgs, get_merit_smem_size<float>(state_size, knot_points), streams[p]));
+            gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, MERIT_THREADS, kernelArgs, get_merit_smem_size<T>(state_size, knot_points), streams[p]));
         }
         if (sqpTimecheck()){ break; }
         gpuErrchk(cudaPeekAtLastError());
@@ -404,7 +406,16 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
         drho = min(drho/rho_factor, 1/rho_factor);
         rho = max(rho*drho, rho_min);
         
-        // add the update
+
+#if USE_DOUBLES
+        cublasDaxpy(
+            handle, 
+            DZ_SIZE_BYTES / sizeof(T),
+            &alphafinal,
+            d_dz, 1,
+            d_xu, 1
+        );
+#else
         cublasSaxpy(
             handle, 
             DZ_SIZE_BYTES / sizeof(T),
@@ -412,6 +423,8 @@ std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool> sqpSol
             d_dz, 1,
             d_xu, 1
         );
+#endif
+    
         gpuErrchk(cudaPeekAtLastError());
         // if success increment after update
         sqp_iter++;

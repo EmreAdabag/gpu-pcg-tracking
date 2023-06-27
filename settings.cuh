@@ -8,8 +8,16 @@
 
 
 // qdldl if 0
-#define PCG_SOLVE       0
+#define PCG_SOLVE       1
 
+// doubles if 1, floats if 0
+#define USE_DOUBLES 1
+
+#if USE_DOUBLES
+typedef double pcg_t;
+#else
+typedef float pcg_t;
+#endif
 
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
@@ -39,7 +47,7 @@
 
 
 #define PCG_NUM_THREADS     128
-#define PCG_EXIT_TOL        1e-9
+#define PCG_EXIT_TOL        1e-7
 #define PCG_MAX_ITER        500
 
 #define MERIT_THREADS       128
@@ -51,7 +59,7 @@
 
 
 // prints state while tracking
-#define LIVE_PRINT_PATH 1
+#define LIVE_PRINT_PATH 0
 #define LIVE_PRINT_STATS 0
 
 // runs sqp a bunch of times before starting to track

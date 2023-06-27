@@ -100,7 +100,7 @@ namespace gato_plant{
 	template <typename T>
 	__device__
 	void forwardDynamics(T *s_qdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
-		grid::forward_dynamics_device(s_qdd,s_q,s_qd,s_u,s_temp,(grid::robotModel<T>*)d_dynMem_const,GRAVITY<T>());
+		grid::forward_dynamics_device<T>(s_qdd,s_q,s_qd,s_u,s_temp,(grid::robotModel<T>*)d_dynMem_const,GRAVITY<T>());
 	}
 
 	__host__ __device__
