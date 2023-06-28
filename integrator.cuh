@@ -7,7 +7,8 @@
 #endif
 
 namespace cgrps = cooperative_groups;
-#include "iiwa_plant.cuh"
+// #include "iiwa_plant.cuh"
+#include "twoiiwa_plant.cuh"
 
 #include "glass.cuh"
 
@@ -282,7 +283,7 @@ void integrator_host(uint32_t state_size, uint32_t control_size, T *d_xs, T *d_x
 
 template <typename T>
 void just_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu){
-    for (int knot = 0; knot < knot_points-1; knot++){
+    for (uint32_t knot = 0; knot < knot_points-1; knot++){
         uint32_t stepsize = (state_size+(knot<knot_points-2)*control_size);
         gpuErrchk(cudaMemcpy(&d_xu[knot*(state_size+control_size)], &d_xu[(knot+1)*(state_size+control_size)], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
     }

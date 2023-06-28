@@ -4,7 +4,8 @@
 #include <iostream>
 #include "toplevel.cuh"
 #include "qdldl.h"
-#include "iiwa_plant.cuh"
+// #include "iiwa_plant.cuh"
+#include "twoiiwa_plant.cuh"
 #include "settings.cuh"
 
 
@@ -49,7 +50,7 @@ int main(){
     const uint32_t control_size = grid::NUM_JOINTS;
     const uint32_t knot_points = KNOT_POINTS;
     const pcg_t timestep = .015625;
-
+    std::cout << "state size " << state_size << " control size " << control_size << " knot points " << knot_points << std::endl;
     const uint32_t traj_test_iters = 1;
 
     // checks GPU space for pcg
@@ -74,10 +75,11 @@ int main(){
         if(start_state == goal_state && start_state != 0){ continue; }
         std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
-        for (int single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
+        for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
 
             // read in traj
-            snprintf(traj_file_name, sizeof(traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
+            // snprintf(traj_file_name, sizeof(traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
+            snprintf(traj_file_name, sizeof(traj_file_name), "testfiles/twoiiwa.traj");
             std::vector<std::vector<pcg_t>> traj2d = readCSVToVecVec<pcg_t>(traj_file_name);
 
             if(traj2d.size() < knot_points){std::cout << "precomputed traj length < knot points, not implemented\n"; continue; }
