@@ -596,8 +596,8 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
         cur_pcg_iters = std::get<0>(sqp_stats);
         cur_linsys_times = std::get<1>(sqp_stats);
-        sqp_times.push_back(std::get<2>(sqp_stats));
-        sqp_iters.push_back(std::get<3>(sqp_stats));
+        sqp_solve_time_us = std::get<2>(sqp_stats);
+        cur_sqp_iters = std::get<3>(sqp_stats);
         sqp_exits.push_back(std::get<4>(sqp_stats));
         cur_pcg_exits = std::get<5>(sqp_stats);
 
@@ -680,7 +680,8 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         pcg_exits.insert(pcg_exits.end(), cur_pcg_exits.begin(), cur_pcg_exits.end());
         gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
         tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));                                   // next state
-
+        sqp_times.push_back(sqp_solve_time_us);
+        sqp_iters.push_back(cur_sqp_iters);
 
 #if DONTFORGETME
         // if(cur_sqp_iters==0 && !cur_pcg_iters.empty()){
@@ -690,7 +691,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
 
 #if LIVE_PRINT_STATS
-        if (control_update_step % 100 == 50){
+        if (control_update_step % 1000 == 50){
             for (int i = 0; i < state_size; i++){
                 std::cout << h_xs[i] << (i < state_size-1 ? " " : "\n");
             }
