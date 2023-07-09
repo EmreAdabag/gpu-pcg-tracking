@@ -7,7 +7,7 @@
 #endif
 
 namespace cgrps = cooperative_groups;
-#include "iiwa_plant.cuh"
+#include "rbd_plant.cuh"
 
 #include "glass.cuh"
 

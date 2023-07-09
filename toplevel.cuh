@@ -246,6 +246,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
     
 
+
     //
     //      SQP LOOP
     //
@@ -268,6 +269,10 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         gpuErrchk(cudaPeekAtLastError());
         if (sqpTimecheck()){ break; }
 
+
+    write_device_matrix_to_file(d_g, 1, 2*(state_size+control_size), "g", 0);
+    write_device_matrix_to_file(d_c, 1, 2*(state_size+control_size), "c", 0);
+    exit(2);
 
 #if PCG_SOLVE
 
@@ -422,7 +427,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
             d_xu, 1
         );
 #endif
-    
+
         gpuErrchk(cudaPeekAtLastError());
         // if success increment after update
         sqp_iter++;

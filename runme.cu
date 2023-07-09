@@ -4,7 +4,7 @@
 #include <iostream>
 #include "toplevel.cuh"
 #include "qdldl.h"
-#include "iiwa_plant.cuh"
+#include "rbd_plant.cuh"
 #include "settings.cuh"
 
 

@@ -3,7 +3,7 @@
 #include "utils.cuh"
 #include "gpuassert.cuh"
 #include "glass.cuh"
-#include "iiwa_plant.cuh"
+#include "rbd_plant.cuh"
 #include "merit.cuh"
 #include "oldschur.cuh"
 #include "integrator.cuh"

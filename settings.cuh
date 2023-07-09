@@ -1,6 +1,6 @@
 #pragma once
 
-#define KNOT_POINTS 256
+#define KNOT_POINTS 64 
 #define STATE_SIZE  14
 
 
@@ -21,8 +21,8 @@ typedef float pcg_t;
 
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
-#define Q_COST          (1.0)
-#define QD_COST         (0.100)
+#define Q_COST          (.10)
+#define QD_COST         (0.050)
 #define R_COST          (0.0001)
 
 
@@ -59,7 +59,7 @@ typedef float pcg_t;
 
 
 // prints state while tracking
-#define LIVE_PRINT_PATH 0
+#define LIVE_PRINT_PATH 1
 #define LIVE_PRINT_STATS 1
 
 // runs sqp a bunch of times before starting to track

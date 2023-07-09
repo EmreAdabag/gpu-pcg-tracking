@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cooperative_groups.h>
 
-#include "iiwa_plant.cuh"
+#include "rbd_plant.cuh"
 #include "integrator.cuh"
 
 template <typename T>

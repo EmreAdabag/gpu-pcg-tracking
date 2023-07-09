@@ -4,6 +4,43 @@
 #include "glass.cuh"
 #include "qdldl.h"
 
+
+
+
+
+void write_device_matrix_to_file(float* d_matrix, int rows, int cols, const char* filename, int filesuffix = 0) {
+    
+    char fname[100];
+    snprintf(fname, sizeof(fname), "%s%d.txt", filename, filesuffix);
+    
+    // Allocate host memory for the matrix
+    float* h_matrix = new float[rows * cols];
+
+    // Copy the data from the device to the host memory
+    size_t pitch = cols * sizeof(float);
+    cudaMemcpy2D(h_matrix, pitch, d_matrix, pitch, pitch, rows, cudaMemcpyDeviceToHost);
+
+    // Write the data to a file in column-major order
+    std::ofstream outfile(fname);
+    if (outfile.is_open()) {
+        for (int row = 0; row < rows; ++row) {
+            for (int col = 0; col < cols; ++col) {
+                outfile << std::setprecision(std::numeric_limits<float>::max_digits10+1) << h_matrix[col * rows + row] << "\t";
+            }
+            outfile << std::endl;
+        }
+        outfile.close();
+    } else {
+        std::cerr << "Unable to open file: " << fname << std::endl;
+    }
+
+    // Deallocate host memory
+    delete[] h_matrix;
+}
+
+
+
+
 template <typename T>
 __device__
 void gato_memcpy(T *dst, T *src, unsigned size_Ts){
