@@ -178,12 +178,12 @@ namespace gato_plant{
 
 	///TODO: costgradientandhessian could be much faster with no divergence
 	// not last block
-	template <typename T>
+	template <typename T, bool computeR=true>
 	__device__
 	void trackingCostGradientAndHessian(uint32_t state_size, 
 										uint32_t control_size, 
 										T *s_xu, 
-										T *s_xu_traj, 
+										T *s_eePos_traj, 
 										T *s_Qk, 
 										T *s_qk, 
 										T *s_Rk, 
@@ -196,8 +196,9 @@ namespace gato_plant{
 
 		T *s_eePos = s_temp;
 		T *s_eePos_grad = s_eePos + 6;
+		// s_end = s_eePos_grad + 6 * state_size/2;
 
-		const uint32_t threadsNeeded = state_size + control_size;
+		const uint32_t threads_needed = state_size + control_size*computeR;
 		uint32_t offset;
 		T err;
 		
@@ -205,23 +206,41 @@ namespace gato_plant{
 		grid::end_effector_positions_gradient_device<T>(s_eePos_grad, s_xu, d_robotModel);
         __syncthreads();
 
-		for (int i = g.thread_rank(); i < threadsNeeded; i += g.size()){
+		for (int i = threadIdx.x; i < threads_needed; i += blockDim.x){
 			
 			if(i < state_size){
+				// sum x, y, z error
+				err = (s_eePos[0] - s_eePos_traj[0]) +
+					  (s_eePos[1] - s_eePos_traj[1]) +
+					  (s_eePos[2] - s_eePos_traj[2]);
+
 				//gradient
 				if (i < state_size / 2){
-					err = s_xu[i] - s_xu_traj[i];
-					s_qk[i] = Q_cost * err;
+					s_qk[i] = Q_cost * ( s_eePos_grad[6 * i + 0] + s_eePos_grad[6 * i + 1] + s_eePos_grad[6 * i + 2] ) * err;
 				}
 				else{
 					err = s_xu[i];
 					s_qk[i] = QD_cost * err;
 				}
 				
+			}
+			else{
+				err = s_xu[i];
+				offset = i - state_size;
+				
+				//gradient
+				s_rk[offset] = R_cost * err;
+			}
+		}
+
+		__syncthreads();
+
+		for (int i = threadIdx.x; i < threads_needed; i += blockDim.x){
+			if (i < state_size){
 				//hessian
 				for(int j = 0; j < state_size; j++){
 					if(j < state_size / 2){
-						s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
+						s_Qk[i*state_size + j] = s_qk[i] * s_qk[j];
 					}
 					else{
 						s_Qk[i*state_size + j] = (i == j) ? QD_cost : static_cast<T>(0);
@@ -229,13 +248,6 @@ namespace gato_plant{
 				}
 			}
 			else{
-
-				err = s_xu[i];
-				offset = i - state_size;
-				
-				//gradient
-				s_rk[offset] = R_cost * err;
-				
 				//hessian
 				for(int j = 0; j < control_size; j++){
 					s_Rk[offset*control_size+j] = (offset == j) ? R_cost : static_cast<T>(0);
@@ -250,85 +262,18 @@ namespace gato_plant{
 	void trackingCostGradientAndHessian_lastblock(uint32_t state_size, 
 							    				  uint32_t control_size, 
 							    				  T *s_xux, 
-							    				  T *s_xux_traj, 
+							    				  T *s_eePos_traj, 
 							    				  T *s_Qk, 
 							    				  T *s_qk, 
 							    				  T *s_Rk, 
 							    				  T *s_rk, 
 							    				  T *s_Qkp1, 
 							    				  T *s_qkp1,
-							    				  uint32_t block_id, 
-							    				  cooperative_groups::thread_group g)
+							    				  T *s_temp)
 	{
-		unsigned threadsNeeded = 2*state_size + control_size;
-		const T Q_cost = COST_Q1<T>();
-		const T QD_cost = COST_QD<T>();
-		const T R_cost = COST_R<T>();
-
-		T err;
-		uint32_t offset;
-
-		for (int i = g.thread_rank(); i < threadsNeeded; i += g.size()){
-
-			if (i < state_size){
-				if(i < state_size / 2){
-					err = s_xux[i] - s_xux_traj[i];
-					s_qk[i] = Q_cost * err;
-				}
-				else{
-#if ABSOLUTE_QD_PENALTY
-					err = s_xux[i];
-#else
-					err = s_xux[i] - s_xux_traj[i];
-#endif
-					s_qk[i] = QD_cost * err;
-				}
-				
-				for(int j = 0; j < state_size; j++){
-					if(j < state_size / 2){
-						s_Qk[i*state_size + j] = (i == j) ? Q_cost : static_cast<T>(0);
-					}
-					else{
-						s_Qk[i*state_size + j] = (i == j) ? QD_cost : static_cast<T>(0);
-					}
-				}
-			}
-			else if(i < state_size + control_size){
-				err = s_xux[i];
-				offset = i - state_size;
-				s_rk[offset] = R_cost * err;
-
-				for(int j = 0; j < control_size; j++){
-					s_Rk[offset*control_size + j] = (offset == j) ? R_cost : static_cast<T>(0);
-				}
-			}
-			else{
-				offset = i - state_size - control_size;
-				if(offset < state_size / 2){
-					err = s_xux[i] - s_xux_traj[i];
-					s_qkp1[offset] = Q_cost * err;
-				}
-				else{
-#if ABSOLUTE_QD_PENALTY
-					err = s_xux[i];
-#else
-					err = s_xux[i] - s_xux_traj[i];
-#endif
-					s_qkp1[offset] = QD_cost * err;
-				}
-
-
-				for(int j = 0; j < state_size; j++){
-					if(j < state_size / 2){
-						s_Qkp1[offset*state_size+j] = (offset == j) ? Q_cost : static_cast<T>(0);
-					}
-					else{
-						s_Qkp1[offset*state_size+j] = (offset == j) ? QD_cost : static_cast<T>(0);
-					}
-				}
-
-			}
-		}
+		trackingCostGradientAndHessian<T>(state_size, control_size, s_xu, s_eePos_traj, s_Qk, s_qk, s_Rk, s_rk, s_temp);
+		__syncthreads();
+		trackingCostGradientAndHessian<T, false>(state_size, control_size, s_xu, s_eePos_traj, s_Qkp1, s_qkp1, nullptr, nullptr, s_temp);
 	}
 
 	__host__ __device__

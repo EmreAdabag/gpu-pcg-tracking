@@ -459,8 +459,7 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
                 s_rk,
                 s_Qkp1,
                 s_qkp1,
-                block_id,
-                block
+                s_extra_temp
             );
             __syncthreads();
 
@@ -508,8 +507,7 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
                                                   s_qk,
                                                   s_Rk,
                                                   s_rk,
-                                                  block_id,
-                                                  block);
+                                                  s_extra_temp);
             __syncthreads();
  
             glass::copy<T>(states_sq, s_Qk, &d_G_dense[(states_sq+controls_sq)*k]);

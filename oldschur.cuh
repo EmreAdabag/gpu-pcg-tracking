@@ -33,7 +33,7 @@ namespace oldschur{
         // return sizeof(float)*(3*states_sq + controls_sq + 6 * state_size + 2 * control_size + state_size*control_size + max(gato_plant::costAndGradient_TempMemSize_Shared(), (state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared()));
 
         // condensed
-        return sizeof(T)*(3*states_sq + controls_sq + 7 * state_size + 3 * control_size + state_size*control_size + (state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
+        return sizeof(T)*(3*states_sq + controls_sq + 7 * state_size + 3 * control_size + state_size*control_size + max((state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared(), 3 + (state_size/2)*6));
         // same but not condensed
         // return sizeof(T)*(5*state_size + 3*control_size + states_sq + controls_sq + 2 * states_sq + state_size*control_size + 2*state_size + (state_size/2)*(state_size + control_size + 1) + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
     }
