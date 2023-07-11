@@ -66,24 +66,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <cuda_runtime.h>
+#include "gpuassert.cuh"
 // single kernel timing helper code
 #define time_delta_us_timespec(start,end) (1e6*static_cast<double>(end.tv_sec - start.tv_sec)+1e-3*static_cast<double>(end.tv_nsec - start.tv_nsec))
 
-/**
- * Check for runtime errors using the CUDA API
- *
- * Notes:
- *   Adapted from https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
- *
- */
-__host__
-void gpuAssert(cudaError_t code, const char *file, const int line, bool abort=true){
-    if (code != cudaSuccess){
-        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-        if (abort){cudaDeviceReset(); exit(code);}
-    }
-}
-#define gpuErrchk(err) {gpuAssert(err, __FILE__, __LINE__);}
 
 template <typename T, int M, int N>
 __host__ __device__
@@ -5313,6 +5299,34 @@ namespace grid {
         }
     }
 
+        template <typename T, bool INCLUDE_DU = false>
+    __device__
+    void forward_dynamics_and_gradient_device(T *s_df_du, T *s_qdd, const T *s_q, const T *s_qd, const T *s_u, T *s_XITemp, const robotModel<T> *d_robotModel, const T gravity) {
+        T *s_XImats = s_XITemp; T *s_vaf = &s_XITemp[504]; T *s_dc_du = &s_vaf[126]; T *s_Minv = &s_dc_du[98]; T *s_temp = &s_Minv[49];
+        load_update_XImats_helpers<T>(s_XImats, s_q, d_robotModel, s_temp); __syncthreads();
+        //TODO: there is a slightly faster way as s_v does not change -- thus no recompute needed
+        direct_minv_inner<T>(s_Minv, s_q, s_XImats, s_temp); __syncthreads();
+        T *s_c = s_temp;
+        inverse_dynamics_inner<T>(s_c, s_vaf, s_q, s_qd, s_XImats, &s_temp[7], gravity); __syncthreads();
+        forward_dynamics_finish<T>(s_qdd, s_u, s_c, s_Minv); __syncthreads();
+        inverse_dynamics_inner_vaf<T>(s_vaf, s_q, s_qd, s_qdd, s_XImats, s_temp, gravity); __syncthreads();
+        inverse_dynamics_gradient_inner<T>(s_dc_du, s_q, s_qd, s_vaf, s_XImats, s_temp, gravity); __syncthreads();
+        for(int ind = threadIdx.x + threadIdx.y*blockDim.x; ind < 98; ind += blockDim.x*blockDim.y){
+            int row = ind % 7; int dc_col_offset = ind - row;
+            // account for the fact that Minv is an SYMMETRIC_UPPER triangular matrix
+            T val = static_cast<T>(0);
+            for(int col = 0; col < 7; col++) {
+                int index = (row <= col) * (col * 7 + row) + (row > col) * (row * 7 + col);
+                val += s_Minv[index] * s_dc_du[dc_col_offset + col];
+            }
+            s_df_du[ind] = -val;
+            if (INCLUDE_DU && ind < 49){
+                int col = ind / 7; int index = (row <= col) * (col * 7 + row) + (row > col) * (row * 7 + col);
+                s_df_du[ind + 98] = s_Minv[index];
+            }
+        }
+    }
+
     /**
      * Computes the gradient of forward dynamics
      *
@@ -5706,6 +5720,12 @@ namespace grid {
         free(hd_data->h_dc_du); free(hd_data->h_df_du);
         free(hd_data->h_eePos); free(hd_data->h_deePos);
         for(int i=0; i<3; i++){gpuErrchk(cudaStreamDestroy(streams[i]));} free(streams);
+    }
+
+    template <typename T>
+    __host__
+    void free_robotModel(robotModel<T> *d_robotModel){
+        gpuErrchk(cudaFree(d_robotModel));
     }
 
 }

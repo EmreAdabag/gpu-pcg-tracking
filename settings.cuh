@@ -31,14 +31,14 @@ typedef float pcg_t;
 
 
 // if 1 sqp exits on time or rho, else sqp exits on max iters or rho
-#define CONST_UPDATE_FREQ   1
+#define CONST_UPDATE_FREQ   0
 
 #if CONST_UPDATE_FREQ 
 #define SQP_MAX_TIME_US 1000
 #define SIMULATION_PERIOD 1000
 #define SQP_MAX_ITER    1
 #else
-#define SQP_MAX_ITER    1
+#define SQP_MAX_ITER    5
 #endif
 
 

@@ -282,7 +282,7 @@ void integrator_host(uint32_t state_size, uint32_t control_size, T *d_xs, T *d_x
 
 template <typename T>
 void just_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu){
-    for (int knot = 0; knot < knot_points-1; knot++){
+    for (uint32_t knot = 0; knot < knot_points-1; knot++){
         uint32_t stepsize = (state_size+(knot<knot_points-2)*control_size);
         gpuErrchk(cudaMemcpy(&d_xu[knot*(state_size+control_size)], &d_xu[(knot+1)*(state_size+control_size)], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
     }
@@ -365,8 +365,8 @@ void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_p
     const T sim_step_time = 2e-4;
     const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
     const uint32_t states_s_controls = state_size + control_size;
-    uint32_t control_offset;
-    T *control;
+    uint32_t control_offset = static_cast<uint32_t>((time_offset) / timestep);
+    T *control = &d_xu[control_offset * states_s_controls + state_size];
 
 
     uint32_t sim_steps_needed = static_cast<uint32_t>(sim_time / sim_step_time);

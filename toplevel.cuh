@@ -21,7 +21,7 @@
 
 
 template <typename T>
-auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_traj, T *d_lambda, T *d_xu, void *d_dynMem_const, pcg_config& config){
+auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_eePos_traj, T *d_lambda, T *d_xu, void *d_dynMem_const, pcg_config& config){
     
     // data storage
     std::vector<int> pcg_iter_vec;
@@ -235,7 +235,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     compute_merit<T><<<knot_points, MERIT_THREADS, merit_smem_size>>>(
         state_size, control_size, knot_points,
         d_xu, 
-        d_traj, 
+        d_eePos_traj, 
         static_cast<T>(10), 
         timestep, 
         d_dynMem_const, 
@@ -252,7 +252,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     //
     for(uint32_t sqpiter = 0; sqpiter < SQP_MAX_ITER; sqpiter++){
         
-        gato_form_kkt<T><<<knot_points, KKT_THREADS, oldschur::get_kkt_smem_size<T>(state_size, control_size)>>>(
+        gato_form_kkt<T><<<knot_points, KKT_THREADS, 2 * oldschur::get_kkt_smem_size<T>(state_size, control_size)>>>(
             state_size,
             control_size,
             knot_points,
@@ -262,7 +262,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
             d_c,
             d_dynMem_const,
             timestep,
-            d_traj,
+            d_eePos_traj,
             d_xs,
             d_xu
         );
@@ -270,9 +270,9 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         if (sqpTimecheck()){ break; }
 
 
-    write_device_matrix_to_file(d_g, 1, 2*(state_size+control_size), "g", 0);
-    write_device_matrix_to_file(d_c, 1, 2*(state_size+control_size), "c", 0);
-    exit(2);
+    // write_device_matrix_to_file(d_g, 1, 2*(state_size+control_size), "g", 0);
+    // write_device_matrix_to_file(d_c, 1, 2*(state_size+control_size), "c", 0);
+    // exit(2);
 
 #if PCG_SOLVE
 
@@ -354,14 +354,14 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         
 
         // line search
-        for(int p = 0; p < num_alphas; p++){
+        for(uint32_t p = 0; p < num_alphas; p++){
             void *kernelArgs[] = {
                 (void *)&state_size,
                 (void *)&control_size,
                 (void *)&knot_points,
                 (void *)&d_xs,
                 (void *)&d_xu,
-                (void *)&d_traj,
+                (void *)&d_eePos_traj,
                 (void *)&mu, 
                 (void *)&timestep,
                 (void *)&d_dynMem_const,
@@ -403,7 +403,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
             }
             continue;
         }
-
+        std::cout << "line search accepted\n";
         alphafinal = -1.0 / (1 << line_search_step);        // alpha sign
 
         drho = min(drho/rho_factor, 1/rho_factor);
@@ -503,7 +503,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
 
 template <typename T>
-void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float timestep, T *d_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
+void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float timestep, T *d_eePos_traj, T *d_xu_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
 
     const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
 
@@ -539,15 +539,15 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
 
     // mpc iterates
-    T *d_lambda, *d_xu_goal, *d_xu, *d_xu_old;
+    T *d_lambda, *d_eePos_goal, *d_xu, *d_xu_old;
     gpuErrchk(cudaMalloc(&d_lambda, state_size*knot_points*sizeof(T)));
     gpuErrchk(cudaMalloc(&d_xu, traj_len*sizeof(T)));
     gpuErrchk(cudaMalloc(&d_xu_old, traj_len*sizeof(T)));
-    gpuErrchk(cudaMalloc(&d_xu_goal, traj_len*sizeof(T)));
+    gpuErrchk(cudaMalloc(&d_eePos_goal, 6*knot_points*sizeof(T)));
     gpuErrchk(cudaMemset(d_lambda, 0, state_size*knot_points*sizeof(T)));
-    gpuErrchk(cudaMemcpy(d_xu_goal, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
-    gpuErrchk(cudaMemcpy(d_xu_old, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
-    gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_eePos_goal, d_eePos_traj, 6*knot_points*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu_old, d_xu_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+    gpuErrchk(cudaMemcpy(d_xu, d_xu_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
 
 
     void *d_dynmem = gato_plant::initializeDynamicsConstMem<T>();
@@ -559,20 +559,16 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));    
     gpuErrchk(cudaPeekAtLastError());
 
-#define DONTFORGETME    1
-
-#if DONTFORGETME
-#pragma message("don't forget you're doing pcg max iter shenanigans")
     pcg_config config;
     config.pcg_block = PCG_NUM_THREADS;
     config.pcg_exit_tol = PCG_EXIT_TOL;
     config.pcg_max_iter = PCG_MAX_ITER;
-#endif
+
 
 #if REMOVE_JITTERS
     for(int j = 0; j < 100; j++){
-        sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem, config);
-        gpuErrchk(cudaMemcpy(d_xu, d_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+        sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config);
+        gpuErrchk(cudaMemcpy(d_xu, d_xu_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
     }
 #endif // #if REMOVE_JITTERS
 
@@ -588,7 +584,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
 
 #if LIVE_PRINT_PATH
-        for (int i = 0; i < state_size; i++){
+        for (uint32_t i = 0; i < state_size; i++){
             std::cout << h_xs[i] << (i < state_size-1 ? " " : "\n");
         }
 #endif // #if LIVE_PRINT_PATH
@@ -596,7 +592,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
         
 
-        sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_xu_goal, d_lambda, d_xu, d_dynmem, config);
+        sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config);
 
 
         cur_pcg_iters = std::get<0>(sqp_stats);
@@ -628,7 +624,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         if (!shifted && time_since_timestep > shift_threshold){
             
             // record tracking error
-            cur_tracking_error = compute_tracking_error<T>(state_size, d_xu_goal, d_xs);            //is this the right place to do this?
+            cur_tracking_error = compute_tracking_error<T>(state_size, d_eePos_goal, d_xs);            //is this the right place to do this?
             tracking_errors.push_back(cur_tracking_error);                                            
             
             traj_offset++;
@@ -637,24 +633,24 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
             just_shift<T>(state_size, control_size, knot_points, d_xu);             // shift everything over one
             if (traj_offset + knot_points < traj_steps){
                 // if within precomputed traj, fill in last state, control with precompute
-                gpuErrchk(cudaMemcpy(&d_xu[traj_len - (state_size + control_size)], &d_traj[(state_size+control_size)*traj_offset - control_size], sizeof(T)*(state_size+control_size), cudaMemcpyDeviceToDevice));     // last state filled from precomputed trajectory
+                gpuErrchk(cudaMemcpy(&d_xu[traj_len - (state_size + control_size)], &d_xu_traj[(state_size+control_size)*traj_offset - control_size], sizeof(T)*(state_size+control_size), cudaMemcpyDeviceToDevice));     // last state filled from precomputed trajectory
             }
             else{
                 // fill in last state with goal position, zero velocity, last control with zero control
-                gpuErrchk(cudaMemcpy(&d_xu[traj_len - state_size], &d_traj[(traj_steps-1)*(state_size+control_size)], (state_size/2)*sizeof(T), cudaMemcpyDeviceToDevice));
+                gpuErrchk(cudaMemcpy(&d_xu[traj_len - state_size], &d_xu_traj[(traj_steps-1)*(state_size+control_size)], (state_size/2)*sizeof(T), cudaMemcpyDeviceToDevice));
                 gpuErrchk(cudaMemset(&d_xu[traj_len - state_size / 2], 0, (state_size/2) * sizeof(T)));
                 gpuErrchk(cudaMemset(&d_xu[traj_len - (state_size+control_size)], 0, control_size * sizeof(T)));
             }
             
             // shift goal
-            just_shift(state_size, control_size, knot_points, d_xu_goal);
+            just_shift(6, 0, knot_points, d_eePos_goal);
             if (traj_offset + knot_points < traj_steps){
-                gpuErrchk(cudaMemcpy(&d_xu_goal[(knot_points-1)*(state_size+control_size)], &d_traj[(traj_offset+knot_points-1) * (state_size + control_size)], state_size*sizeof(T), cudaMemcpyDeviceToDevice));
+                gpuErrchk(cudaMemcpy(&d_eePos_goal[(knot_points-1)*(6)], &d_eePos_traj[(traj_offset+knot_points-1) * (6)], 6*sizeof(T), cudaMemcpyDeviceToDevice));
             }
             else{
                 // fill in last goal state with goal state and zero velocity
-                gpuErrchk(cudaMemcpy(&d_xu_goal[(knot_points-1)*(state_size+control_size)], &d_traj[(traj_steps-1)*(state_size+control_size)], (state_size/2)*sizeof(T), cudaMemcpyDeviceToDevice));
-                gpuErrchk(cudaMemset(&d_xu_goal[(knot_points-1)*(state_size+control_size) + state_size / 2], 0, (state_size/2) * sizeof(T)));
+                gpuErrchk(cudaMemcpy(&d_eePos_goal[(knot_points-1)*(6)], &d_eePos_traj[(traj_steps-1)*(6)], (6)*sizeof(T), cudaMemcpyDeviceToDevice));
+                // gpuErrchk(cudaMemset(&d_eePos_goal[(knot_points-1)*(6) + state_size / 2], 0, (state_size/2) * sizeof(T)));
             }
             
             
@@ -688,16 +684,10 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         sqp_times.push_back(sqp_solve_time_us);
         sqp_iters.push_back(cur_sqp_iters);
 
-#if DONTFORGETME
-        // if(cur_sqp_iters==0 && !cur_pcg_iters.empty()){
-        //     config.pcg_max_iter = *std::max_element(cur_pcg_iters.begin(), cur_pcg_iters.end());
-        // }
-#endif
-
 
 #if LIVE_PRINT_STATS
         if (control_update_step % 1000 == 50){
-            for (int i = 0; i < state_size; i++){
+            for (uint32_t i = 0; i < state_size; i++){
                 std::cout << h_xs[i] << (i < state_size-1 ? " " : "\n");
             }
     #if TIME_LINSYS
@@ -736,7 +726,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
     gpuErrchk(cudaFree(d_lambda));
     gpuErrchk(cudaFree(d_xu));
-    gpuErrchk(cudaFree(d_xu_goal));
+    gpuErrchk(cudaFree(d_eePos_goal));
     gpuErrchk(cudaFree(d_xu_old));
 }
 
@@ -770,5 +760,5 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         // }
 
     // previous end fills
-            // gpuErrchk(cudaMemcpy(&d_xu[traj_len - (state_size + control_size)], &d_traj[(state_size+control_size)*(traj_offset+1) - control_size], sizeof(T)*(state_size+control_size), cudaMemcpyDeviceToDevice));     // last state filled from precomputed trajectory
-            // gpuErrchk(cudaMemcpy(d_xu_goal, &d_traj[traj_offset * (state_size + control_size)], traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+            // gpuErrchk(cudaMemcpy(&d_xu[traj_len - (state_size + control_size)], &d_eePos_traj[(state_size+control_size)*(traj_offset+1) - control_size], sizeof(T)*(state_size+control_size), cudaMemcpyDeviceToDevice));     // last state filled from precomputed trajectory
+            // gpuErrchk(cudaMemcpy(d_xu_goal, &d_eePos_traj[traj_offset * (state_size + control_size)], traj_len*sizeof(T), cudaMemcpyDeviceToDevice));

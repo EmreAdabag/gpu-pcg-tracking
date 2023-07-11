@@ -99,26 +99,97 @@ namespace gato_plant{
 
 	template <typename T>
 	__device__
-	void forwardDynamics(T *s_qdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
-		grid::forward_dynamics_device<T>(s_qdd,s_q,s_qd,s_u,s_temp,(grid::robotModel<T>*)d_dynMem_const,GRAVITY<T>());
+	void forwardDynamics(T *s_qdd, T *s_q, T *s_qd, T *s_u, T *s_XITemp, void *d_dynMem_const, cooperative_groups::thread_block block){
+
+		// T *s_XImats = s_XITemp; T *s_temp = &s_XITemp[1008];
+    	// grid::load_update_XImats_helpers<T>(s_XImats, s_q, (grid::robotModel<float> *) d_dynMem_const, s_temp);
+    	// __syncthreads();
+
+    	// grid::forward_dynamics_inner<T>(s_qdd, s_q, s_qd, s_u, s_XImats, s_temp, gato_plant::GRAVITY<T>());
+		
+		grid::forward_dynamics_device<T>(s_qdd,s_q,s_qd,s_u,(grid::robotModel<T>*)d_dynMem_const,GRAVITY<T>());
 	}
 
 	__host__ __device__
 	constexpr unsigned forwardDynamics_TempMemSize_Shared(){return grid::FD_DYNAMIC_SHARED_MEM_COUNT;}
 
+	// template <typename T>
+	// __device__
+	// void forwardDynamicsGradient( T *s_dqdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
+	// 	grid::forward_dynamics_gradient_device<T,true>(s_dqdd, s_q, s_qd, s_u, s_temp, (grid::robotModel<T> *)d_dynMem_const,GRAVITY<T>());
+	// }
+
+	// __host__ __device__
+	// constexpr unsigned forwardDynamicsGradient_TempMemSize_Shared(){return grid::FD_DU_MAX_SHARED_MEM_COUNT;}
+
 	template <typename T>
 	__device__
-	void forwardDynamicsGradient( T *s_dqdd, T *s_q, T *s_qd, T *s_u, T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
-		grid::forward_dynamics_gradient_device<T,true>(s_dqdd, s_q, s_qd, s_u, s_temp, (grid::robotModel<T> *)d_dynMem_const,GRAVITY<T>());
-	}
+    void forwardDynamicsAndGradient(T *s_dqdd, T *s_qdd, T *s_q, T *s_qd, T *s_u,  T *s_temp_in, void *d_dynMem_const, cooperative_groups::thread_block block){
+       
+		// grid::robotModel<T> *d_robotModel = (grid::robotModel<T> *) d_dynMem_const;
+		
+		// T *s_dc_du = s_temp_in;
+		// T *s_vaf = s_dc_du + 392;
+		// T *s_Minv = s_vaf + 252;
+		// T *s_XITemp = s_Minv + 196;
+		// T *s_XImats = s_XITemp; T *s_temp = &s_XITemp[1008];
 
-	__host__ __device__
-	constexpr unsigned forwardDynamicsGradient_TempMemSize_Shared(){return grid::FD_DU_MAX_SHARED_MEM_COUNT;}
 
-	template <typename T>
-	__device__
-    void forwardDynamicsAndGradient(T *s_dqdd, T *s_qdd, T *s_q, T *s_qd, T *s_u,  T *s_temp, void *d_dynMem_const, cooperative_groups::thread_block block){
-        grid::forward_dynamics_and_gradient_device<T,true>(s_dqdd, s_qdd, s_q, s_qd, s_u, s_temp, (grid::robotModel<T> *)d_dynMem_const,GRAVITY<T>());
+	    // grid::load_update_XImats_helpers<T>(s_XImats, s_q, d_robotModel, s_temp);
+		
+		// grid::direct_minv_inner<T>(s_Minv, s_q, s_XImats, s_temp);
+		// grid::inverse_dynamics_inner<T>(s_temp, s_vaf, s_q, s_qd, s_XImats, &s_temp[14], GRAVITY<T>());
+		// grid::forward_dynamics_finish<T>(s_qdd, s_u, s_temp, s_Minv);
+		
+		// grid::inverse_dynamics_inner_vaf<T>(s_vaf, s_q, s_qd, s_qdd, s_XImats, s_temp, GRAVITY<T>());
+		// grid::inverse_dynamics_gradient_inner<T>(s_dc_du, s_q, s_qd, s_vaf, s_XImats, s_temp, GRAVITY<T>());
+		// for(int ind = threadIdx.x; ind < 392; ind += blockDim.x){
+		// 	int row = ind % 14; int dc_col_offset = ind - row;
+		// 	// account for the fact that Minv is an SYMMETRIC_UPPER triangular matrix
+		// 	T val = static_cast<T>(0);
+		// 	for(int col = 0; col < 14; col++) {
+		// 		int index = (row <= col) * (col * 14 + row) + (row > col) * (row * 14 + col);
+		// 		val += s_Minv[index] * s_dc_du[dc_col_offset + col];
+		// 	}
+		// 	s_temp[ind] = -val;
+		// }
+
+		// for(int ind = threadIdx.x; ind < 392; ind += blockDim.x){
+		// 	s_dqdd[ind] = s_temp[ind];
+		// }
+		// __syncthreads();
+		
+
+		// T *s_XITemp = s_temp_in;
+		// grid::robotModel<T> *d_robotModel = (grid::robotModel<T> *) d_dynMem_const;
+		// T *s_XImats = s_XITemp; T *s_vaf = &s_XITemp[504]; T *s_dc_du = &s_vaf[126]; T *s_Minv = &s_dc_du[98]; T *s_temp = &s_Minv[49];
+        // grid::load_update_XImats_helpers<T>(s_XImats, s_q, d_robotModel, s_temp); __syncthreads();
+        // //TODO: there is a slightly faster way as s_v does not change -- thus no recompute needed
+        // grid::direct_minv_inner<T>(s_Minv, s_q, s_XImats, s_temp); __syncthreads();
+        // T *s_c = s_temp;
+        // grid::inverse_dynamics_inner<T>(s_c, s_vaf, s_q, s_qd, s_XImats, &s_temp[7], GRAVITY<T>()); __syncthreads();
+        // grid::forward_dynamics_finish<T>(s_qdd, s_u, s_c, s_Minv); __syncthreads();
+        // grid::inverse_dynamics_inner_vaf<T>(s_vaf, s_q, s_qd, s_qdd, s_XImats, s_temp, GRAVITY<T>()); __syncthreads();
+        // grid::inverse_dynamics_gradient_inner<T>(s_dc_du, s_q, s_qd, s_vaf, s_XImats, s_temp, GRAVITY<T>()); __syncthreads();
+        // for(int ind = threadIdx.x + threadIdx.y*blockDim.x; ind < 98; ind += blockDim.x*blockDim.y){
+        //     int row = ind % 7; int dc_col_offset = ind - row;
+        //     // account for the fact that Minv is an SYMMETRIC_UPPER triangular matrix
+        //     T val = static_cast<T>(0);
+        //     for(int col = 0; col < 7; col++) {
+        //         int index = (row <= col) * (col * 7 + row) + (row > col) * (row * 7 + col);
+        //         val += s_Minv[index] * s_dc_du[dc_col_offset + col];
+        //     }
+        //     s_dqdd[ind] = -val;
+        //     if (1 && ind < 49){
+        //         int col = ind / 7; int index = (row <= col) * (col * 7 + row) + (row > col) * (row * 7 + col);
+        //         s_dqdd[ind + 98] = s_Minv[index];
+        //     }
+        // }
+
+
+
+		// grid::robotModel<T> *d_robotModel = (grid::robotModel<T> *) d_dynMem_const;
+		// grid::forward_dynamics_gradient_device<T>(s_dqdd, s_q, s_qd, s_u, d_robotModel, GRAVITY<T>());
     }
 
 
@@ -188,7 +259,8 @@ namespace gato_plant{
 										T *s_qk, 
 										T *s_Rk, 
 										T *s_rk,
-										T *s_temp)
+										T *s_temp,
+										void *d_robotModel)
 	{	
 		const T Q_cost = COST_Q1<T>();
 		const T QD_cost = COST_QD<T>();
@@ -202,8 +274,8 @@ namespace gato_plant{
 		uint32_t offset;
 		T err;
 		
-		grid::end_effector_positions_device<T>(s_eePos, s_xu, d_robotModel);
-		grid::end_effector_positions_gradient_device<T>(s_eePos_grad, s_xu, d_robotModel);
+		grid::end_effector_positions_device<T>(s_eePos, s_xu, (grid::robotModel<T> *)d_robotModel);
+		grid::end_effector_positions_gradient_device<T>(s_eePos_grad, s_xu, (grid::robotModel<T> *)d_robotModel);
         __syncthreads();
 
 		for (int i = threadIdx.x; i < threads_needed; i += blockDim.x){
@@ -269,11 +341,13 @@ namespace gato_plant{
 							    				  T *s_rk, 
 							    				  T *s_Qkp1, 
 							    				  T *s_qkp1,
-							    				  T *s_temp)
+							    				  T *s_temp,
+												  void *d_dynMem_const
+												  )
 	{
-		trackingCostGradientAndHessian<T>(state_size, control_size, s_xu, s_eePos_traj, s_Qk, s_qk, s_Rk, s_rk, s_temp);
+		trackingCostGradientAndHessian<T>(state_size, control_size, s_xux, s_eePos_traj, s_Qk, s_qk, s_Rk, s_rk, s_temp, d_dynMem_const);
 		__syncthreads();
-		trackingCostGradientAndHessian<T, false>(state_size, control_size, s_xu, s_eePos_traj, s_Qkp1, s_qkp1, nullptr, nullptr, s_temp);
+		trackingCostGradientAndHessian<T, false>(state_size, control_size, s_xux, &s_eePos_traj[6], s_Qkp1, s_qkp1, nullptr, nullptr, s_temp, d_dynMem_const);
 	}
 
 	__host__ __device__

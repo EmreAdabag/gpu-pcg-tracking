@@ -393,7 +393,7 @@ __global__
 void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_points,
                    T *d_G_dense, T *d_C_dense, T *d_g, T *d_c,
                    void *d_dynMem_const, T timestep,
-                   T *d_xu_traj, T *d_xs, T *d_xu)
+                   T *d_eePos_traj, T *d_xs, T *d_xu)
 {
 
     const cgrps::thread_block block = cgrps::this_thread_block();
@@ -411,8 +411,8 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
     extern __shared__ T s_temp[];
 
     T *s_xux = s_temp;
-    T *s_xux_traj = s_xux + 2*state_size + control_size;
-    T *s_Qk = s_xux_traj + 2*state_size + control_size;
+    T *s_eePos_traj = s_xux + 2*state_size + control_size;
+    T *s_Qk = s_eePos_traj + 6;
     T *s_Rk = s_Qk + states_sq;
     T *s_qk = s_Rk + controls_sq;
     T *s_rk = s_qk + state_size;
@@ -422,7 +422,7 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
     for(unsigned k = block_id; k < knot_points-1; k += num_blocks){
 
         glass::copy<T>(2*state_size + control_size, &d_xu[k*states_s_controls], s_xux);
-        glass::copy<T>(2*state_size + control_size, &d_xu_traj[k*states_s_controls], s_xux_traj);
+        glass::copy<T>(2 * 6, &d_eePos_traj[k*6], s_eePos_traj);
         
         __syncthreads();    
 
@@ -452,14 +452,15 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
                 state_size,
                 control_size,
                 s_xux,
-                s_xux_traj,
+                s_eePos_traj,
                 s_Qk,
                 s_qk,
                 s_Rk,
                 s_rk,
                 s_Qkp1,
                 s_qkp1,
-                s_extra_temp
+                s_extra_temp,
+                d_dynMem_const
             );
             __syncthreads();
 
@@ -502,12 +503,13 @@ void gato_form_kkt(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
             gato_plant::trackingCostGradientAndHessian<T>(state_size,
                                                   control_size,
                                                   s_xux,
-                                                  s_xux_traj,
+                                                  s_eePos_traj,
                                                   s_Qk,
                                                   s_qk,
                                                   s_Rk,
                                                   s_rk,
-                                                  s_extra_temp);
+                                                  s_extra_temp,
+                                                  d_dynMem_const);
             __syncthreads();
  
             glass::copy<T>(states_sq, s_Qk, &d_G_dense[(states_sq+controls_sq)*k]);

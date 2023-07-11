@@ -61,11 +61,11 @@ int main(){
     const uint32_t recorded_states = 5;
     const uint32_t start_goal_combinations = recorded_states*recorded_states;
 
-    char traj_file_name[100];
-    // char lambda_file_name[100];
+    char eePos_traj_file_name[100];
+    char xu_traj_file_name[100];
 
     int start_state, goal_state;
-    pcg_t *d_traj, *d_xs;
+    pcg_t *d_eePos_traj, *d_xu_traj, *d_xs;
 
     for(uint32_t ind = 0; ind < start_goal_combinations; ind++){
 
@@ -74,27 +74,38 @@ int main(){
         if(start_state == goal_state && start_state != 0){ continue; }
         std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
-        for (int single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
+        for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
 
             // read in traj
-            snprintf(traj_file_name, sizeof(traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
-            std::vector<std::vector<pcg_t>> traj2d = readCSVToVecVec<pcg_t>(traj_file_name);
+            snprintf(eePos_traj_file_name, sizeof(eePos_traj_file_name), "testfiles/%d_%d_eepos.traj", start_state, goal_state);
+            std::vector<std::vector<pcg_t>> eePos_traj2d = readCSVToVecVec<pcg_t>(eePos_traj_file_name);
+            
+            snprintf(xu_traj_file_name, sizeof(xu_traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
+            std::vector<std::vector<pcg_t>> xu_traj2d = readCSVToVecVec<pcg_t>(xu_traj_file_name);
+            
+            if(eePos_traj2d.size() < knot_points){std::cout << "precomputed traj length < knotpoints, not implemented\n"; continue; }
 
-            if(traj2d.size() < knot_points){std::cout << "precomputed traj length < knot points, not implemented\n"; continue; }
 
-            std::vector<pcg_t> h_traj;
-            for (const auto& vec : traj2d) {
-                h_traj.insert(h_traj.end(), vec.begin(), vec.end());
+            std::vector<pcg_t> h_eePos_traj;
+            for (const auto& vec : eePos_traj2d) {
+                h_eePos_traj.insert(h_eePos_traj.end(), vec.begin(), vec.end());
+            }
+            std::vector<pcg_t> h_xu_traj;
+            for (const auto& xu_vec : xu_traj2d) {
+                h_xu_traj.insert(h_xu_traj.end(), xu_vec.begin(), xu_vec.end());
             }
 
-            gpuErrchk(cudaMalloc(&d_traj, h_traj.size()*sizeof(pcg_t)));
-            gpuErrchk(cudaMemcpy(d_traj, h_traj.data(), h_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
+            gpuErrchk(cudaMalloc(&d_eePos_traj, h_eePos_traj.size()*sizeof(pcg_t)));
+            gpuErrchk(cudaMemcpy(d_eePos_traj, h_eePos_traj.data(), h_eePos_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
+            
+            gpuErrchk(cudaMalloc(&d_xu_traj, h_xu_traj.size()*sizeof(pcg_t)));
+            gpuErrchk(cudaMemcpy(d_xu_traj, h_xu_traj.data(), h_xu_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
             
             gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(pcg_t)));
-            gpuErrchk(cudaMemcpy(d_xs, h_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
-            
+            gpuErrchk(cudaMemcpy(d_xs, h_xu_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
 
-            track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(traj2d.size()), timestep, d_traj, d_xs, start_state, goal_state, single_traj_test_iter);
+
+            track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter);
 
             gpuErrchk(cudaPeekAtLastError());
             
@@ -104,7 +115,8 @@ int main(){
 
 
 
-    gpuErrchk(cudaFree(d_traj));
+    gpuErrchk(cudaFree(d_xu_traj));
+    gpuErrchk(cudaFree(d_eePos_traj));
     gpuErrchk(cudaFree(d_xs));
 
     return 0;
