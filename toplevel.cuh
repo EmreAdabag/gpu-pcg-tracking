@@ -609,9 +609,34 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         simulation_time = sqp_solve_time_us;
 #endif
 
+        // std::cout << "simulating for " << simulation_time << " us\nxu:";
+        // float h_temp[21];
+        // gpuErrchk(cudaMemcpy(h_temp, d_xu_old, 21*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 21; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl << "xs:";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
+        
+
+
+
 
         // simulate traj for current solve time, offset by previous solve time
         simple_simulate<T>(state_size, control_size, knot_points, d_xs, d_xu_old, d_dynmem, timestep, prev_simulation_time, simulation_time);
+
+        
+        // std::cout << "result\n";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
+        // exit(12);
 
 
         // old xu = new xu

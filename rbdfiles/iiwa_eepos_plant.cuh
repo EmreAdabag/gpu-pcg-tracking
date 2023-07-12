@@ -101,13 +101,13 @@ namespace gato_plant{
 	__device__
 	void forwardDynamics(T *s_qdd, T *s_q, T *s_qd, T *s_u, T *s_XITemp, void *d_dynMem_const, cooperative_groups::thread_block block){
 
-		// T *s_XImats = s_XITemp; T *s_temp = &s_XITemp[1008];
-    	// grid::load_update_XImats_helpers<T>(s_XImats, s_q, (grid::robotModel<float> *) d_dynMem_const, s_temp);
-    	// __syncthreads();
+		T *s_XImats = s_XITemp; T *s_temp = &s_XITemp[1008];
+    	grid::load_update_XImats_helpers<T>(s_XImats, s_q, (grid::robotModel<float> *) d_dynMem_const, s_temp);
+    	__syncthreads();
 
-    	// grid::forward_dynamics_inner<T>(s_qdd, s_q, s_qd, s_u, s_XImats, s_temp, gato_plant::GRAVITY<T>());
+    	grid::forward_dynamics_inner<T>(s_qdd, s_q, s_qd, s_u, s_XImats, s_temp, gato_plant::GRAVITY<T>());
 		
-		grid::forward_dynamics_device<T>(s_qdd,s_q,s_qd,s_u,(grid::robotModel<T>*)d_dynMem_const,GRAVITY<T>());
+		// grid::forward_dynamics_device<T>(s_qdd,s_q,s_qd,s_u,(grid::robotModel<T>*)d_dynMem_const,GRAVITY<T>());
 	}
 
 	__host__ __device__
@@ -122,9 +122,43 @@ namespace gato_plant{
 	// __host__ __device__
 	// constexpr unsigned forwardDynamicsGradient_TempMemSize_Shared(){return grid::FD_DU_MAX_SHARED_MEM_COUNT;}
 
-	template <typename T>
-	__device__
-    void forwardDynamicsAndGradient(T *s_dqdd, T *s_qdd, T *s_q, T *s_qd, T *s_u,  T *s_temp_in, void *d_dynMem_const, cooperative_groups::thread_block block){
+
+    template <typename T, bool INCLUDE_DU = true>
+    __device__
+    void forwardDynamicsAndGradient(T *s_df_du, T *s_qdd, const T *s_q, const T *s_qd, const T *s_u, T *s_temp_in, void *d_dynMem_const){
+
+		T *s_XITemp = s_temp_in;
+		grid::robotModel<T> *d_robotModel = (grid::robotModel<T> *) d_dynMem_const;
+
+        T *s_XImats = s_XITemp; T *s_vaf = &s_XITemp[504]; T *s_dc_du = &s_vaf[126]; T *s_Minv = &s_dc_du[98]; T *s_temp = &s_Minv[49];
+        grid::load_update_XImats_helpers<T>(s_XImats, s_q, d_robotModel, s_temp); __syncthreads();
+        //TODO: there is a slightly faster way as s_v does not change -- thus no recompute needed
+        grid::direct_minv_inner<T>(s_Minv, s_q, s_XImats, s_temp); __syncthreads();
+        T *s_c = s_temp;
+        grid::inverse_dynamics_inner<T>(s_c, s_vaf, s_q, s_qd, s_XImats, &s_temp[7], GRAVITY<T>()); __syncthreads();
+        grid::forward_dynamics_finish<T>(s_qdd, s_u, s_c, s_Minv); __syncthreads();
+        grid::inverse_dynamics_inner_vaf<T>(s_vaf, s_q, s_qd, s_qdd, s_XImats, s_temp, GRAVITY<T>()); __syncthreads();
+        grid::inverse_dynamics_gradient_inner<T>(s_dc_du, s_q, s_qd, s_vaf, s_XImats, s_temp, GRAVITY<T>()); __syncthreads();
+        for(int ind = threadIdx.x + threadIdx.y*blockDim.x; ind < 98; ind += blockDim.x*blockDim.y){
+            int row = ind % 7; int dc_col_offset = ind - row;
+            // account for the fact that Minv is an SYMMETRIC_UPPER triangular matrix
+            T val = static_cast<T>(0);
+            for(int col = 0; col < 7; col++) {
+                int index = (row <= col) * (col * 7 + row) + (row > col) * (row * 7 + col);
+                val += s_Minv[index] * s_dc_du[dc_col_offset + col];
+            }
+            s_df_du[ind] = -val;
+            if (INCLUDE_DU && ind < 49){
+                int col = ind / 7; int index = (row <= col) * (col * 7 + row) + (row > col) * (row * 7 + col);
+                s_df_du[ind + 98] = s_Minv[index];
+            }
+        }
+    }
+
+
+	// template <typename T>
+	// __device__
+    // void forwardDynamicsAndGradient(T *s_dqdd, T *s_qdd, T *s_q, T *s_qd, T *s_u,  T *s_temp_in, void *d_dynMem_const, cooperative_groups::thread_block block){
        
 		// grid::robotModel<T> *d_robotModel = (grid::robotModel<T> *) d_dynMem_const;
 		
@@ -190,7 +224,7 @@ namespace gato_plant{
 
 		// grid::robotModel<T> *d_robotModel = (grid::robotModel<T> *) d_dynMem_const;
 		// grid::forward_dynamics_gradient_device<T>(s_dqdd, s_q, s_qd, s_u, d_robotModel, GRAVITY<T>());
-    }
+    // }
 
 
 	__host__ __device__

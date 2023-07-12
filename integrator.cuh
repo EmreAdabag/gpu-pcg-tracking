@@ -168,7 +168,7 @@ void integratorAndGradient(uint32_t state_size, uint32_t control_size, T *s_xux,
     T *s_q = s_xux; 	
     T *s_qd = s_q + state_size/2; 		
     T *s_u = s_qd + state_size/2;
-    gato_plant::forwardDynamicsAndGradient<T>(s_dqdd, s_qdd, s_q, s_qd, s_u, s_extra_temp, d_dynMem_const, block);
+    gato_plant::forwardDynamicsAndGradient<T>(s_dqdd, s_qdd, s_q, s_qd, s_u, s_extra_temp, d_dynMem_const);
     block.sync();
     // first compute xnew or error
     if (COMPUTE_INTEGRATOR_ERROR){
@@ -372,12 +372,23 @@ void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_p
     uint32_t sim_steps_needed = static_cast<uint32_t>(sim_time / sim_step_time);
 
 
-
     for(uint32_t step = 0; step < sim_steps_needed; step++){
+        // float h_temp[21];
+        // std::cout << "sim step: " << step << " sim time " << sim_step_time <<  std::endl;
+
         control_offset = static_cast<uint32_t>((time_offset + step * sim_step_time) / timestep);
         control = &d_xu[control_offset * states_s_controls + state_size];
 
         simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time);
+
+        // std::cout << "result\n";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
+        // exit(12);
+
     }
 
     T half_sim_step_time = fmod(sim_time, sim_step_time);
