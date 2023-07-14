@@ -244,8 +244,9 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     gpuErrchk(cudaMemcpyAsync(&h_merit_initial, d_merit_initial, sizeof(T), cudaMemcpyDeviceToHost));
     gpuErrchk(cudaPeekAtLastError());
 
-    
-
+    // gpuErrchk(cudaDeviceSynchronize());
+    // std::cout << "initial merit " << h_merit_initial << std::endl;
+    // exit(0);
 
     //
     //      SQP LOOP
@@ -384,6 +385,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         line_search_step = 0;
         min_merit = h_merit_initial;
         for(int i = 0; i < 8; i++){
+            // std::cout << h_merit_news[i] << (i == 7 ? "\n" : " ");
             ///TODO: reduction ratio
             if(h_merit_news[i] < min_merit){
                 min_merit = h_merit_news[i];
@@ -403,7 +405,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
             }
             continue;
         }
-        std::cout << "line search accepted\n";
+        // std::cout << "line search accepted\n";
         alphafinal = -1.0 / (1 << line_search_step);        // alpha sign
 
         drho = min(drho/rho_factor, 1/rho_factor);
@@ -558,6 +560,16 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
     tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));    
     gpuErrchk(cudaPeekAtLastError());
+#if LIVE_PRINT_PATH
+    T h_eePos[6];
+#endif // #if LIVE_PRINT_PATH
+
+
+    // temp device memory
+#if LIVE_PRINT_PATH
+    T *d_eePos;
+    gpuErrchk(cudaMalloc(&d_eePos, 6*sizeof(T)));
+#endif // #if LIVE_PRINT_PATH
 
     pcg_config config;
     config.pcg_block = PCG_NUM_THREADS;
@@ -584,8 +596,11 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
 
 #if LIVE_PRINT_PATH
-        for (uint32_t i = 0; i < state_size; i++){
-            std::cout << h_xs[i] << (i < state_size-1 ? " " : "\n");
+        grid::end_effector_positions_kernel<T><<<1,128>>>(d_eePos, d_xs, grid::NUM_JOINTS, (grid::robotModel<T> *) d_dynmem, 1);
+        gpuErrchk(cudaMemcpy(h_eePos, d_eePos, 6*sizeof(T), cudaMemcpyDeviceToHost));
+
+        for (uint32_t i = 0; i < 6; i++){
+            std::cout << h_eePos[i] << (i < 5 ? " " : "\n");
         }
 #endif // #if LIVE_PRINT_PATH
         
@@ -719,6 +734,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
             std::cout << "linear system solve time:" << std::endl;
             printStats<double>(&linsys_times);
     #endif // #if TIME_LINSYS
+            std::cout << "goal offset [" << traj_offset << "]\n";
             std::cout << "sqp iters" << std::endl;
             printStats<uint32_t>(&sqp_iters);
             std::cout << "sqp times" << std::endl;
@@ -753,7 +769,13 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaFree(d_xu));
     gpuErrchk(cudaFree(d_eePos_goal));
     gpuErrchk(cudaFree(d_xu_old));
+
+#if LIVE_PRINT_PATH
+    gpuErrchk(cudaFree(d_eePos));
+#endif
+
 }
+
 
 
 

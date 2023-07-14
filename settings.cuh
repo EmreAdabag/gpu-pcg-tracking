@@ -22,7 +22,7 @@ typedef float pcg_t;
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
 #define Q_COST          (.10)
-#define QD_COST         (0.050)
+#define QD_COST         (0.0010)
 #define R_COST          (0.0001)
 
 

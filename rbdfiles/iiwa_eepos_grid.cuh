@@ -2091,8 +2091,8 @@ namespace grid {
      */
     template <typename T>
     __device__
-    void end_effector_positions_device(T *s_eePos, const T *s_q, const robotModel<T> *d_robotModel) {
-        extern __shared__ T s_XHomTemp[]; T *s_XmatsHom = s_XHomTemp; T *s_temp = &s_XHomTemp[112];
+    void end_effector_positions_device(T *s_eePos, const T *s_q, T *s_temp_in, const robotModel<T> *d_robotModel) {
+        T *s_XHomTemp = s_temp_in; T *s_XmatsHom = s_XHomTemp; T *s_temp = &s_XHomTemp[112];
         load_update_XmatsHom_helpers<T>(s_XmatsHom, s_q, d_robotModel, s_temp);
         end_effector_positions_inner<T>(s_eePos, s_q, s_XmatsHom, s_temp);
     }
@@ -2343,8 +2343,8 @@ namespace grid {
      */
     template <typename T>
     __device__
-    void end_effector_positions_gradient_device(T *s_deePos, const T *s_q, const robotModel<T> *d_robotModel) {
-        extern __shared__ T s_XHomTemp[]; T *s_XmatsHom = s_XHomTemp; T *s_dXmatsHom = &s_XHomTemp[112]; T *s_temp = &s_dXmatsHom[112];
+    void end_effector_positions_gradient_device(T *s_deePos, const T *s_q, T *s_temp_in, const robotModel<T> *d_robotModel) {
+        T *s_XHomTemp = s_temp_in; T *s_XmatsHom = s_XHomTemp; T *s_dXmatsHom = &s_XHomTemp[112]; T *s_temp = &s_dXmatsHom[112];
         load_update_XmatsHom_helpers<T>(s_XmatsHom, s_dXmatsHom, s_q, d_robotModel, s_temp);
         end_effector_positions_gradient_inner<T>(s_deePos, s_q, s_XmatsHom, s_dXmatsHom, s_temp);
     }

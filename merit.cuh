@@ -6,10 +6,11 @@
 #include "rbd_plant.cuh"
 #include "integrator.cuh"
 
+//TODO: this
 template <typename T>
 size_t get_merit_smem_size(uint32_t state_size, uint32_t control_size)
 {
-    return sizeof(T) * ((4 * state_size + 2 * control_size ) + max((2 * state_size + control_size), state_size + gato_plant::forwardDynamics_TempMemSize_Shared()));
+    return sizeof(T) * ((4 * state_size + 2 * control_size ) + grid::EE_POS_SHARED_MEM_COUNT + max((2 * state_size + control_size), state_size + gato_plant::forwardDynamics_TempMemSize_Shared()));
 }
 
 // cost compute for line search
@@ -120,6 +121,9 @@ void compute_merit(uint32_t state_size, uint32_t control_size, uint32_t knot_poi
                 s_eePos_k_traj[i] = d_eePos_traj[knot*6+i];                            
             }
         }
+        // if(threadIdx.x==0 && blockIdx.x==0){
+        //     printf("block %d with input %f,%f,%f,%f,%f,%f,%f\n", blockIdx.x, s_xux_k[0],s_xux_k[1],s_xux_k[2],s_xux_k[3],s_xux_k[4],s_xux_k[5],s_xux_k[6]);
+        // }
         block.sync();
         Jk = gato_plant::trackingcost<T>(state_size, control_size, knot_points, s_xux_k, s_eePos_k_traj, s_temp, d_robotModel);
 

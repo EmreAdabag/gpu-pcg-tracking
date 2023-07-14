@@ -250,14 +250,6 @@ namespace gato_plant{
         T *s_qd_r_cost = s_eePos_cost + 6;
 		T *s_scratch = s_qd_r_cost + threadsNeeded;
 
-        grid::end_effector_positions_device<T>(s_eePos_cost, s_xu, d_robotModel);
-        __syncthreads();
-        
-
-        for(int i = 0; i < 3; i++){
-            err = s_eePos_cost[i] - s_eePos_traj[i];
-            s_eePos_cost[i+3] = static_cast<T>(0.5) * Q_COST * err * err;
-        }
 
 
 
@@ -267,12 +259,23 @@ namespace gato_plant{
                 val = QD_cost * err * err;
 			}
 			else{
-				err = s_xu[i+state_size];
+				err = s_xu[i+state_size/2];
 				val = R_cost * err * err;
 			}
 			s_qd_r_cost[i] = static_cast<T>(0.5) * val;
 		}
 
+        __syncthreads();
+        grid::end_effector_positions_device<T>(s_eePos_cost, s_xu, s_scratch, d_robotModel);
+        __syncthreads();
+        // if(threadIdx.x==0){
+		// 	printf("block %d with input %f,%f,%f,%f,%f,%f,%f\n reporting positions %f,%f,%f\n", blockIdx.x, s_xu[0],s_xu[1],s_xu[2],s_xu[3],s_xu[4],s_xu[5],s_xu[6], s_eePos_cost[0],s_eePos_cost[1],s_eePos_cost[2]);
+		// }
+
+        for(int i = threadIdx.x; i < 3; i+=blockDim.x){
+            err = s_eePos_cost[i] - s_eePos_traj[i];
+            s_eePos_cost[i+3] = static_cast<T>(0.5) * Q_COST * err * err;
+        }
 		__syncthreads();
 		glass::reduce<T>(3 + threadsNeeded, &s_eePos_cost[3]);
 		__syncthreads();
@@ -302,26 +305,27 @@ namespace gato_plant{
 
 		T *s_eePos = s_temp;
 		T *s_eePos_grad = s_eePos + 6;
-		// s_end = s_eePos_grad + 6 * state_size/2;
+		T *s_scratch = s_eePos_grad + 6 * state_size/2;
 
 		const uint32_t threads_needed = state_size + control_size*computeR;
 		uint32_t offset;
 		T err;
 		
-		grid::end_effector_positions_device<T>(s_eePos, s_xu, (grid::robotModel<T> *)d_robotModel);
-		grid::end_effector_positions_gradient_device<T>(s_eePos_grad, s_xu, (grid::robotModel<T> *)d_robotModel);
+		grid::end_effector_positions_device<T>(s_eePos, s_xu, s_scratch, (grid::robotModel<T> *)d_robotModel);
+        __syncthreads();
+		grid::end_effector_positions_gradient_device<T>(s_eePos_grad, s_xu, s_scratch, (grid::robotModel<T> *)d_robotModel);
         __syncthreads();
 
 		for (int i = threadIdx.x; i < threads_needed; i += blockDim.x){
 			
 			if(i < state_size){
-				// sum x, y, z error
-				err = (s_eePos[0] - s_eePos_traj[0]) +
-					  (s_eePos[1] - s_eePos_traj[1]) +
-					  (s_eePos[2] - s_eePos_traj[2]);
-
 				//gradient
 				if (i < state_size / 2){
+					// sum x, y, z error
+					err = (s_eePos[0] - s_eePos_traj[0]) +
+						(s_eePos[1] - s_eePos_traj[1]) +
+						(s_eePos[2] - s_eePos_traj[2]);
+
 					s_qk[i] = Q_cost * ( s_eePos_grad[6 * i + 0] + s_eePos_grad[6 * i + 1] + s_eePos_grad[6 * i + 2] ) * err;
 				}
 				else{
@@ -354,6 +358,7 @@ namespace gato_plant{
 				}
 			}
 			else{
+				offset = i - state_size;
 				//hessian
 				for(int j = 0; j < control_size; j++){
 					s_Rk[offset*control_size+j] = (offset == j) ? R_cost : static_cast<T>(0);
@@ -382,9 +387,10 @@ namespace gato_plant{
 		trackingCostGradientAndHessian<T>(state_size, control_size, s_xux, s_eePos_traj, s_Qk, s_qk, s_Rk, s_rk, s_temp, d_dynMem_const);
 		__syncthreads();
 		trackingCostGradientAndHessian<T, false>(state_size, control_size, s_xux, &s_eePos_traj[6], s_Qkp1, s_qkp1, nullptr, nullptr, s_temp, d_dynMem_const);
+		__syncthreads();
 	}
 
-	__host__ __device__
-	constexpr unsigned costGradientAndHessian_TempMemSize_Shared(){return 0;}
+	// __host__ __device__
+	// constexpr unsigned costGradientAndHessian_TempMemSize_Shared(){return 0;}
 }
 
