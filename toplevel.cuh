@@ -270,7 +270,6 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         gpuErrchk(cudaPeekAtLastError());
         if (sqpTimecheck()){ break; }
 
-
     // write_device_matrix_to_file(d_g, 1, 2*(state_size+control_size), "g", 0);
     // write_device_matrix_to_file(d_c, 1, 2*(state_size+control_size), "c", 0);
     // exit(2);
@@ -560,16 +559,13 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
     tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));    
     gpuErrchk(cudaPeekAtLastError());
-#if LIVE_PRINT_PATH
     T h_eePos[6];
-#endif // #if LIVE_PRINT_PATH
+    T h_eePos_goal[6];
 
 
     // temp device memory
-#if LIVE_PRINT_PATH
     T *d_eePos;
     gpuErrchk(cudaMalloc(&d_eePos, 6*sizeof(T)));
-#endif // #if LIVE_PRINT_PATH
 
     pcg_config config;
     config.pcg_block = PCG_NUM_THREADS;
@@ -595,10 +591,10 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         if (traj_offset == traj_steps){ break; }
 
 
+
 #if LIVE_PRINT_PATH
         grid::end_effector_positions_kernel<T><<<1,128>>>(d_eePos, d_xs, grid::NUM_JOINTS, (grid::robotModel<T> *) d_dynmem, 1);
         gpuErrchk(cudaMemcpy(h_eePos, d_eePos, 6*sizeof(T), cudaMemcpyDeviceToHost));
-
         for (uint32_t i = 0; i < 6; i++){
             std::cout << h_eePos[i] << (i < 5 ? " " : "\n");
         }
@@ -664,7 +660,14 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         if (!shifted && time_since_timestep > shift_threshold){
             
             // record tracking error
-            cur_tracking_error = compute_tracking_error<T>(state_size, d_eePos_goal, d_xs);            //is this the right place to do this?
+            grid::end_effector_positions_kernel<T><<<1,128>>>(d_eePos, d_xs, grid::NUM_JOINTS, (grid::robotModel<T> *) d_dynmem, 1);
+            gpuErrchk(cudaMemcpy(h_eePos, d_eePos, 6*sizeof(T), cudaMemcpyDeviceToHost));
+            gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, 6*sizeof(T), cudaMemcpyDeviceToHost));
+            cur_tracking_error = 0.0;
+            for(uint32_t i=0; i < 3; i++){
+                cur_tracking_error += abs(h_eePos[i] - h_eePos_goal[i]);
+            }
+            // std::cout << cur_tracking_error << std::endl;;
             tracking_errors.push_back(cur_tracking_error);                                            
             
             traj_offset++;
@@ -739,7 +742,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
             printStats<uint32_t>(&sqp_iters);
             std::cout << "sqp times" << std::endl;
             printStats<double>(&sqp_times);
-            std::cout << "avg tracking error: " << std::accumulate(tracking_errors.begin(), tracking_errors.end(), 0.0f) / traj_steps << " current error: " << cur_tracking_error << "\n";
+            std::cout << "avg tracking error: " << std::accumulate(tracking_errors.begin(), tracking_errors.end(), 0.0f) / traj_offset << " current error: " << cur_tracking_error << "\n";
             std::cout << std::endl;
         }
 
@@ -770,9 +773,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaFree(d_eePos_goal));
     gpuErrchk(cudaFree(d_xu_old));
 
-#if LIVE_PRINT_PATH
     gpuErrchk(cudaFree(d_eePos));
-#endif
 
 }
 

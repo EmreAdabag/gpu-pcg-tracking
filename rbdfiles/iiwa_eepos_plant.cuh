@@ -51,9 +51,9 @@ namespace gato_plant{
 	constexpr T GRAVITY() {return static_cast<T>(0.0);}
 
 
-	template<class T>
-	__host__ __device__
-	constexpr T COST_Q1() {return static_cast<T>(Q_COST);}
+	// template<class T>
+	// __host__ __device__
+	// constexpr T COST_Q1() {return static_cast<T>(Q_COST);}
 	
 	template<class T>
 	__host__ __device__
@@ -232,11 +232,11 @@ namespace gato_plant{
 
 
 	///TODO: get rid of divergence
-	template <typename T>
+		template <typename T>
 	__device__
 	T trackingcost(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *s_xu, T *s_eePos_traj, T *s_temp, const grid::robotModel<T> *d_robotModel){
 		
-        const T Q_cost = COST_Q1<T>();
+        // const T Q_cost = COST_Q1<T>();
 		const T QD_cost = COST_QD<T>();
 		const T R_cost = COST_R<T>();
         
@@ -244,11 +244,11 @@ namespace gato_plant{
         T val = 0;
 		
         // QD and R penalty
-		const uint32_t threadsNeeded = state_size/2 + control_size * (blockIdx.x != knot_points - 1);
+		const uint32_t threadsNeeded = state_size/2 + control_size * (blockIdx.x < knot_points - 1);
         
-		T *s_eePos_cost = s_temp;
-        T *s_qd_r_cost = s_eePos_cost + 6;
-		T *s_scratch = s_qd_r_cost + threadsNeeded;
+		T *s_cost_vec = s_temp;
+		T *s_eePos_cost = s_cost_vec + threadsNeeded + 3;
+        T *s_extra_temp = s_eePos_cost + 6;
 
 
 
@@ -262,26 +262,27 @@ namespace gato_plant{
 				err = s_xu[i+state_size/2];
 				val = R_cost * err * err;
 			}
-			s_qd_r_cost[i] = static_cast<T>(0.5) * val;
+			s_cost_vec[i] = static_cast<T>(0.5) * val;
 		}
 
         __syncthreads();
-        grid::end_effector_positions_device<T>(s_eePos_cost, s_xu, s_scratch, d_robotModel);
+        grid::end_effector_positions_device<T>(s_eePos_cost, s_xu, s_extra_temp, d_robotModel);
         __syncthreads();
-        // if(threadIdx.x==0){
-		// 	printf("block %d with input %f,%f,%f,%f,%f,%f,%f\n reporting positions %f,%f,%f\n", blockIdx.x, s_xu[0],s_xu[1],s_xu[2],s_xu[3],s_xu[4],s_xu[5],s_xu[6], s_eePos_cost[0],s_eePos_cost[1],s_eePos_cost[2]);
+        
+		// if(threadIdx.x==0){
+		// 	printf("block %d with input %f,%f,%f,%f,%f,%f,%f\n", blockIdx.x, s_xu[7],s_xu[8],s_xu[9],s_xu[10],s_xu[11],s_xu[12],s_xu[13]);
 		// }
 
         for(int i = threadIdx.x; i < 3; i+=blockDim.x){
             err = s_eePos_cost[i] - s_eePos_traj[i];
-            s_eePos_cost[i+3] = static_cast<T>(0.5) * Q_COST * err * err;
+            s_cost_vec[threadsNeeded + i] = static_cast<T>(0.5) * err * err;
         }
 		__syncthreads();
-		glass::reduce<T>(3 + threadsNeeded, &s_eePos_cost[3]);
+		glass::reduce<T>(3 + threadsNeeded, s_cost_vec);
 		__syncthreads();
 		
-        return s_eePos_cost[3];
-	}
+        return s_cost_vec[0];
+	}	
 
 
 	///TODO: costgradientandhessian could be much faster with no divergence
@@ -299,7 +300,7 @@ namespace gato_plant{
 										T *s_temp,
 										void *d_robotModel)
 	{	
-		const T Q_cost = COST_Q1<T>();
+		// const T Q_cost = COST_Q1<T>();
 		const T QD_cost = COST_QD<T>();
 		const T R_cost = COST_R<T>();
 
@@ -310,11 +311,15 @@ namespace gato_plant{
 		const uint32_t threads_needed = state_size + control_size*computeR;
 		uint32_t offset;
 		T err;
-		
+
 		grid::end_effector_positions_device<T>(s_eePos, s_xu, s_scratch, (grid::robotModel<T> *)d_robotModel);
         __syncthreads();
 		grid::end_effector_positions_gradient_device<T>(s_eePos_grad, s_xu, s_scratch, (grid::robotModel<T> *)d_robotModel);
         __syncthreads();
+
+		// if(threadIdx.x==0){
+		// 	printf("block %d with input %f,%f,%f,%f,%f,%f,%f\n", blockIdx.x, s_xu[0],s_xu[1],s_xu[2],s_xu[3],s_xu[4],s_xu[5],s_xu[6]);
+		// }
 
 		for (int i = threadIdx.x; i < threads_needed; i += blockDim.x){
 			
@@ -326,7 +331,7 @@ namespace gato_plant{
 						(s_eePos[1] - s_eePos_traj[1]) +
 						(s_eePos[2] - s_eePos_traj[2]);
 
-					s_qk[i] = Q_cost * ( s_eePos_grad[6 * i + 0] + s_eePos_grad[6 * i + 1] + s_eePos_grad[6 * i + 2] ) * err;
+					s_qk[i] = ( s_eePos_grad[6 * i + 0] + s_eePos_grad[6 * i + 1] + s_eePos_grad[6 * i + 2] ) * err;
 				}
 				else{
 					err = s_xu[i];
@@ -349,7 +354,7 @@ namespace gato_plant{
 			if (i < state_size){
 				//hessian
 				for(int j = 0; j < state_size; j++){
-					if(j < state_size / 2){
+					if(j < state_size / 2 && i < state_size / 2){
 						s_Qk[i*state_size + j] = s_qk[i] * s_qk[j];
 					}
 					else{
