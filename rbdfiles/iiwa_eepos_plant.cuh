@@ -231,6 +231,11 @@ namespace gato_plant{
 	constexpr unsigned forwardDynamicsAndGradient_TempMemSize_Shared(){return grid::FD_DU_MAX_SHARED_MEM_COUNT;}
 
 
+	__host__
+	unsigned trackingcost_TempMemCt_Shared(uint32_t state_size, uint32_t control_size, uint32_t knot_points){
+		return state_size/2 + control_size + 3 + 6 + grid::EE_POS_SHARED_MEM_COUNT;
+	}
+
 	///TODO: get rid of divergence
 		template <typename T>
 	__device__
@@ -310,7 +315,7 @@ namespace gato_plant{
 
 		const uint32_t threads_needed = state_size + control_size*computeR;
 		uint32_t offset;
-		T err;
+		T x_err, y_err, z_err, err;
 
 		grid::end_effector_positions_device<T>(s_eePos, s_xu, s_scratch, (grid::robotModel<T> *)d_robotModel);
         __syncthreads();
@@ -327,11 +332,11 @@ namespace gato_plant{
 				//gradient
 				if (i < state_size / 2){
 					// sum x, y, z error
-					err = (s_eePos[0] - s_eePos_traj[0]) +
-						(s_eePos[1] - s_eePos_traj[1]) +
-						(s_eePos[2] - s_eePos_traj[2]);
+					x_err = (s_eePos[0] - s_eePos_traj[0]);
+					y_err = (s_eePos[1] - s_eePos_traj[1]);
+					z_err = (s_eePos[2] - s_eePos_traj[2]);
 
-					s_qk[i] = ( s_eePos_grad[6 * i + 0] + s_eePos_grad[6 * i + 1] + s_eePos_grad[6 * i + 2] ) * err;
+					s_qk[i] = s_eePos_grad[6 * i + 0] * x_err + s_eePos_grad[6 * i + 1] * y_err + s_eePos_grad[6 * i + 2] * z_err;
 				}
 				else{
 					err = s_xu[i];
