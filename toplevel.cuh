@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <numeric>
 #include <algorithm>
 #include <cstdint>
 #include <cublas_v2.h>
@@ -21,7 +22,7 @@
 
 
 template <typename T>
-auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_eePos_traj, T *d_lambda, T *d_xu, void *d_dynMem_const, pcg_config& config){
+auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_eePos_traj, T *d_lambda, T *d_xu, void *d_dynMem_const, pcg_config& config, T &rho, T rho_reset){
     
     // data storage
     std::vector<int> pcg_iter_vec;
@@ -86,7 +87,6 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
     
     T drho = 1.0;
-    T rho = 1e-3;
     T rho_factor = 4;
     T rho_max = 1e3;
     T rho_min = 1e-3;
@@ -384,7 +384,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         line_search_step = 0;
         min_merit = h_merit_initial;
         for(int i = 0; i < 8; i++){
-            // std::cout << h_merit_news[i] << (i == 7 ? "\n" : " ");
+        //     std::cout << h_merit_news[i] << (i == 7 ? "\n" : " ");
             ///TODO: reduction ratio
             if(h_merit_news[i] < min_merit){
                 min_merit = h_merit_news[i];
@@ -400,6 +400,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
             sqp_iter++;
             if(rho > rho_max){
                 sqp_time_exit = 0;
+                rho = rho_reset;
                 break; 
             }
             continue;
@@ -572,12 +573,20 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     config.pcg_exit_tol = PCG_EXIT_TOL;
     config.pcg_max_iter = PCG_MAX_ITER;
 
+    T rho = 1e-3;
+    T rho_reset = 1e-3;
 
 #if REMOVE_JITTERS
+    config.pcg_exit_tol = 1e-11;
+    config.pcg_max_iter = 1000;
+
     for(int j = 0; j < 100; j++){
-        sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config);
+        sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, 1e-3);
         gpuErrchk(cudaMemcpy(d_xu, d_xu_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
     }
+
+    config.pcg_exit_tol = PCG_EXIT_TOL;
+    config.pcg_max_iter = PCG_MAX_ITER;
 #endif // #if REMOVE_JITTERS
 
 
@@ -603,7 +612,7 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 
         
 
-        sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config);
+        sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, rho_reset);
 
 
         cur_pcg_iters = std::get<0>(sqp_stats);
@@ -696,6 +705,9 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
                 // gpuErrchk(cudaMemset(&d_eePos_goal[(knot_points-1)*(6) + state_size / 2], 0, (state_size/2) * sizeof(T)));
             }
             
+            // shift lambda
+            just_shift(state_size, 0, knot_points, d_lambda);
+                // gpuErrchk(cudaMemset(&lambdas[i][state_size*(knot_points-1)], 0, state_size*sizeof(T)));
             
             shifted = true;
         }
@@ -742,8 +754,17 @@ void track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
             printStats<uint32_t>(&sqp_iters);
             std::cout << "sqp times" << std::endl;
             printStats<double>(&sqp_times);
+            
+            int totalOnes = std::accumulate(pcg_exits.begin(), pcg_exits.end(), 0);
+            double max_iter_pct = (static_cast<double>(totalOnes) / pcg_exits.size());
+            std::cout << "pcg exits for max iter: " << max_iter_pct * 100 << "% of the time\n";
+            if (max_iter_pct > 0.5) {
+               std::cout << "WARNING: PCG exiting for max iter over 50% of the time" << std::endl;
+            }
+            
             std::cout << "avg tracking error: " << std::accumulate(tracking_errors.begin(), tracking_errors.end(), 0.0f) / traj_offset << " current error: " << cur_tracking_error << "\n";
             std::cout << std::endl;
+
         }
 
 #endif

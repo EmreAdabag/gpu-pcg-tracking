@@ -1,6 +1,6 @@
 #pragma once
 
-#define KNOT_POINTS 64 
+#define KNOT_POINTS 32
 #define STATE_SIZE  14
 
 
@@ -8,7 +8,7 @@
 
 
 // qdldl if 0
-#define PCG_SOLVE       0
+#define PCG_SOLVE       1
 
 // doubles if 1, floats if 0
 #define USE_DOUBLES 0
@@ -21,8 +21,8 @@ typedef float pcg_t;
 
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
-#define Q_COST          (.10)
-#define QD_COST         (0.0010)
+// #define Q_COST          (.10)
+#define QD_COST         (0.0001)
 #define R_COST          (0.0001)
 
 
@@ -34,9 +34,9 @@ typedef float pcg_t;
 #define CONST_UPDATE_FREQ   1
 
 #if CONST_UPDATE_FREQ 
-#define SQP_MAX_TIME_US 50000
-#define SIMULATION_PERIOD 1000
-#define SQP_MAX_ITER    10
+#define SQP_MAX_TIME_US 2000
+#define SIMULATION_PERIOD 2000
+#define SQP_MAX_ITER    5
 #else
 #define SQP_MAX_ITER    5
 #endif
@@ -47,7 +47,7 @@ typedef float pcg_t;
 
 
 #define PCG_NUM_THREADS     128
-#define PCG_EXIT_TOL        1e-9
+#define PCG_EXIT_TOL        1e-7
 #define PCG_MAX_ITER        200
 
 #define MERIT_THREADS       128
@@ -59,12 +59,12 @@ typedef float pcg_t;
 
 
 // prints state while tracking
-#define LIVE_PRINT_PATH 1
+#define LIVE_PRINT_PATH 0
 #define LIVE_PRINT_STATS 1
 
 // runs sqp a bunch of times before starting to track
 #define REMOVE_JITTERS  1
 
 // where to store test results — manually create this directory
-#define SAVE_DATA   1
+#define SAVE_DATA   0
 #define DATA_DIRECTORY   "./testresults_qdl/"
