@@ -1,11 +1,11 @@
 #pragma once
 
-#define KNOT_POINTS 64
+#define KNOT_POINTS 512
 #define STATE_SIZE  14
 
 
 #define ADD_NOISE  0
-#define TEST_ITERS 3
+#define TEST_ITERS 10
 
 // qdldl if 0
 #define PCG_SOLVE       1
@@ -34,8 +34,8 @@ typedef float pcg_t;
 #define CONST_UPDATE_FREQ   1
 
 #if CONST_UPDATE_FREQ 
-#define SQP_MAX_TIME_US 2000
-#define SIMULATION_PERIOD 2000
+#define SQP_MAX_TIME_US 1000
+#define SIMULATION_PERIOD 1000
 #define SQP_MAX_ITER    20
 #else
 #define SQP_MAX_ITER    5
@@ -48,7 +48,7 @@ typedef float pcg_t;
 
 #define PCG_NUM_THREADS     128
 // #define PCG_EXIT_TOL        5e-6
-#define PCG_MAX_ITER        173
+#define PCG_MAX_ITER        67
 
 #define MERIT_THREADS       128
 #define SCHUR_THREADS       128
@@ -56,7 +56,7 @@ typedef float pcg_t;
 #define KKT_THREADS         128
 
 
-#define RHO_FACTOR  1.2
+#define RHO_FACTOR 4 
 #define RHO_MAX 1e1
 #define RHO_MIN 1e-3
 
@@ -69,5 +69,5 @@ typedef float pcg_t;
 #define REMOVE_JITTERS  1
 
 // where to store test results — manually create this directory
-#define SAVE_DATA   0
+#define SAVE_DATA   1
 #define DATA_DIRECTORY   "./testresults/"

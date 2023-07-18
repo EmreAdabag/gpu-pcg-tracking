@@ -2,6 +2,7 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <tuple>
 #include "toplevel.cuh"
 #include "qdldl.h"
 #include "rbd_plant.cuh"
@@ -74,16 +75,17 @@ int main(){
         if(start_state == goal_state && start_state != 0){ continue; }
         std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
-        uint32_t num_exit_vals;
-        T pcg_exit_vals[num_exit_vals] = {1e-4, 5e-5, 1e-5, 5e-6, 1e-6};
+        uint32_t num_exit_vals = 10;
+        float pcg_exit_vals[num_exit_vals] = {1e-3, 5e-4, 1e-4, 5e-5, 1e-5, 5e-6, 1e-6, 5e-7, 1e-7, 5e-8};
 
-        double tot_avg_sqp_iters = 0;
-        double tot_avg_tracking_err = 0;
-        double tot_final_tracking_err = 0;
 
         for (uint32_t pcg_exit_ind = 0; pcg_exit_ind < num_exit_vals; pcg_exit_ind++){
+            // if(pcg_exit_ind < 2){continue;}
 
-            T pcg_exit_tol = pcg_exit_vals[rho_ind];
+            float pcg_exit_tol = pcg_exit_vals[pcg_exit_ind];
+            double tot_avg_sqp_iters = 0;
+            double tot_avg_tracking_err = 0;
+            double tot_final_tracking_err = 0;
 
 
             for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
@@ -122,25 +124,29 @@ int main(){
                 tot_avg_tracking_err += std::get<1>(trackingstats);
                 tot_final_tracking_err += std::get<2>(trackingstats);
 
+                if (std::get<1>(trackingstats) > 1 || std::get<2>(trackingstats) > .1){
+                    std::cout << "error condition violation, ignore this result set\n";
+                    break;
+                }
 
-
+                gpuErrchk(cudaFree(d_xu_traj));
+                gpuErrchk(cudaFree(d_eePos_traj));
+                gpuErrchk(cudaFree(d_xs));
                 gpuErrchk(cudaPeekAtLastError());
                 
             }
 
-            std::cout << "\n\n";
+            std::cout << "\nRESULTS\n";
             std::cout << "exit tol: " << pcg_exit_tol << std::endl;
-            std::cout << "avg avg tracking err: " << tot_avg_tracking_err / num_exit_vals << " avg final tracking err " << tot_final_tracking_err / num_exit_vals << std::endl;
-            std::cout << "avg avg sqp iters: " << tot_avg_sqp_iters << std::endl;
+            std::cout << "avg avg tracking err: " << tot_avg_tracking_err / traj_test_iters << " avg final tracking err " << tot_final_tracking_err / traj_test_iters << std::endl;
+            std::cout << "avg avg sqp iters: " << tot_avg_sqp_iters / traj_test_iters << std::endl;
+            std::cout << "\n\n";
         }
         break;
     }
 
 
 
-    gpuErrchk(cudaFree(d_xu_traj));
-    gpuErrchk(cudaFree(d_eePos_traj));
-    gpuErrchk(cudaFree(d_xs));
 
     return 0;
 }

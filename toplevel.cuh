@@ -813,7 +813,7 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     };
 
-    return std::make_tuple(ivecAvg(sqp_iters), tvecAvg(tracking_errors), cur_tracking_err);
+    return std::make_tuple(ivecAvg(sqp_iters), tvecAvg(tracking_errors), cur_tracking_error);
 }
 
 

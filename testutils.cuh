@@ -111,7 +111,7 @@ void print_test_config(){
     std::cout << "solver: " << (PCG_SOLVE ? "PCG" : "QDLDL") << "\n";
 #if PCG_SOLVE
     std::cout << "max pcg iter: " << PCG_MAX_ITER << "\n";
-    std::cout << "pcg exit tol: " << PCG_EXIT_TOL << "\n";
+    // std::cout << "pcg exit tol: " << PCG_EXIT_TOL << "\n";
 #endif
     std::cout << "save data: " << (SAVE_DATA ? "ON" : "OFF") << "\n";
     std::cout << "jitters: " << (REMOVE_JITTERS ? "ON" : "OFF") << "\n";
