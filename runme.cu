@@ -7,6 +7,7 @@
 #include "qdldl.h"
 #include "rbd_plant.cuh"
 #include "settings.cuh"
+#include "experiment_helpers.cuh"
 
 
 
@@ -75,18 +76,18 @@ int main(){
         if(start_state == goal_state && start_state != 0){ continue; }
         std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
-        uint32_t num_exit_vals = 10;
-        float pcg_exit_vals[num_exit_vals] = {1e-3, 5e-4, 1e-4, 5e-5, 1e-5, 5e-6, 1e-6, 5e-7, 1e-7, 5e-8};
-
+        uint32_t num_exit_vals = 8;
+        float pcg_exit_vals[num_exit_vals] = {5e-5, 1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3};
+        
 
         for (uint32_t pcg_exit_ind = 0; pcg_exit_ind < num_exit_vals; pcg_exit_ind++){
-            // if(pcg_exit_ind < 2){continue;}
+            if(pcg_exit_ind < 1){continue;}
 
             float pcg_exit_tol = pcg_exit_vals[pcg_exit_ind];
-            double tot_avg_sqp_iters = 0;
-            double tot_avg_tracking_err = 0;
+            std::vector<double> linsys_times;
+            std::vector<double> cur_linsys_times;
             double tot_final_tracking_err = 0;
-
+            double tot_avg_tracking_err = 0;
 
             for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
 
@@ -120,11 +121,12 @@ int main(){
 
 
                 auto trackingstats = track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol);
-                tot_avg_sqp_iters += std::get<0>(trackingstats);
+                cur_linsys_times = std::get<0>(trackingstats);
+                linsys_times.insert(linsys_times.end(), cur_linsys_times.begin(), cur_linsys_times.end());
                 tot_avg_tracking_err += std::get<1>(trackingstats);
                 tot_final_tracking_err += std::get<2>(trackingstats);
 
-                if (std::get<1>(trackingstats) > 1 || std::get<2>(trackingstats) > .1){
+                if (std::get<1>(trackingstats) > .5 || std::get<2>(trackingstats) > .05){
                     std::cout << "error condition violation, ignore this result set\n";
                     break;
                 }
@@ -138,8 +140,8 @@ int main(){
 
             std::cout << "\nRESULTS\n";
             std::cout << "exit tol: " << pcg_exit_tol << std::endl;
+            printStats<double>(&linsys_times);
             std::cout << "avg avg tracking err: " << tot_avg_tracking_err / traj_test_iters << " avg final tracking err " << tot_final_tracking_err / traj_test_iters << std::endl;
-            std::cout << "avg avg sqp iters: " << tot_avg_sqp_iters / traj_test_iters << std::endl;
             std::cout << "\n\n";
         }
         break;

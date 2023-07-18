@@ -779,6 +779,12 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     std::cout << "\n\nlinear system solve time:" << std::endl;
     printStats<double>(&linsys_times);
 #endif
+#if PCG_SOLVE
+    std::cout << "PCG exit tol: " << pcg_exit_tol << std::endl;
+    int totalOnes = std::accumulate(pcg_exits.begin(), pcg_exits.end(), 0);
+    double max_iter_pct = (static_cast<double>(totalOnes) / pcg_exits.size());
+    std::cout << "pcg exits for max iter: " << max_iter_pct * 100 << "% of the time\n";
+#endif
     std::cout << "sqp iters" << std::endl;
     printStats<uint32_t>(&sqp_iters);
     // printStats<int>(&pcg_iters);
@@ -813,7 +819,7 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     };
 
-    return std::make_tuple(ivecAvg(sqp_iters), tvecAvg(tracking_errors), cur_tracking_error);
+    return std::make_tuple(linsys_times, tvecAvg(tracking_errors), cur_tracking_error);
 }
 
 
