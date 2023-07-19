@@ -89,7 +89,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     T drho = 1.0;
     T rho_factor = RHO_FACTOR;
     T rho_max = RHO_MAX;
-    T rho_min = RHO_MIN;
+    T rho_min = rho_reset;
 
     
 
@@ -811,9 +811,9 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaFree(d_eePos));
 
 
-    auto ivecAvg = [](const std::vector<uint32_t>& v){
-        return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
-    };
+    // auto ivecAvg = [](const std::vector<uint32_t>& v){
+    //     return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+    // };
     
     auto tvecAvg = [](const std::vector<T>& v){
         return std::accumulate(v.begin(), v.end(), 0.0) / v.size();

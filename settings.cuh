@@ -43,7 +43,7 @@ typedef float pcg_t;
 
 
 
-#define TIME_LINSYS     0
+#define TIME_LINSYS     1
 
 
 #define PCG_NUM_THREADS     128
@@ -56,9 +56,9 @@ typedef float pcg_t;
 #define KKT_THREADS         128
 
 
-#define RHO_FACTOR 4
-#define RHO_MAX 1e1
-#define RHO_MIN 1e-3
+#define RHO_FACTOR 8
+#define RHO_MAX 1e2
+// #define RHO_MIN 1e-3
 
 
 // prints state while tracking
