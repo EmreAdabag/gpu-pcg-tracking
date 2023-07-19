@@ -89,7 +89,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     T drho = 1.0;
     T rho_factor = RHO_FACTOR;
     T rho_max = RHO_MAX;
-    T rho_min = RHO_MIN;
+    T rho_min = rho_reset;
 
     
 
@@ -813,7 +813,7 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
         return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     };
 
-    return std::make_tuple(ivecAvg(sqp_iters), tvecAvg(tracking_errors), cur_tracking_err);
+    return std::make_tuple(ivecAvg(sqp_iters), tvecAvg(tracking_errors), cur_tracking_error);
 }
 
 

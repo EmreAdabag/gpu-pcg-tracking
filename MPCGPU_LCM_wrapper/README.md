@@ -1,0 +1,1 @@
+You need to generate the LCM types if you change them. http://lcm-proj.github.io/lcm/content/tutorial-cpp.html
