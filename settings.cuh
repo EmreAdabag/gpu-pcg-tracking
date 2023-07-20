@@ -34,7 +34,7 @@ typedef float pcg_t;
 #define CONST_UPDATE_FREQ   1
 
 #if CONST_UPDATE_FREQ 
-#define SQP_MAX_TIME_US 2000
+#define SQP_MAX_TIME_US 4000
 #define SIMULATION_PERIOD 2000
 #define SQP_MAX_ITER    20
 #else
@@ -48,7 +48,7 @@ typedef float pcg_t;
 
 #define PCG_NUM_THREADS     128
 // #define PCG_EXIT_TOL        5e-6
-#define PCG_MAX_ITER        173
+#define PCG_MAX_ITER        300
 
 #define MERIT_THREADS       128
 #define SCHUR_THREADS       128

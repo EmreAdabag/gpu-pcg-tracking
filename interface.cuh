@@ -6,13 +6,15 @@
 template <typename T>
 struct MPC_variables {
     int64_t utime;
+    int64_t first_utime;
     T *h_xu;
     T *h_x0;
 
     
     T *h_xs;
-    double timestamp;
     double timestep;
+    int64_t timestep_long;
+    int64_t last_shifted_utime;
 
     T rho_reset;
     uint32_t pcg_max_iter;
@@ -66,7 +68,6 @@ void setupTracking_pcg(struct MPC_variables<T> *mpcvars){
     const uint32_t DZ_SIZE_BYTES          =   static_cast<uint32_t>((states_s_controls*knot_points-control_size)*sizeof(T));
 
 
-
     mpcvars->h_x0 = (T *) malloc(grid::NUM_JOINTS*sizeof(T));
     mpcvars->h_xu = (T *) malloc(STEPS_IN_TRAJ*(3 * grid::NUM_JOINTS)*sizeof(T));
     mpcvars->h_xs = (T *) malloc(grid::NUM_JOINTS*2*sizeof(T));
@@ -89,15 +90,18 @@ void setupTracking_pcg(struct MPC_variables<T> *mpcvars){
         h_xu_traj.insert(h_xu_traj.end(), xu_vec.begin(), xu_vec.end());
     }
     gpuErrchk(cudaMalloc(&(mpcvars->d_eePos_full_traj), h_eePos_traj.size()*sizeof(T)));
+    std::cout << "h_eePos_full_traj size: " << h_eePos_traj.size() << std::endl;
     gpuErrchk(cudaMemcpy(mpcvars->d_eePos_full_traj, h_eePos_traj.data(), h_eePos_traj.size()*sizeof(T), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMalloc(&(mpcvars->d_xu), ((states_s_controls*knot_points)-control_size)*sizeof(T)));
     gpuErrchk(cudaMemcpy(mpcvars->d_xu, h_xu_traj.data(), ((states_s_controls*knot_points)-control_size)*sizeof(T), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMalloc(&(mpcvars->d_xs), state_size*sizeof(T)));
     gpuErrchk(cudaMemcpy(mpcvars->d_xs, h_xu_traj.data(), state_size*sizeof(T), cudaMemcpyHostToDevice));
 
-
-    mpcvars->timestamp = 0;
+    mpcvars->utime = 0;
+    mpcvars->first_utime = 0;
+    mpcvars->last_shifted_utime = 0;
     mpcvars->timestep = .015625;
+    mpcvars->timestep_long = 15625;
     mpcvars->pcg_max_iter = 200;
     mpcvars->pcg_exit_tol = 1e-6;
     mpcvars->rho_ptr[0] = 1e-3;
@@ -152,10 +156,7 @@ template <typename T>
 void cleanupTracking_pcg(struct MPC_variables<T> *mpcvars){
 
     free(mpcvars->h_x0);
-    free(mpcvars->h_xu);
-    free(mpcvars->h_xs);
-    free(mpcvars->rho_ptr);
-
+    bool *d_pcg_exit = mpcvars->d_pcg_exit;
     gpuErrchk(cudaFree(mpcvars->d_xu));
     gpuErrchk(cudaFree(mpcvars->d_lambda));
     
@@ -201,17 +202,17 @@ int updateTrajectory(struct MPC_variables<T> *mpcvars){
     struct timespec sqp_solve_start;
     clock_gettime(CLOCK_MONOTONIC, &sqp_solve_start);
     
-
     
     T *h_xs = mpcvars->h_xs;
 
-    double timestamp = mpcvars->timestamp;
+
     double timestep = mpcvars->timestep;
     T rho_reset = mpcvars->rho_reset;
     uint32_t pcg_max_iter = mpcvars->pcg_max_iter;
     T pcg_exit_tol = mpcvars->pcg_exit_tol;
     T *rho_ptr = mpcvars->rho_ptr;
     
+
     void *d_dynMem_const = mpcvars->d_dynmem;
     
     T *d_xu = mpcvars->d_xu;
@@ -240,6 +241,8 @@ int updateTrajectory(struct MPC_variables<T> *mpcvars){
     uint32_t *d_pcg_iters = mpcvars->d_pcg_iters;
     bool *d_pcg_exit = mpcvars->d_pcg_exit;
     
+    int64_t utime = mpcvars->utime - mpcvars->first_utime;
+    int64_t last_shifted_utime = mpcvars->last_shifted_utime;
     
     const uint32_t state_size = grid::NUM_JOINTS*2;
     const uint32_t control_size = grid::NUM_JOINTS;
@@ -248,17 +251,23 @@ int updateTrajectory(struct MPC_variables<T> *mpcvars){
     const uint32_t DZ_SIZE_BYTES          =   static_cast<uint32_t>((states_s_controls*knot_points-control_size)*sizeof(T));
     
     
+    if (utime - last_shifted_utime > mpcvars->timestep_long){
+        just_shift<T>(state_size, control_size, knot_points, d_xu);
+        // std::cout << "shifted with difference " << utime - last_shifted_utime << std::endl;   
+        last_shifted_utime = utime;
+    }
 
 
     // copy in xs
     gpuErrchk(cudaMemcpy(d_xs, h_xs, state_size*sizeof(T), cudaMemcpyHostToDevice));
     // get goal pointer
-    d_eePos_traj = &d_eePos_full_traj[static_cast<uint32_t>(std::fmod(timestamp, timestep)) * 6];
+    d_eePos_traj = &d_eePos_full_traj[(utime / mpcvars->timestep_long) * 6];
+    // std::cout << "utime: " << utime  << " " << mpcvars->timestep_long << std::endl;
+    // std::cout << (utime / mpcvars->timestep_long) * 6 << " line\n";
 
     gpuErrchk(cudaMemset(d_merit_initial, 0, sizeof(T)));
     
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
+
     
     
     // line search things
@@ -295,8 +304,7 @@ int updateTrajectory(struct MPC_variables<T> *mpcvars){
     };
     size_t ppcg_kernel_smem_size = pcgSharedMemSize<T>(state_size, knot_points);
 
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
+
     
     
     T drho = 1.0;
@@ -331,8 +339,7 @@ int updateTrajectory(struct MPC_variables<T> *mpcvars){
     gpuErrchk(cudaPeekAtLastError());
 
 
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
+
 
     for(uint32_t sqpiter = 0; sqpiter < SQP_MAX_ITER; sqpiter++){
         
@@ -474,8 +481,7 @@ int updateTrajectory(struct MPC_variables<T> *mpcvars){
     
     }
 
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
+
 
     gpuErrchk(cudaMemcpy(mpcvars->h_xu, d_xu, STEPS_IN_TRAJ*(states_s_controls)*sizeof(T), cudaMemcpyDeviceToHost));
 
