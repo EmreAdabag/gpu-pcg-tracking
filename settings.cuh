@@ -1,6 +1,6 @@
 #pragma once
 
-#define KNOT_POINTS 1024
+#define KNOT_POINTS 64
 #define STATE_SIZE  14
 
 
