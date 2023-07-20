@@ -498,7 +498,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
 
     double sqp_solve_time = time_delta_us_timespec(sqp_solve_start, sqp_solve_end);
-
+    // if(sqp_time_exit && sqp_iter < 10){std::cout << pcg_iter_vec.size() << " " << std::accumulate(pcg_iter_vec.begin(), pcg_iter_vec.end(), 0) << std::endl;}
     return std::make_tuple(pcg_iter_vec, linsys_time_vec, sqp_solve_time, sqp_iter, sqp_time_exit, pcg_exit_vec);
 }
 
@@ -778,6 +778,12 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 #if TIME_LINSYS
     std::cout << "\n\nlinear system solve time:" << std::endl;
     printStats<double>(&linsys_times);
+#endif
+#if PCG_SOLVE
+    std::cout << "PCG exit tol: " << pcg_exit_tol << std::endl;
+    int totalOnes = std::accumulate(pcg_exits.begin(), pcg_exits.end(), 0);
+    double max_iter_pct = (static_cast<double>(totalOnes) / pcg_exits.size());
+    std::cout << "pcg exits for max iter: " << max_iter_pct * 100 << "% of the time\n";
 #endif
     std::cout << "sqp iters" << std::endl;
     printStats<uint32_t>(&sqp_iters);
