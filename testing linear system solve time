@@ -1,0 +1,5 @@
+testing linear system solve time
+TIME_LINSYS 1
+KNOT_POINTS, PCG_MAX_ITER {(32, 173), (64, 173), (128, 167), (256, 118), (512, 67)}
+PCG_SOLVE {1,0}
+PCG_EXIT_TOL {1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3}
