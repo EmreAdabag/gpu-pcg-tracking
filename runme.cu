@@ -50,7 +50,7 @@ int main(){
     const uint32_t knot_points = KNOT_POINTS;
     const pcg_t timestep = .015625;
 
-    const uint32_t traj_test_iters = 1;
+    const uint32_t traj_test_iters = TEST_ITERS;
 
     // checks GPU space for pcg
     checkPcgOccupancy<pcg_t>((void *) pcg<pcg_t, state_size, knot_points>, PCG_NUM_THREADS, state_size, knot_points);    
@@ -74,41 +74,64 @@ int main(){
         if(start_state == goal_state && start_state != 0){ continue; }
         std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
-        for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
+        uint32_t num_exit_vals;
+        T pcg_exit_vals[num_exit_vals] = {1e-4, 5e-5, 1e-5, 5e-6, 1e-6};
 
-            // read in traj
-            snprintf(eePos_traj_file_name, sizeof(eePos_traj_file_name), "testfiles/%d_%d_eepos.traj", start_state, goal_state);
-            std::vector<std::vector<pcg_t>> eePos_traj2d = readCSVToVecVec<pcg_t>(eePos_traj_file_name);
-            
-            snprintf(xu_traj_file_name, sizeof(xu_traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
-            std::vector<std::vector<pcg_t>> xu_traj2d = readCSVToVecVec<pcg_t>(xu_traj_file_name);
-            
-            if(eePos_traj2d.size() < knot_points){std::cout << "precomputed traj length < knotpoints, not implemented\n"; continue; }
+        double tot_avg_sqp_iters = 0;
+        double tot_avg_tracking_err = 0;
+        double tot_final_tracking_err = 0;
+
+        for (uint32_t pcg_exit_ind = 0; pcg_exit_ind < num_exit_vals; pcg_exit_ind++){
+
+            T pcg_exit_tol = pcg_exit_vals[rho_ind];
 
 
-            std::vector<pcg_t> h_eePos_traj;
-            for (const auto& vec : eePos_traj2d) {
-                h_eePos_traj.insert(h_eePos_traj.end(), vec.begin(), vec.end());
+            for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
+
+                // read in traj
+                snprintf(eePos_traj_file_name, sizeof(eePos_traj_file_name), "testfiles/%d_%d_eepos.traj", start_state, goal_state);
+                std::vector<std::vector<pcg_t>> eePos_traj2d = readCSVToVecVec<pcg_t>(eePos_traj_file_name);
+                
+                snprintf(xu_traj_file_name, sizeof(xu_traj_file_name), "testfiles/%d_%d_traj.csv", start_state, goal_state);
+                std::vector<std::vector<pcg_t>> xu_traj2d = readCSVToVecVec<pcg_t>(xu_traj_file_name);
+                
+                if(eePos_traj2d.size() < knot_points){std::cout << "precomputed traj length < knotpoints, not implemented\n"; continue; }
+
+
+                std::vector<pcg_t> h_eePos_traj;
+                for (const auto& vec : eePos_traj2d) {
+                    h_eePos_traj.insert(h_eePos_traj.end(), vec.begin(), vec.end());
+                }
+                std::vector<pcg_t> h_xu_traj;
+                for (const auto& xu_vec : xu_traj2d) {
+                    h_xu_traj.insert(h_xu_traj.end(), xu_vec.begin(), xu_vec.end());
+                }
+
+                gpuErrchk(cudaMalloc(&d_eePos_traj, h_eePos_traj.size()*sizeof(pcg_t)));
+                gpuErrchk(cudaMemcpy(d_eePos_traj, h_eePos_traj.data(), h_eePos_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
+                
+                gpuErrchk(cudaMalloc(&d_xu_traj, h_xu_traj.size()*sizeof(pcg_t)));
+                gpuErrchk(cudaMemcpy(d_xu_traj, h_xu_traj.data(), h_xu_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
+                
+                gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(pcg_t)));
+                gpuErrchk(cudaMemcpy(d_xs, h_xu_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
+
+
+                auto trackingstats = track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol);
+                tot_avg_sqp_iters += std::get<0>(trackingstats);
+                tot_avg_tracking_err += std::get<1>(trackingstats);
+                tot_final_tracking_err += std::get<2>(trackingstats);
+
+
+
+                gpuErrchk(cudaPeekAtLastError());
+                
             }
-            std::vector<pcg_t> h_xu_traj;
-            for (const auto& xu_vec : xu_traj2d) {
-                h_xu_traj.insert(h_xu_traj.end(), xu_vec.begin(), xu_vec.end());
-            }
 
-            gpuErrchk(cudaMalloc(&d_eePos_traj, h_eePos_traj.size()*sizeof(pcg_t)));
-            gpuErrchk(cudaMemcpy(d_eePos_traj, h_eePos_traj.data(), h_eePos_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
-            
-            gpuErrchk(cudaMalloc(&d_xu_traj, h_xu_traj.size()*sizeof(pcg_t)));
-            gpuErrchk(cudaMemcpy(d_xu_traj, h_xu_traj.data(), h_xu_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
-            
-            gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(pcg_t)));
-            gpuErrchk(cudaMemcpy(d_xs, h_xu_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
-
-
-            track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter);
-
-            gpuErrchk(cudaPeekAtLastError());
-            
+            std::cout << "\n\n";
+            std::cout << "exit tol: " << pcg_exit_tol << std::endl;
+            std::cout << "avg avg tracking err: " << tot_avg_tracking_err / num_exit_vals << " avg final tracking err " << tot_final_tracking_err / num_exit_vals << std::endl;
+            std::cout << "avg avg sqp iters: " << tot_avg_sqp_iters << std::endl;
         }
         break;
     }
