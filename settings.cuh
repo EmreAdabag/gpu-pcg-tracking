@@ -22,28 +22,23 @@ typedef float pcg_t;
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
 // #define Q_COST          (.10)
-#define QD_COST         (0.0001)
 // #define R_COST          (0.0001)
 
 
 // this constant controls when xu and goal will be shifted, should be a fraction of a timestep
 #define SHIFT_THRESHOLD (1 * timestep)
 
-
-// if 1 sqp exits on time or rho, else sqp exits on max iters or rho
-#define CONST_UPDATE_FREQ   1
-
-#if CONST_UPDATE_FREQ 
-#define SQP_MAX_TIME_US 1000
-#define SIMULATION_PERIOD 1000
-#define SQP_MAX_ITER    20
-#else
-#define SQP_MAX_ITER    5
+#ifndef TIME_LINSYS
+    #define TIME_LINSYS     0 // won't time linear system solves by default
 #endif
-
-
-
-#define TIME_LINSYS     1
+#if TIME_LINSYS == 1
+    #define QD_COST         (0.0001) // when timing linear system solve times, we always use the same value here.
+    #define SQP_MAX_ITER    20
+#elif TIME_LINSYS == 0
+    #define SQP_MAX_ITER    40
+#else
+    #error "TIME_LINSYS must be either 0 or 1 \n"
+#endif
 
 
 #define PCG_NUM_THREADS     128
