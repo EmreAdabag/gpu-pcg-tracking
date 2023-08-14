@@ -813,7 +813,13 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     //     return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     // };
 
-    return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error);
+    if (TIME_LINSYS == 1) {
+        printf("TIME_LINSYS is 1, first element in tuple is linsys times") 
+        return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error);
+    } else {
+        printf("TIME_LINSYS is 0, first element in tuple is number of sqp iters") 
+        return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error);
+    }
 }
 
 
