@@ -5,7 +5,7 @@
 
 
 #define ADD_NOISE  0
-#define TEST_ITERS 100
+#define TEST_ITERS 1
 
 // qdldl if 0
 // #define PCG_SOLVE       1
@@ -24,20 +24,17 @@ typedef float pcg_t;
 // #define Q_COST          (.10)
 // #define R_COST          (0.0001)
 
+#define CONST_UPDATE_FREQ 1
 
 // this constant controls when xu and goal will be shifted, should be a fraction of a timestep
 #define SHIFT_THRESHOLD (1 * timestep)
 
-#ifndef TIME_LINSYS
-    #define TIME_LINSYS     0 // won't time linear system solves by default
-#endif
-#if TIME_LINSYS == 1
-    #define QD_COST         (0.0001) // when timing linear system solve times, we always use the same value here.
+#if TIME_LINSYS
     #define SQP_MAX_ITER    20
-#elif TIME_LINSYS == 0
-    #define SQP_MAX_ITER    40
+    typedef double toplevel_return_type;
 #else
-    #error "TIME_LINSYS must be either 0 or 1 \n"
+    #define SQP_MAX_ITER    40
+    typedef uint32_t toplevel_return_type;
 #endif
 
 

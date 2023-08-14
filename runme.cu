@@ -102,8 +102,10 @@ int main(){
         for (uint32_t pcg_exit_ind = 0; pcg_exit_ind < num_exit_vals; pcg_exit_ind++){
 
             float pcg_exit_tol = pcg_exit_vals[pcg_exit_ind];
+            // Will declare the variables to track both linsys times and sqp times, but a single test will only use one or the other
             std::vector<double> linsys_times;
-            std::vector<double> cur_linsys_times;
+            std::vector<uint32_t> sqp_iters;
+            std::vector<toplevel_return_type> current_results;
             std::vector<float> tracking_errs;
             std::vector<float> cur_tracking_errs;
             double tot_final_tracking_err = 0;
@@ -138,10 +140,15 @@ int main(){
                 gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(pcg_t)));
                 gpuErrchk(cudaMemcpy(d_xs, h_xu_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
 
+                std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> trackingstats = track<pcg_t, toplevel_return_type>(state_size, control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol);
+                
+                current_results = std::get<0>(trackingstats);
+                if (TIME_LINSYS == 1) {
+                    linsys_times.insert(linsys_times.end(), current_results.begin(), current_results.end());
+                } else {
+                    sqp_iters.insert(sqp_iters.end(), current_results.begin(), current_results.end());
+                }
 
-                auto trackingstats = track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol);
-                cur_linsys_times = std::get<0>(trackingstats);
-                linsys_times.insert(linsys_times.end(), cur_linsys_times.begin(), cur_linsys_times.end());
                 cur_tracking_errs = std::get<1>(trackingstats);
                 tracking_errs.insert(tracking_errs.end(), cur_tracking_errs.begin(), cur_tracking_errs.end());
 
@@ -161,8 +168,16 @@ int main(){
             std::cout << "tracking err\n";
             printStats<float>(&tracking_errs);
             std::cout << tot_final_tracking_err / traj_test_iters << std::endl;
-            std::cout << "linsys times\n";
-            printStats<double>(&linsys_times);
+            if (TIME_LINSYS == 1)
+            {
+                std::cout << "linsys times\n";
+                printStats<double>(&linsys_times);
+            }
+            else
+            {
+                std::cout << "sqp iters\n";
+                printStats<uint32_t>(&sqp_iters);
+            }
             std::cout << "************************************************\n\n";
         }
         break;

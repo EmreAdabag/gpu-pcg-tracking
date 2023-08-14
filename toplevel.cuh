@@ -504,8 +504,8 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
 
 
-template <typename T>
-auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float timestep, T *d_eePos_traj, T *d_xu_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter, T pcg_exit_tol){
+template <typename T, typename return_type>
+std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, float timestep, T *d_eePos_traj, T *d_xu_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter, T pcg_exit_tol){
 
     const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
 
@@ -813,13 +813,11 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     //     return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     // };
 
-    if (TIME_LINSYS == 1) {
-        printf("TIME_LINSYS is 1, first element in tuple is linsys times") 
+    #if TIME_LINSYS 
         return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error);
-    } else {
-        printf("TIME_LINSYS is 0, first element in tuple is number of sqp iters") 
+    #else
         return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error);
-    }
+    #endif
 }
 
 
