@@ -779,8 +779,8 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     // std::cout << "\n\nlinear system solve time:" << std::endl;
     // printStats<double>(&linsys_times);
 #endif
-    std::cout << "sqp iters" << std::endl;
-    printStats<uint32_t>(&sqp_iters);
+    // std::cout << "sqp iters" << std::endl;
+    // printStats<uint32_t>(&sqp_iters);
     // printStats<int>(&pcg_iters);
     // printStats<double>(&sqp_times);
     // printStats<float>(&tracking_errors);
