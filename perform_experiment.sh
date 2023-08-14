@@ -29,7 +29,7 @@ echo $base_compile_command
 knot_points=("32" "64")
 periods=("2000")
 rho_maxs=("1e1", "1e2")
-rho_factors=("1.2", "2", "4", "6")
+rho_factors=("1.2", "2", "6")
 
 # END test configuration - shouldn't have to modify anything below this line
 
