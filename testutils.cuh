@@ -104,6 +104,7 @@ void print_test_config(){
     std::cout << "noise: " << (ADD_NOISE ? "ON" : "OFF") << "\n";
     std::cout << "sqp exits condition: " << (CONST_UPDATE_FREQ ? "CONSTANT TIME" : "CONSTANT ITERS") << "\n";
     std::cout << "rho factor: " << RHO_FACTOR << "\n";
+    std::cout << "rho max: " << RHO_MAX << "\n";
 #if CONST_UPDATE_FREQ
     std::cout << "max sqp time: " << SQP_MAX_TIME_US << "\n";
 #else

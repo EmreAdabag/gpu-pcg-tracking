@@ -77,22 +77,28 @@ int main(){
         // std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
 #if PCG_SOLVE
-        uint32_t num_exit_vals = 3;
+        uint32_t num_exit_vals = 5;
         float pcg_exit_vals[num_exit_vals];
         if(knot_points==32){
-            pcg_exit_vals[0] = 1e-8;
-            pcg_exit_vals[1] = 1e-7;
+            pcg_exit_vals[0] = 5e-6;
+            pcg_exit_vals[1] = 2.5e-6;
             pcg_exit_vals[2] = 1e-6;
+            pcg_exit_vals[3] = 7.5e-5;
+            pcg_exit_vals[4] = 5e-5;
         }
         else if(knot_points==64){
-            pcg_exit_vals[0] = 1e-7;
-            pcg_exit_vals[1] = 1e-6;
+            pcg_exit_vals[0] = 5e-5;
+            pcg_exit_vals[1] = 2.5e-5;
             pcg_exit_vals[2] = 1e-5;
+            pcg_exit_vals[3] = 7.5e-4;
+            pcg_exit_vals[4] = 5e-4;
         }
         else{
-            pcg_exit_vals[0] = 1e-6;
-            pcg_exit_vals[1] = 1e-5;
-            pcg_exit_vals[2] = 1e-4;
+            pcg_exit_vals[0] = 1e-5;
+            pcg_exit_vals[1] = 7.5e-4;
+            pcg_exit_vals[2] = 5e-4;
+            pcg_exit_vals[3] = 2.5e-4;
+            pcg_exit_vals[4] = 1e-4;
         }
 #else
         uint32_t num_exit_vals = 1;
@@ -102,7 +108,6 @@ int main(){
         for (uint32_t pcg_exit_ind = 0; pcg_exit_ind < num_exit_vals; pcg_exit_ind++){
 
             float pcg_exit_tol = pcg_exit_vals[pcg_exit_ind];
-            // Will declare the variables to track both linsys times and sqp times, but a single test will only use one or the other
             std::vector<double> linsys_times;
             std::vector<uint32_t> sqp_iters;
             std::vector<toplevel_return_type> current_results;

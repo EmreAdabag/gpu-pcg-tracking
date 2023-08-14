@@ -5,7 +5,7 @@
 
 
 #define ADD_NOISE  0
-#define TEST_ITERS 1
+#define TEST_ITERS 50
 
 // qdldl if 0
 // #define PCG_SOLVE       1
@@ -48,8 +48,6 @@ typedef float pcg_t;
 #define KKT_THREADS         128
 
 
-#define RHO_FACTOR  1.2
-#define RHO_MAX 1e1
 #define RHO_MIN 1e-3
 
 
