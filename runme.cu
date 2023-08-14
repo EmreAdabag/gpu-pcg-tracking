@@ -2,10 +2,12 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <tuple>
 #include "toplevel.cuh"
 #include "qdldl.h"
 #include "rbd_plant.cuh"
 #include "settings.cuh"
+#include "experiment_helpers.cuh"
 
 
 
@@ -72,19 +74,39 @@ int main(){
         start_state = ind % recorded_states;
         goal_state = ind / recorded_states;
         if(start_state == goal_state && start_state != 0){ continue; }
-        std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
+        // std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
-        uint32_t num_exit_vals;
-        T pcg_exit_vals[num_exit_vals] = {1e-4, 5e-5, 1e-5, 5e-6, 1e-6};
-
-        double tot_avg_sqp_iters = 0;
-        double tot_avg_tracking_err = 0;
-        double tot_final_tracking_err = 0;
+#if PCG_SOLVE
+        uint32_t num_exit_vals = 3;
+        float pcg_exit_vals[num_exit_vals];
+        if(knot_points==32){
+            pcg_exit_vals[0] = 1e-8;
+            pcg_exit_vals[1] = 1e-7;
+            pcg_exit_vals[2] = 1e-6;
+        }
+        else if(knot_points==64){
+            pcg_exit_vals[0] = 1e-7;
+            pcg_exit_vals[1] = 1e-6;
+            pcg_exit_vals[2] = 1e-5;
+        }
+        else{
+            pcg_exit_vals[0] = 1e-6;
+            pcg_exit_vals[1] = 1e-5;
+            pcg_exit_vals[2] = 1e-4;
+        }
+#else
+        uint32_t num_exit_vals = 1;
+        float pcg_exit_vals[num_exit_vals] = {-1};
+#endif
 
         for (uint32_t pcg_exit_ind = 0; pcg_exit_ind < num_exit_vals; pcg_exit_ind++){
 
-            T pcg_exit_tol = pcg_exit_vals[rho_ind];
-
+            float pcg_exit_tol = pcg_exit_vals[pcg_exit_ind];
+            std::vector<double> linsys_times;
+            std::vector<double> cur_linsys_times;
+            std::vector<float> tracking_errs;
+            std::vector<float> cur_tracking_errs;
+            double tot_final_tracking_err = 0;
 
             for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
 
@@ -118,29 +140,36 @@ int main(){
 
 
                 auto trackingstats = track<pcg_t>(state_size, control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol);
-                tot_avg_sqp_iters += std::get<0>(trackingstats);
-                tot_avg_tracking_err += std::get<1>(trackingstats);
+                cur_linsys_times = std::get<0>(trackingstats);
+                linsys_times.insert(linsys_times.end(), cur_linsys_times.begin(), cur_linsys_times.end());
+                cur_tracking_errs = std::get<1>(trackingstats);
+                tracking_errs.insert(tracking_errs.end(), cur_tracking_errs.begin(), cur_tracking_errs.end());
+
                 tot_final_tracking_err += std::get<2>(trackingstats);
+                
 
 
-
+                gpuErrchk(cudaFree(d_xu_traj));
+                gpuErrchk(cudaFree(d_eePos_traj));
+                gpuErrchk(cudaFree(d_xs));
                 gpuErrchk(cudaPeekAtLastError());
                 
             }
 
-            std::cout << "\n\n";
+            std::cout << "\nRESULTS*************************************\n";
             std::cout << "exit tol: " << pcg_exit_tol << std::endl;
-            std::cout << "avg avg tracking err: " << tot_avg_tracking_err / num_exit_vals << " avg final tracking err " << tot_final_tracking_err / num_exit_vals << std::endl;
-            std::cout << "avg avg sqp iters: " << tot_avg_sqp_iters << std::endl;
+            std::cout << "tracking err\n";
+            printStats<float>(&tracking_errs);
+            std::cout << tot_final_tracking_err / traj_test_iters << std::endl;
+            std::cout << "linsys times\n";
+            printStats<double>(&linsys_times);
+            std::cout << "************************************************\n\n";
         }
         break;
     }
 
 
 
-    gpuErrchk(cudaFree(d_xu_traj));
-    gpuErrchk(cudaFree(d_eePos_traj));
-    gpuErrchk(cudaFree(d_xs));
 
     return 0;
 }

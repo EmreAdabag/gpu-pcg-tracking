@@ -1,0 +1,450 @@
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.072883] Std Dev [0.0642544] Min [0.000707254] Max [0.287968]
+0.0096808
+sqp iters
+Average[9.92961] Std Dev [0] Min [2] Max [10]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: PCG
+max pcg iter: 173
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0889818] Std Dev [0.0713937] Min [0.000757456] Max [0.324148]
+0.0211441
+sqp iters
+Average[10.078] Std Dev [3] Min [1] Max [15]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.071948] Std Dev [0.0628138] Min [0.00072208] Max [0.277409]
+0.00947865
+sqp iters
+Average[20.8429] Std Dev [0] Min [14] Max [21]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: PCG
+max pcg iter: 173
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0924221] Std Dev [0.0737323] Min [0.000757456] Max [0.357735]
+0.070146
+sqp iters
+Average[22.166] Std Dev [6] Min [4] Max [31]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0996096] Std Dev [0.113612] Min [0.000678509] Max [0.518279]
+0.00554025
+sqp iters
+Average[6.51582] Std Dev [0] Min [3] Max [7]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.0883088] Std Dev [0.0893241] Min [0.0007516] Max [0.437673]
+0.00925142
+sqp iters
+Average[10.3678] Std Dev [4] Min [1] Max [15]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0990873] Std Dev [0.113139] Min [0.000689507] Max [0.516527]
+0.00496318
+sqp iters
+Average[14.4618] Std Dev [0] Min [10] Max [15]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.15696] Std Dev [0.313738] Min [0.000757456] Max [2.12122]
+0.0158815
+sqp iters
+Average[19.1703] Std Dev [9] Min [1] Max [31]
+************************************************
+
+-----------------------------------------------------------
+knot points: 128
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0318238] Std Dev [0.0379246] Min [0.000123873] Max [0.175398]
+0.00152088
+sqp iters
+Average[3.94914] Std Dev [0] Min [1] Max [4]
+************************************************
+
+-----------------------------------------------------------
+knot points: 128
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.108023] Std Dev [0.16853] Min [0.000757456] Max [0.939079]
+0.0129516
+sqp iters
+Average[7.30726] Std Dev [4] Min [1] Max [13]
+************************************************
+
+-----------------------------------------------------------
+knot points: 128
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0318607] Std Dev [0.0387752] Min [0.000249296] Max [0.190643]
+0.000997841
+sqp iters
+Average[7.97937] Std Dev [0] Min [6] Max [8]
+************************************************
+
+-----------------------------------------------------------
+knot points: 128
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.0696475] Std Dev [0.0795073] Min [0.000757456] Max [0.419199]
+0.00563842
+sqp iters
+Average[15.6654] Std Dev [8] Min [1] Max [28]
+************************************************
+
+-----------------------------------------------------------
+knot points: 256
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.028666] Std Dev [0.0293768] Min [0.000752494] Max [0.137985]
+0.00321965
+sqp iters
+Average[1.97566] Std Dev [0] Min [1] Max [2]
+************************************************
+
+-----------------------------------------------------------
+knot points: 256
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: PCG
+max pcg iter: 118
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.0412952] Std Dev [0.0404826] Min [0.000756264] Max [0.248409]
+0.00790448
+sqp iters
+Average[4.79657] Std Dev [3] Min [1] Max [11]
+************************************************
+
+-----------------------------------------------------------
+knot points: 256
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0273958] Std Dev [0.0287961] Min [0.000753731] Max [0.144255]
+0.00529543
+sqp iters
+Average[3.9968] Std Dev [0] Min [3] Max [4]
+************************************************
+
+-----------------------------------------------------------
+knot points: 256
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: PCG
+max pcg iter: 118
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.0401574] Std Dev [0.0348921] Min [0.000757456] Max [0.207945]
+0.00794429
+sqp iters
+Average[9.37317] Std Dev [6] Min [1] Max [22]
+************************************************
+
+-----------------------------------------------------------
+knot points: 512
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0268079] Std Dev [0.0281362] Min [0.000742286] Max [0.160837]
+0.00260239
+sqp iters
+Average[0.68505] Std Dev [0] Min [0] Max [1]
+************************************************
+
+-----------------------------------------------------------
+knot points: 512
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 2000
+solver: PCG
+max pcg iter: 67
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.0722952] Std Dev [0.14912] Min [0.000755355] Max [0.926216]
+0.151054
+sqp iters
+Average[2.93223] Std Dev [1] Min [1] Max [7]
+************************************************
+
+-----------------------------------------------------------
+knot points: 512
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0233235] Std Dev [0.0235531] Min [0.00029245] Max [0.1411]
+0.0037166
+sqp iters
+Average[1.9968] Std Dev [0] Min [1] Max [2]
+************************************************
+
+-----------------------------------------------------------
+knot points: 512
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 4000
+solver: PCG
+max pcg iter: 67
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.116521] Std Dev [0.285474] Min [0.000755787] Max [1.65029]
+0.307466
+sqp iters
+Average[5.871] Std Dev [2] Min [1] Max [15]
+************************************************
+
+-----------------------------------------------------------

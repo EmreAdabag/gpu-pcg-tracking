@@ -776,15 +776,15 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
 #endif
     
 #if TIME_LINSYS
-    std::cout << "\n\nlinear system solve time:" << std::endl;
-    printStats<double>(&linsys_times);
+    // std::cout << "\n\nlinear system solve time:" << std::endl;
+    // printStats<double>(&linsys_times);
 #endif
     std::cout << "sqp iters" << std::endl;
     printStats<uint32_t>(&sqp_iters);
     // printStats<int>(&pcg_iters);
     // printStats<double>(&sqp_times);
     // printStats<float>(&tracking_errors);
-    std::cout << "control updates: " << control_update_step << "\n";
+    // std::cout << "control updates: " << control_update_step << "\n";
 
     grid::end_effector_positions_kernel<T><<<1,128>>>(d_eePos, d_xs, grid::NUM_JOINTS, (grid::robotModel<T> *) d_dynmem, 1);
     gpuErrchk(cudaMemcpy(h_eePos, d_eePos, 6*sizeof(T), cudaMemcpyDeviceToHost));
@@ -793,7 +793,7 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     for(uint32_t i=0; i < 3; i++){
         cur_tracking_error += abs(h_eePos[i] - h_eePos_goal[i]);
     }
-    std::cout << "avg tracking error: " << std::accumulate(tracking_errors.begin(), tracking_errors.end(), 0.0f) / traj_steps << " final error: " << cur_tracking_error << "\n\n";
+    // std::cout << "avg tracking error: " << std::accumulate(tracking_errors.begin(), tracking_errors.end(), 0.0f) / traj_steps << " final error: " << cur_tracking_error << "\n\n";
 
     gato_plant::freeDynamicsConstMem<T>(d_dynmem);
 
@@ -805,15 +805,15 @@ auto track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, con
     gpuErrchk(cudaFree(d_eePos));
 
 
-    auto ivecAvg = [](const std::vector<uint32_t>& v){
-        return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
-    };
+    // auto ivecAvg = [](const std::vector<uint32_t>& v){
+    //     return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+    // };
     
-    auto tvecAvg = [](const std::vector<T>& v){
-        return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
-    };
+    // auto tvecAvg = [](const std::vector<T>& v){
+    //     return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+    // };
 
-    return std::make_tuple(ivecAvg(sqp_iters), tvecAvg(tracking_errors), cur_tracking_err);
+    return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error);
 }
 
 

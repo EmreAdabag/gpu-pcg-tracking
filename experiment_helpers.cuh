@@ -83,15 +83,15 @@ void printStats(std::vector<double> *times){
 
 template<typename T>
 void printStats(std::vector<T> *data){
-   double sum = std::accumulate(data->begin(), data->end(), 0);
-   double mean = sum/static_cast<double>(data->size());
+   T sum = std::accumulate(data->begin(), data->end(), static_cast<T>(0));
+   float mean = sum/static_cast<double>(data->size());
    std::vector<T> diff(data->size());
    std::transform(data->begin(), data->end(), diff.begin(), [mean](T x) {return x - mean;});
-   double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-   double stdev = std::sqrt(sq_sum / data->size());
+   T sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+   T stdev = std::sqrt(sq_sum / data->size());
    typename std::vector<T>::iterator minInd = std::min_element(data->begin(), data->end());
    typename std::vector<T>::iterator maxInd = std::max_element(data->begin(), data->end());
-   double min = data->at(std::distance(data->begin(), minInd)); 
-   double max = data->at(std::distance(data->begin(), maxInd));
+   T min = data->at(std::distance(data->begin(), minInd)); 
+   T max = data->at(std::distance(data->begin(), maxInd));
    std::cout << "Average[" << mean << "] Std Dev [" << stdev << "] Min [" << min << "] Max [" << max << "]" << std::endl;
 }

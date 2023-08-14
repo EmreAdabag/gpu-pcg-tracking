@@ -5,7 +5,7 @@
 
 
 #define ADD_NOISE  0
-#define TEST_ITERS 3
+#define TEST_ITERS 100
 
 // qdldl if 0
 // #define PCG_SOLVE       1
@@ -23,7 +23,7 @@ typedef float pcg_t;
 #define ABSOLUTE_QD_PENALTY 0
 // #define Q_COST          (.10)
 #define QD_COST         (0.0001)
-#define R_COST          (0.0001)
+// #define R_COST          (0.0001)
 
 
 // this constant controls when xu and goal will be shifted, should be a fraction of a timestep
