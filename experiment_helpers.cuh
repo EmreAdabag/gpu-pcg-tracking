@@ -79,10 +79,19 @@ void printStats(std::vector<double> *times){
    }
 }
 
-
+std::string getCurrentTimestamp() {
+   time_t rawtime;
+   struct tm * timeinfo;
+   char buffer[80];
+   time(&rawtime);
+   timeinfo = localtime(&rawtime);
+   strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S", timeinfo);
+   std::string timestampStr(buffer);
+   return timestampStr;
+}
 
 template<typename T>
-void printStats(std::vector<T> *data){
+void printStats(std::vector<T> *data, std::string prefix = "data"){
    T sum = std::accumulate(data->begin(), data->end(), static_cast<T>(0));
    float mean = sum/static_cast<double>(data->size());
    std::vector<T> diff(data->size());
@@ -93,5 +102,38 @@ void printStats(std::vector<T> *data){
    typename std::vector<T>::iterator maxInd = std::max_element(data->begin(), data->end());
    T min = data->at(std::distance(data->begin(), minInd)); 
    T max = data->at(std::distance(data->begin(), maxInd));
-   std::cout << "Average[" << mean << "] Std Dev [" << stdev << "] Min [" << min << "] Max [" << max << "]" << std::endl;
+
+   // Now also want to sort and get median, first and third quartile for variance plot
+   std::vector<T> sortedData(*data);
+   std::sort(sortedData.begin(), sortedData.end());
+
+   std::cout << std::endl;
+   T median, Q1, Q3;
+   size_t n = sortedData.size();
+   if (n % 2 == 0) {
+      median = (sortedData[n/2 - 1] + sortedData[n/2]) / 2.0;
+      Q1 = (sortedData[n/4 - 1] + sortedData[n/4]) / 2.0;
+      Q3 = (sortedData[3*n/4 - 1] + sortedData[3*n/4]) / 2.0;
+   } else {
+      median = sortedData[n/2];
+      Q1 = sortedData[n/4];
+      Q3 = sortedData[3*n/4];
+   }
+   std::cout << "Average[" << mean << "] Std Dev [" << stdev << "] Min [" << min << "] Max [" << max << "] Median [" << median << "] Q1 [" << Q1 << "] Q3 [" << Q3 << "]" << std::endl;
+
+   // Create filename with timestamp
+   std::string filename = prefix + "_" + getCurrentTimestamp() + ".txt";
+   // Open the file
+   std::ofstream outfile(filename);
+   if (!outfile.is_open()) {
+      std::cerr << "Failed to open file for writing: " << filename << std::endl;
+      return;
+   }
+   // Write the vector data to the file
+   for (const auto& val : *data) {
+      outfile << val << "\n";
+   }
+   // Close the file
+   outfile.close();
+   std::cout << "Data written to: " << filename << std::endl;
 }
