@@ -1,0 +1,625 @@
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0877471] Std Dev [0.0934705] Min [0.000750601] Max [0.494619]
+0.0121624
+linsys times
+Average[186.82] Std Dev [243.849] Min [21.595] Max [1223.03]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 7.5e-05
+tracking err
+Average[0.136041] Std Dev [0.179219] Min [0.000754267] Max [1.00309]
+0.0250376
+linsys times
+Average[66.7217] Std Dev [135.076] Min [21.614] Max [993.342]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 5e-05
+tracking err
+Average[0.137256] Std Dev [0.198571] Min [0.000754207] Max [1.19704]
+0.0166885
+linsys times
+Average[76.0065] Std Dev [153.252] Min [21.53] Max [770.254]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.101029] Std Dev [0.0943318] Min [0.000754237] Max [0.415669]
+0.00998411
+linsys times
+Average[69.0111] Std Dev [132.239] Min [21.645] Max [769.568]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.0828989] Std Dev [0.0840704] Min [0.000753731] Max [0.359373]
+0.00962796
+linsys times
+Average[86.8797] Std Dev [155.196] Min [21.499] Max [771.495]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00075
+tracking err
+Average[0.296848] Std Dev [0.415325] Min [0.000754341] Max [2.05509]
+0.0532805
+linsys times
+Average[72.5536] Std Dev [156.381] Min [21.523] Max [903.476]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0005
+tracking err
+Average[0.232253] Std Dev [0.364986] Min [0.000754341] Max [2.42816]
+0.0621962
+linsys times
+Average[64.8112] Std Dev [139.566] Min [21.562] Max [771.217]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00025
+tracking err
+Average[0.222877] Std Dev [0.373745] Min [0.000754341] Max [2.28876]
+0.040105
+linsys times
+Average[71.4356] Std Dev [150.935] Min [22.102] Max [769.262]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.112309] Std Dev [0.111279] Min [0.000754327] Max [0.448862]
+0.0350837
+linsys times
+Average[55.8909] Std Dev [111.19] Min [21.445] Max [769.844]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 2
+rho max: 10
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.09473] Std Dev [0.102033] Min [0.000750765] Max [0.477083]
+0.00888905
+linsys times
+Average[240.526] Std Dev [257.643] Min [22.015] Max [762.709]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 7.5e-05
+tracking err
+Average[0.359547] Std Dev [0.581004] Min [0.000754178] Max [2.54383]
+0.0185286
+linsys times
+Average[147.411] Std Dev [234.6] Min [22.407] Max [966.32]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 5e-05
+tracking err
+Average[0.224488] Std Dev [0.438618] Min [0.000754207] Max [2.40121]
+0.0128561
+linsys times
+Average[112.975] Std Dev [191.27] Min [21.895] Max [1025.33]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.0854679] Std Dev [0.0874765] Min [0.000754073] Max [0.378186]
+0.011521
+linsys times
+Average[97.9639] Std Dev [157.002] Min [21.506] Max [883.669]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.0859718] Std Dev [0.0845237] Min [0.000753224] Max [0.415211]
+0.010889
+linsys times
+Average[122.97] Std Dev [180.948] Min [21.646] Max [768.986]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00075
+tracking err
+Average[0.319355] Std Dev [0.505209] Min [0.000754356] Max [2.40418]
+0.0434827
+linsys times
+Average[92.0926] Std Dev [180.451] Min [21.318] Max [762.692]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0005
+tracking err
+Average[0.412611] Std Dev [0.606357] Min [0.000754267] Max [2.59268]
+0.0471199
+linsys times
+Average[123.36] Std Dev [216.909] Min [21.49] Max [926.6]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00025
+tracking err
+Average[0.16631] Std Dev [0.296739] Min [0.000754267] Max [2.08999]
+0.0207744
+linsys times
+Average[80.2461] Std Dev [151.134] Min [21.923] Max [770.595]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.267938] Std Dev [0.502652] Min [0.000754327] Max [2.75908]
+0.0212546
+linsys times
+Average[123.815] Std Dev [206.89] Min [21.405] Max [761.536]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 6
+rho max: 10
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0971341] Std Dev [0.106374] Min [0.000751555] Max [0.485929]
+0.00874298
+linsys times
+Average[272.948] Std Dev [255.241] Min [24.035] Max [967.376]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 7.5e-05
+tracking err
+Average[0.0975179] Std Dev [0.0911294] Min [0.000754252] Max [0.404272]
+0.0174842
+linsys times
+Average[118.792] Std Dev [176.37] Min [21.481] Max [910.807]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 5e-05
+tracking err
+Average[0.0914024] Std Dev [0.0862246] Min [0.000754237] Max [0.392366]
+0.0173823
+linsys times
+Average[121.663] Std Dev [177.04] Min [21.491] Max [778.273]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.08702] Std Dev [0.0880006] Min [0.000754073] Max [0.377698]
+0.0145917
+linsys times
+Average[137.661] Std Dev [189.45] Min [21.588] Max [762.466]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.125915] Std Dev [0.224289] Min [0.000752911] Max [2.19157]
+0.0108201
+linsys times
+Average[172.54] Std Dev [213.634] Min [24.014] Max [770.374]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00075
+tracking err
+Average[0.295703] Std Dev [0.515455] Min [0.000754401] Max [2.56213]
+0.0228366
+linsys times
+Average[121.147] Std Dev [206.532] Min [21.616] Max [1720.8]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0005
+tracking err
+Average[0.206229] Std Dev [0.357602] Min [0.000754386] Max [2.27953]
+0.0276621
+linsys times
+Average[121.469] Std Dev [196.014] Min [21.516] Max [1393.66]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00025
+tracking err
+Average[0.217537] Std Dev [0.420018] Min [0.000754341] Max [2.30076]
+0.031346
+linsys times
+Average[110.844] Std Dev [186.331] Min [21.404] Max [762.24]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.235596] Std Dev [0.488449] Min [0.000754312] Max [2.638]
+0.0206768
+linsys times
+Average[136.297] Std Dev [208.328] Min [23.994] Max [1787.84]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 100
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.240918] Std Dev [0.47431] Min [0.000750437] Max [2.62415]
+0.0101633
+linsys times
+Average[225.205] Std Dev [274.024] Min [23.918] Max [1581.9]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 7.5e-05
+tracking err
+Average[0.550804] Std Dev [0.694353] Min [0.000751689] Max [2.58828]
+0.426235
+linsys times
+Average[155.289] Std Dev [257.219] Min [21.549] Max [1254.87]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 5e-05
+tracking err
+Average[0.223584] Std Dev [0.366616] Min [0.000754207] Max [2.41373]
+0.0209476
+linsys times
+Average[102.486] Std Dev [196.367] Min [21.492] Max [934.121]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.23708] Std Dev [0.390951] Min [0.000754297] Max [2.49253]
+0.013186
+linsys times
+Average[105.507] Std Dev [197.541] Min [21.439] Max [984.114]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.23554] Std Dev [0.423478] Min [0.00075376] Max [2.12385]
+0.0147472
+linsys times
+Average[138.279] Std Dev [228.087] Min [22.199] Max [967.473]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00075
+tracking err
+Average[0.157955] Std Dev [0.169188] Min [0.000600278] Max [0.934132]
+0.0689391
+linsys times
+Average[45.7473] Std Dev [91.8364] Min [21.92] Max [1015.84]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0005
+tracking err
+Average[0.155803] Std Dev [0.155906] Min [0.000754312] Max [0.825337]
+0.0692812
+linsys times
+Average[56.3949] Std Dev [121.943] Min [21.349] Max [758.674]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00025
+tracking err
+Average[0.149665] Std Dev [0.259413] Min [0.000754341] Max [2.31406]
+0.0337559
+linsys times
+Average[53.9054] Std Dev [114.215] Min [21.441] Max [747.264]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.140731] Std Dev [0.235092] Min [0.000754371] Max [2.39191]
+0.0281637
+linsys times
+Average[60.5398] Std Dev [124.189] Min [21.439] Max [754.395]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 2
+rho max: 100
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0946778] Std Dev [0.101333] Min [0.000750765] Max [0.463871]
+0.00982902
+linsys times
+Average[240.531] Std Dev [258.671] Min [23.441] Max [770.729]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 7.5e-05
+tracking err
+Average[0.214907] Std Dev [0.386365] Min [0.000754327] Max [2.45037]
+0.011993
+linsys times
+Average[126.959] Std Dev [208.379] Min [22.594] Max [852.945]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 5e-05
+tracking err
+Average[0.117889] Std Dev [0.17679] Min [0.000754207] Max [1.58751]
+0.0173485
+linsys times
+Average[91.5782] Std Dev [154.004] Min [21.637] Max [763.175]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.17044] Std Dev [0.370112] Min [0.000754073] Max [2.51259]
+0.0124563
+linsys times
+Average[119.424] Std Dev [192.773] Min [21.624] Max [761.117]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.0894457] Std Dev [0.0892727] Min [0.000753224] Max [0.432276]
+0.0127761
+linsys times
+Average[117.888] Std Dev [175.354] Min [21.778] Max [1185.06]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00075
+tracking err
+Average[0.290221] Std Dev [0.491262] Min [0.000754386] Max [2.29641]
+0.0576704
+linsys times
+Average[89.9048] Std Dev [175.211] Min [21.734] Max [972.908]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0005
+tracking err
+Average[0.285382] Std Dev [0.470055] Min [0.000754297] Max [2.40072]
+0.0260859
+linsys times
+Average[96.8103] Std Dev [184.747] Min [21.652] Max [991.848]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00025
+tracking err
+Average[0.20679] Std Dev [0.340358] Min [0.000754341] Max [1.92336]
+0.0306734
+linsys times
+Average[91.0339] Std Dev [166.361] Min [21.374] Max [1180.96]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.219659] Std Dev [0.383278] Min [0.000754327] Max [2.55404]
+0.0221629
+linsys times
+Average[109.745] Std Dev [192.07] Min [21.616] Max [754.848]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 6
+rho max: 100
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.10286] Std Dev [0.122533] Min [0.000751942] Max [0.654721]
+0.0100873
+linsys times
+Average[276.72] Std Dev [258.574] Min [21.344] Max [1623.24]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 7.5e-05
+tracking err
+Average[0.626227] Std Dev [0.710785] Min [0.000754192] Max [2.67924]
+0.66088
+linsys times
+Average[242.271] Std Dev [295.759] Min [21.398] Max [999.714]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 5e-05
+tracking err
+Average[0.411241] Std Dev [0.612675] Min [0.000751674] Max [2.75532]
+0.206182
+linsys times
+Average[199.906] Std Dev [262.008] Min [21.696] Max [968.955]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.193703] Std Dev [0.361269] Min [0.000754014] Max [2.17407]
+0.0178646
+linsys times
+Average[168.073] Std Dev [225.918] Min [21.586] Max [959.692]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.100923] Std Dev [0.104524] Min [0.000752911] Max [0.464688]
+0.015241
+linsys times
+Average[156.993] Std Dev [197.37] Min [21.593] Max [852.652]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00075
+tracking err
+Average[0.179591] Std Dev [0.265291] Min [0.000754505] Max [1.17685]
+0.0346292
+linsys times
+Average[112.824] Std Dev [190.847] Min [21.57] Max [1132.01]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0005
+tracking err
+Average[0.343362] Std Dev [0.51314] Min [0.000754505] Max [2.20251]
+0.0289434
+linsys times
+Average[142.176] Std Dev [226.046] Min [20.445] Max [967.415]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.00025
+tracking err
+Average[0.485167] Std Dev [0.641478] Min [0.000754461] Max [2.70697]
+0.456468
+linsys times
+Average[162.368] Std Dev [247.848] Min [21.727] Max [753.993]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.337918] Std Dev [0.511485] Min [0.000754297] Max [2.32489]
+0.434123
+linsys times
+Average[157.105] Std Dev [232.614] Min [21.654] Max [975.671]
+************************************************
+
+-----------------------------------------------------------
