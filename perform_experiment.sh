@@ -26,10 +26,10 @@ time_linsys="1"
 # NOTE: make sure to set -arch value appropiately based on GPU we are using (use 86 for 3080, 89 for 4090)
 base_compile_command="nvcc --compiler-options -Wall -arch=sm_89  -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl "
 echo $base_compile_command
-knot_points=("32" "64")
+knot_points=("128")
 periods=("2000")
-rho_maxs=("1e1", "1e2")
-rho_factors=("1.2", "2", "6")
+rho_maxs=("10")
+rho_factors=("1.2")
 
 # END test configuration - shouldn't have to modify anything below this line
 
@@ -38,7 +38,7 @@ for knot in "${knot_points[@]}"; do
     for per in "${periods[@]}"; do
         for rm in "${rho_maxs[@]}"; do
             for rf in "${rho_factors[@]}"; do
-                # test qdl
+                test qdl
                 compile_command=$base_compile_command
                 compile_command+="-DPCG_SOLVE=0 "
                 compile_command+="-DQD_COST=.0001 "
@@ -83,6 +83,7 @@ for knot in "${knot_points[@]}"; do
                 compile_command+="-DTIME_LINSYS=$time_linsys "
                 compile_command+=$end_compile_command
 
+                echo $compile_command
                 eval $compile_command
                 ./runme.exe
                 echo "-----------------------------------------------------------"

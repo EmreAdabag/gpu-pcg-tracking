@@ -5,8 +5,7 @@
 
 
 #define ADD_NOISE  0
-#define TEST_ITERS 50
-
+#define TEST_ITERS 100
 // qdldl if 0
 // #define PCG_SOLVE       1
 

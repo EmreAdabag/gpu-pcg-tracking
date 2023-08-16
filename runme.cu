@@ -77,40 +77,34 @@ int main(){
         // std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
 #if PCG_SOLVE
-        uint32_t num_exit_vals = 9;
+        uint32_t num_exit_vals = 3;
         float pcg_exit_vals[num_exit_vals];
         if(knot_points==32){
-            pcg_exit_vals[0] = 1e-7;
+            pcg_exit_vals[0] = 1e-6;
             pcg_exit_vals[1] = 7.5e-6;
-            pcg_exit_vals[0] = 5e-6;
-            pcg_exit_vals[1] = 2.5e-6;
-            pcg_exit_vals[2] = 1e-6;
-            pcg_exit_vals[3] = 7.5e-5;
-            pcg_exit_vals[4] = 5e-5;
-            pcg_exit_vals[3] = 2.5e-5;
-            pcg_exit_vals[4] = 1e-5;
+            pcg_exit_vals[2] = 5e-6;
+            // pcg_exit_vals[3] = 2.5e-6;
+            // pcg_exit_vals[4] = 1e-6;
+            // pcg_exit_vals[5] = 7.5e-5;
+            // pcg_exit_vals[6] = 5e-5;
+            // pcg_exit_vals[7] = 2.5e-5;
+            // pcg_exit_vals[8] = 1e-5;
         }
         else if(knot_points==64){
-            pcg_exit_vals[0] = 1e-6;
+            pcg_exit_vals[0] = 1e-5;
             pcg_exit_vals[1] = 7.5e-5;
-            pcg_exit_vals[0] = 5e-5;
-            pcg_exit_vals[1] = 2.5e-5;
-            pcg_exit_vals[2] = 1e-5;
-            pcg_exit_vals[3] = 7.5e-4;
-            pcg_exit_vals[4] = 5e-4;
-            pcg_exit_vals[3] = 2.5e-4;
-            pcg_exit_vals[4] = 1e-4;
+            pcg_exit_vals[2] = 5e-5;
+            // pcg_exit_vals[3] = 2.5e-5;
+            // pcg_exit_vals[4] = 1e-5;
+            // pcg_exit_vals[5] = 7.5e-4;
+            // pcg_exit_vals[6] = 5e-4;
+            // pcg_exit_vals[7] = 2.5e-4;
+            // pcg_exit_vals[8] = 1e-4;
         }
         else{
-            pcg_exit_vals[0] = 5e-5;
-            pcg_exit_vals[1] = 2.5e-5;
             pcg_exit_vals[0] = 1e-5;
-            pcg_exit_vals[1] = 7.5e-4;
-            pcg_exit_vals[2] = 5e-4;
-            pcg_exit_vals[3] = 2.5e-4;
-            pcg_exit_vals[4] = 1e-4;
-            pcg_exit_vals[3] = 7.5e-3;
-            pcg_exit_vals[4] = 5e-3;
+            pcg_exit_vals[1] = 5e-5;
+            pcg_exit_vals[2] = 1e-4;
         }
 #else
         uint32_t num_exit_vals = 1;
@@ -183,17 +177,17 @@ int main(){
             std::cout << "\nRESULTS*************************************\n";
             std::cout << "exit tol: " << pcg_exit_tol << std::endl;
             std::cout << "tracking err\n";
-            printStats<float>(&tracking_errs);
+            printStats<float>(&tracking_errs, "trackingerr");
             std::cout << tot_final_tracking_err / traj_test_iters << std::endl;
             if (TIME_LINSYS == 1)
             {
                 std::cout << "linsys times\n";
-                printStats<double>(&linsys_times);
+                printStats<double>(&linsys_times, "linsystimes");
             }
             else
             {
                 std::cout << "sqp iters\n";
-                printStats<uint32_t>(&sqp_iters);
+                printStats<uint32_t>(&sqp_iters, "sqpiters");
             }
             std::cout << "************************************************\n\n";
         }
