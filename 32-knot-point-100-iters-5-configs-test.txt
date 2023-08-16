@@ -1,0 +1,621 @@
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2, -DRHO_MAX=1e1, -DKNOT_POINTS=32 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0728409] Std Dev [0.0642134] Min [0.000709265] Max [0.28794]
+0.00969148
+linsys times
+Average[89.6482] Std Dev [4.24167] Min [84.377] Max [737.216]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: PCG
+max pcg iter: 173
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 5e-06
+tracking err
+Average[0.113729] Std Dev [0.091182] Min [0.000757456] Max [0.579772]
+0.0521994
+linsys times
+Average[58.7099] Std Dev [87.3016] Min [20.868] Max [1139.31]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-06
+tracking err
+Average[0.105119] Std Dev [0.0882069] Min [0.000757456] Max [0.532604]
+0.0562089
+linsys times
+Average[66.7292] Std Dev [94.7425] Min [21.016] Max [909.252]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0901381] Std Dev [0.0725872] Min [0.000757456] Max [0.416039]
+0.0443652
+linsys times
+Average[82.2549] Std Dev [109.326] Min [21.165] Max [770.478]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.165924] Std Dev [0.141294] Min [0.000757456] Max [0.770089]
+0.0470696
+linsys times
+Average[45.9468] Std Dev [67.6206] Min [20.344] Max [769.877]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.132373] Std Dev [0.10423] Min [0.000757456] Max [0.605613]
+0.0406452
+linsys times
+Average[51.7637] Std Dev [77.0145] Min [21.147] Max [893.443]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0
+tracking err
+Average[0.0729167] Std Dev [0.0633861] Min [0.000751942] Max [0.267671]
+0.010301
+linsys times
+Average[742.231] Std Dev [4.91731] Min [730.007] Max [991.837]
+************************************************
+
+
+RESULTS*************************************
+exit tol: -2.0831
+tracking err
+Average[0.0729179] Std Dev [0.0633881] Min [0.000751942] Max [0.267834]
+0.0103031
+linsys times
+Average[741.853] Std Dev [4.74436] Min [729.257] Max [1007.37]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 4.59149e-41
+tracking err
+Average[0.0729163] Std Dev [0.0633855] Min [0.000751644] Max [0.267571]
+0.0102981
+linsys times
+Average[741.737] Std Dev [4.62876] Min [729.901] Max [983.731]
+************************************************
+
+
+RESULTS*************************************
+exit tol: -1.93737e-32
+tracking err
+Average[0.0729164] Std Dev [0.0633844] Min [0.000751823] Max [0.267561]
+0.0102989
+linsys times
+Average[741.666] Std Dev [4.81643] Min [729.047] Max [992.386]
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=2, -DRHO_MAX=1e1, -DKNOT_POINTS=32 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0728389] Std Dev [0.0641949] Min [0.000707254] Max [0.287345]
+0.00974536
+linsys times
+Average[89.5765] Std Dev [3.08724] Min [84.542] Max [323.596]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 2
+rho max: 10
+max sqp time: 2000
+solver: PCG
+max pcg iter: 173
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 5e-06
+tracking err
+Average[0.100082] Std Dev [0.0866693] Min [0.000757456] Max [0.55119]
+0.033345
+linsys times
+Average[73.8503] Std Dev [98.7072] Min [20.632] Max [919.148]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-06
+tracking err
+Average[0.0940213] Std Dev [0.0795177] Min [0.000567004] Max [0.448147]
+0.0287081
+linsys times
+Average[82.3796] Std Dev [105.687] Min [20.885] Max [812.277]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0869684] Std Dev [0.0683912] Min [0.000757456] Max [0.329973]
+0.064677
+linsys times
+Average[97.0853] Std Dev [117.801] Min [20.588] Max [844.868]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.115136] Std Dev [0.0879686] Min [0.000757456] Max [0.562624]
+0.0410185
+linsys times
+Average[59.8445] Std Dev [84.9859] Min [20.782] Max [888.929]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.103111] Std Dev [0.0861756] Min [0.000757456] Max [0.529351]
+0.0463195
+linsys times
+Average[67.1074] Std Dev [93.2048] Min [21.041] Max [926.166]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0
+tracking err
+Average[0.0729746] Std Dev [0.0634278] Min [0.000751793] Max [0.267995]
+0.0103299
+linsys times
+Average[739.701] Std Dev [4.74888] Min [728.65] Max [1008.34]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1.32098e+34
+tracking err
+Average[1.24395] Std Dev [0.556305] Min [0.000757456] Max [2.77545]
+1.22326
+linsys times
+Average[25.4102] Std Dev [1.55445] Min [20.738] Max [279.427]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 4.59135e-41
+tracking err
+Average[0.0729744] Std Dev [0.0634269] Min [0.000751793] Max [0.267904]
+0.0103333
+linsys times
+Average[739.486] Std Dev [5.19401] Min [728.638] Max [976.277]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1.68669e-24
+tracking err
+Average[0.0729736] Std Dev [0.0634256] Min [0.000751793] Max [0.26724]
+0.0103314
+linsys times
+Average[739.468] Std Dev [5.49902] Min [639.953] Max [1032.49]
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=6 -DRHO_MAX=1e1, -DKNOT_POINTS=32 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 6
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0728576] Std Dev [0.0641628] Min [0.000709265] Max [0.286731]
+0.00992582
+linsys times
+Average[90.0216] Std Dev [3.26404] Min [84.611] Max [332.055]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 6
+rho max: 10
+max sqp time: 2000
+solver: PCG
+max pcg iter: 173
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 5e-06
+tracking err
+Average[0.0930774] Std Dev [0.0810499] Min [0.000369929] Max [0.468695]
+0.0111045
+linsys times
+Average[90.9096] Std Dev [115.016] Min [20.632] Max [769.814]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-06
+tracking err
+Average[0.0901022] Std Dev [0.0770763] Min [0.000398703] Max [0.435319]
+0.0101605
+linsys times
+Average[99.9575] Std Dev [120.13] Min [20.92] Max [888.096]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0834116] Std Dev [0.069543] Min [0.000757456] Max [0.385068]
+0.0200728
+linsys times
+Average[114.753] Std Dev [128.393] Min [20.671] Max [762.089]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.104438] Std Dev [0.083402] Min [0.000757456] Max [0.522546]
+0.025301
+linsys times
+Average[75.1424] Std Dev [102.807] Min [21.022] Max [882.647]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.0945405] Std Dev [0.0808305] Min [0.000321545] Max [0.524395]
+0.0181702
+linsys times
+Average[83.664] Std Dev [110.146] Min [19.932] Max [984.029]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0
+tracking err
+Average[0.0730185] Std Dev [0.0634764] Min [0.000751868] Max [0.267516]
+0.0103257
+linsys times
+Average[739.647] Std Dev [4.65094] Min [728.58] Max [1000.75]
+************************************************
+
+
+RESULTS*************************************
+exit tol: -2.90494e-29
+tracking err
+Average[0.0730193] Std Dev [0.0634772] Min [0.000751868] Max [0.267867]
+0.010325
+linsys times
+Average[739.601] Std Dev [4.79198] Min [728.622] Max [991.989]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 4.59163e-41
+tracking err
+Average[0.073019] Std Dev [0.0634768] Min [0.00075151] Max [0.268069]
+0.0103256
+linsys times
+Average[739.608] Std Dev [4.98347] Min [728.597] Max [992.445]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 6.95742e+26
+tracking err
+Average[1.17239] Std Dev [0.572242] Min [0.000757456] Max [2.67459]
+1.57198
+linsys times
+Average[25.3819] Std Dev [1.77192] Min [21.071] Max [279.196]
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2, -DRHO_MAX=1e2 -DKNOT_POINTS=32 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 100
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0728442] Std Dev [0.0642127] Min [0.000707254] Max [0.287969]
+0.00969455
+linsys times
+Average[89.7713] Std Dev [2.91852] Min [84.193] Max [334.124]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 100
+max sqp time: 2000
+solver: PCG
+max pcg iter: 173
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 5e-06
+tracking err
+Average[0.113162] Std Dev [0.0901031] Min [0.000757456] Max [0.660409]
+0.0512203
+linsys times
+Average[58.7841] Std Dev [87.5324] Min [20.849] Max [877.279]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-06
+tracking err
+Average[0.105125] Std Dev [0.0877041] Min [0.000757098] Max [0.541928]
+0.0622835
+linsys times
+Average[67.2256] Std Dev [95.8448] Min [21.137] Max [786.868]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0891602] Std Dev [0.0725431] Min [0.000756294] Max [0.417331]
+0.0395909
+linsys times
+Average[81.8413] Std Dev [108.198] Min [20.379] Max [894.781]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.170396] Std Dev [0.149902] Min [0.000757456] Max [0.873777]
+0.0538604
+linsys times
+Average[46.6562] Std Dev [69.7076] Min [20.417] Max [763.163]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.134347] Std Dev [0.107075] Min [0.000757456] Max [0.634846]
+0.0411621
+linsys times
+Average[51.6275] Std Dev [76.645] Min [21.164] Max [786.821]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0
+tracking err
+Average[0.0729169] Std Dev [0.0633857] Min [0.000751942] Max [0.267753]
+0.0103001
+linsys times
+Average[745.91] Std Dev [3.08814] Min [736.774] Max [1016.69]
+************************************************
+
+
+RESULTS*************************************
+exit tol: -2.95828e+23
+tracking err
+Average[0.0729165] Std Dev [0.0633866] Min [0.000751942] Max [0.267776]
+0.0102989
+linsys times
+Average[745.643] Std Dev [2.92447] Min [736.819] Max [1000.38]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 4.59163e-41
+tracking err
+Average[0.0729172] Std Dev [0.0633869] Min [0.000751644] Max [0.267634]
+0.0103026
+linsys times
+Average[745.707] Std Dev [3.09325] Min [736.824] Max [1008.4]
+************************************************
+
+
+RESULTS*************************************
+exit tol: -6.56647e+33
+tracking err
+Average[0.0729165] Std Dev [0.0633862] Min [0.000751644] Max [0.267631]
+0.0103013
+linsys times
+Average[745.714] Std Dev [3.25802] Min [736.83] Max [992.433]
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=2, -DRHO_MAX=1e2 -DKNOT_POINTS=32 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 2
+rho max: 100
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.07284] Std Dev [0.0641975] Min [0.000709265] Max [0.28701]
+0.00974429
+linsys times
+Average[90.1071] Std Dev [3.19005] Min [84.614] Max [332.622]
+************************************************
+
+-----------------------------------------------------------
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 2
+rho max: 100
+max sqp time: 2000
+solver: PCG
+max pcg iter: 173
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 5e-06
+tracking err
+Average[0.0992462] Std Dev [0.0862718] Min [0.000757456] Max [0.523578]
+0.0286405
+linsys times
+Average[74.5674] Std Dev [99.8221] Min [21.035] Max [770.816]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-06
+tracking err
+Average[0.0937493] Std Dev [0.0801437] Min [0.000757188] Max [0.461823]
+0.0289649
+linsys times
+Average[83.0335] Std Dev [106.446] Min [20.748] Max [991.619]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0865191] Std Dev [0.0684657] Min [0.000756294] Max [0.390435]
+0.0622586
+linsys times
+Average[97.8235] Std Dev [118.685] Min [21.137] Max [1025.28]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 2.5e-05
+tracking err
+Average[0.116472] Std Dev [0.0905601] Min [0.000757456] Max [0.549257]
+0.0364976
+linsys times
+Average[60.1507] Std Dev [85.5428] Min [20.747] Max [869.375]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.103148] Std Dev [0.0869776] Min [0.000757456] Max [0.564966]
+0.0424642
+linsys times
+Average[67.6398] Std Dev [94.0027] Min [20.497] Max [983.68]
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0
+tracking err
+Average[0.0729769] Std Dev [0.0634288] Min [0.000751793] Max [0.26753]
+0.0103159
+linsys times
+Average[745.841] Std Dev [3.12434] Min [736.816] Max [985.965]
+************************************************
+
+
+RESULTS*************************************
+exit tol: -1.12051e-36
+tracking err
+Average[0.0729784] Std Dev [0.06343] Min [0.000751793] Max [0.267909]
+0.01031
+linsys times
+Average[745.901] Std Dev [7.11491] Min [736.575] Max [1863.89]
+************************************************
+
+Received SIGINT, exiting
