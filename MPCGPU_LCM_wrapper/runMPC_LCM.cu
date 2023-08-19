@@ -91,7 +91,7 @@ class LCM_MPCLoop_Handler {
             // std::cout << vars->h_xs[0] << " " << vars->h_xs[1] << " " << vars->h_xs[2] << " " << vars->h_xs[3] << " " << vars->h_xs[4] << " " << vars->h_xs[5] << " " << vars->h_xs[6] << " " << std::endl;
 
             // run the solver
-            updateTrajectory<T>(vars);
+            updateTrajectory_test<T>(vars);
 
             // T testarr[7] = {-1.806143, -1.452489, 2.101637, -1.246232, 1.675261, -0.489622, -0.368079};
             std::string namearr[7] = {"iiwa_joint_1", "iiwa_joint_2", "iiwa_joint_3", "iiwa_joint_4", "iiwa_joint_5", "iiwa_joint_6", "iiwa_joint_7"};

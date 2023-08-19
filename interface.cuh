@@ -9,7 +9,7 @@ struct MPC_variables {
     int64_t first_utime;
     T *h_xu;
     T *h_x0;
-
+    t *h_xu_traj;
     
     T *h_xs;
     double timestep;
@@ -96,6 +96,9 @@ void setupTracking_pcg(struct MPC_variables<T> *mpcvars){
     gpuErrchk(cudaMemcpy(mpcvars->d_xu, h_xu_traj.data(), ((states_s_controls*knot_points)-control_size)*sizeof(T), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMalloc(&(mpcvars->d_xs), state_size*sizeof(T)));
     gpuErrchk(cudaMemcpy(mpcvars->d_xs, h_xu_traj.data(), state_size*sizeof(T), cudaMemcpyHostToDevice));
+    
+    mpcvars->h_xu_traj = h_xu_traj.data();
+
 
     mpcvars->utime = 0;
     mpcvars->first_utime = 0;
@@ -192,6 +195,18 @@ void cleanupTracking_pcg(struct MPC_variables<T> *mpcvars){
 }
 
 
+
+template <typename T>
+int updateTrajectory_test(struct MPC_variables<T> *mpcvars){
+
+    int64_t utime = mpcvars->utime - mpcvars->first_utime;
+    T *h_xu = mpcvars->h_xu;
+    T *h_xu_traj = mpcvars->h_xu_traj;
+
+    uint32_t traj_offset = utime / mpcvars->timestep_long;
+
+    memcpy(h_xu, &h_xu_traj[traj_offset * 21], STEPS_IN_TRAJ*21*sizeof(float));
+}
 
 
 
