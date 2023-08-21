@@ -132,6 +132,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     
     
     
+    void *ss_precon_kernel = (void *) ss_precon<T, STATE_SIZE, KNOT_POINTS>;
     void *pcg_kernel = (void *) pcg<T, STATE_SIZE, KNOT_POINTS>;
     uint32_t pcg_iters;
     uint32_t *d_pcg_iters;
@@ -140,6 +141,22 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
     bool *d_pcg_exit;
     gpuErrchk(cudaMalloc(&d_pcg_exit, sizeof(bool)));
     
+    // also keeping full argument lists for now
+    void *ssPreconKernelArgs[] = {
+        (void *)&d_S,
+        (void *)&d_Pinv,
+        (void *)&d_gamma, 
+        (void *)&d_lambda,
+        (void *)&d_r,
+        (void *)&d_p,
+        (void *)&d_v_temp,
+        (void *)&d_eta_new_temp,
+        (void *)&d_pcg_iters,
+        (void *)&d_pcg_exit,
+        (void *)&config.pcg_max_iter,
+        (void *)&config.pcg_exit_tol
+    };
+
     void *pcgKernelArgs[] = {
         (void *)&d_S,
         (void *)&d_Pinv,
@@ -154,6 +171,12 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         (void *)&config.pcg_max_iter,
         (void *)&config.pcg_exit_tol
     };
+    // splitting into separate kernel for preconditioner formation and actual PCG loop
+    // will use the same shared mem calculation for now because not sure which pieces of 
+    // the sum are for preconditioner vs PCG
+    // if this blows shared mem I'll dig in further
+    size_t ss_precon_kernel_smem_size = pcgSharedMemSize<T>(state_size, knot_points);
+    
     size_t ppcg_kernel_smem_size = pcgSharedMemSize<T>(state_size, knot_points);
 
 
@@ -282,6 +305,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         gpuErrchk(cudaPeekAtLastError());
         if (sqpTimecheck()){ break; }
         
+        gpuErrchk(cudaLaunchCooperativeKernel(ss_precon_kernel, knot_points, PCG_NUM_THREADS, ssPreconKernelArgs, ss_precon_kernel_smem_size));    
 
     #if TIME_LINSYS    
         gpuErrchk(cudaDeviceSynchronize());
