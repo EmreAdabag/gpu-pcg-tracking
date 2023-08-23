@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <iostream>
 
+
 #define TEST_FOR_EQUIVALENCE 0
 #define CPU_THREADS_GLOBAL 8
 #define TEST_ITERS_GLOBAL 100000
@@ -90,8 +91,26 @@ std::string getCurrentTimestamp() {
    return timestampStr;
 }
 
+// Function to format stats string values into CSV format
+std::string getStatsString(const std::string& statsString) {
+   std::stringstream ss(statsString);
+   std::string token;
+   std::string csvFormattedString;
+   
+   while (getline(ss, token, '[')) {
+       if (getline(ss, token, ']')) {
+           if (!csvFormattedString.empty()) {
+               csvFormattedString += ",";
+           }
+           csvFormattedString += token;
+       }
+   }
+   
+   return csvFormattedString;
+}
+
 template<typename T>
-void printStats(std::vector<T> *data, std::string prefix = "data"){
+std::string printStats(std::vector<T> *data, std::string prefix = "data"){
    T sum = std::accumulate(data->begin(), data->end(), static_cast<T>(0));
    float mean = sum/static_cast<double>(data->size());
    std::vector<T> diff(data->size());
@@ -121,19 +140,25 @@ void printStats(std::vector<T> *data, std::string prefix = "data"){
    }
    std::cout << "Average[" << mean << "] Std Dev [" << stdev << "] Min [" << min << "] Max [" << max << "] Median [" << median << "] Q1 [" << Q1 << "] Q3 [" << Q3 << "]" << std::endl;
 
-   // Create filename with timestamp
-   std::string filename = prefix + "_" + getCurrentTimestamp() + ".txt";
-   // Open the file
-   std::ofstream outfile(filename);
-   if (!outfile.is_open()) {
-      std::cerr << "Failed to open file for writing: " << filename << std::endl;
-      return;
-   }
-   // Write the vector data to the file
-   for (const auto& val : *data) {
-      outfile << val << "\n";
-   }
-   // Close the file
-   outfile.close();
-   std::cout << "Data written to: " << filename << std::endl;
+   // // Create filename with timestamp
+   // std::string filename = prefix + "_" + getCurrentTimestamp() + ".txt";
+   // // Open the file
+   // std::ofstream outfile(filename);
+   // if (!outfile.is_open()) {
+   //    std::cerr << "Failed to open file for writing: " << filename << std::endl;
+   //    return;
+   // }
+   // // Write the vector data to the file
+   // for (const auto& val : *data) {
+   //    outfile << val << "\n";
+   // }
+   // // Close the file
+   // outfile.close();
+   // std::cout << "Data written to: " << filename << std::endl;
+
+   // Construct the formatted string
+   std::stringstream ss;
+   ss << "Average[" << mean << "] Std Dev [" << stdev << "] Min [" << min << "] Max [" << max << "] Median [" << median << "] Q1 [" << Q1 << "] Q3 [" << Q3 << "]";
+   
+   return ss.str();
 }
