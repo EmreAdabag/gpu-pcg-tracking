@@ -1,0 +1,162 @@
+emwi@workDesktop:~/code/gpu-pcg-tracking$ ./perform_experiment.sh 
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=32 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+
+Average[0.0728572] Std Dev [0.064227] Min [0.000709265] Max [0.287222] Median [0.0534886] Q1 [0.0210346] Q3 [0.104654]
+Data written to: trackingerr_20230821_101824.txt
+0.00968362
+linsys times
+
+Average[72.6891] Std Dev [2.08898] Min [68.858] Max [116.567] Median [72.542] Q1 [70.916] Q3 [73.996]
+Data written to: linsystimes_20230821_101824.txt
+************************************************
+
+-----------------------------------------------------------
+emwi@workDesktop:~/code/gpu-pcg-tracking$ ./perform_experiment.sh 
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl
+./perform_experiment.sh: line 52: [: too many arguments
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=64 128 256 512 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+nvcc fatal   : Don't know what to do with '512'
+knot points: 32
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+^CReceived SIGINT, exiting
+emwi@workDesktop:~/code/gpu-pcg-tracking$ ./perform_experiment.sh 
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=64 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+
+Average[0.0996229] Std Dev [0.113729] Min [0.000678509] Max [0.51919] Median [0.0553547] Q1 [0.0193806] Q3 [0.139761]
+Data written to: trackingerr_20230821_102432.txt
+0.00545512
+linsys times
+
+Average[142.625] Std Dev [2.62383] Min [138.173] Max [186.216] Median [142.102] Q1 [141.41] Q3 [143.034]
+Data written to: linsystimes_20230821_102432.txt
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=128 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 128
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+
+Average[0.0318042] Std Dev [0.0377837] Min [0.000136137] Max [0.168812] Median [0.018418] Q1 [0.00617993] Q3 [0.0393126]
+Data written to: trackingerr_20230821_102643.txt
+0.00168967
+linsys times
+
+Average[287.258] Std Dev [4.55548] Min [277.772] Max [374.086] Median [286.383] Q1 [284.85] Q3 [288.292]
+Data written to: linsystimes_20230821_102643.txt
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=256 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 256
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+
+Average[0.0296727] Std Dev [0.0300551] Min [0.000596851] Max [0.137198] Median [0.019891] Q1 [0.00705946] Q3 [0.0403029]
+Data written to: trackingerr_20230821_102931.txt
+0.0011236
+linsys times
+
+Average[579.527] Std Dev [6.86743] Min [562.66] Max [730.489] Median [578.109] Q1 [575.411] Q3 [581.899]
+Data written to: linsystimes_20230821_102931.txt
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=512 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 512
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+
+Average[0.0244563] Std Dev [0.0277726] Min [0.000222176] Max [0.194773] Median [0.0137888] Q1 [0.00833553] Q3 [0.0314488]
+Data written to: trackingerr_20230821_103208.txt
+0.00223415
+linsys times
+
+Average[1170.43] Std Dev [11.6004] Min [1138.45] Max [1410.09] Median [1168.17] Q1 [1162.54] Q3 [1175.7]
+Data written to: linsystimes_20230821_103208.txt
+************************************************
+
+-----------------------------------------------------------
