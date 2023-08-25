@@ -1,0 +1,484 @@
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 1000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+sqp iters
+Average[2.98837] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99154] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99058] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.98981] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.9952] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99029] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[2.99116] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[2.99106] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[2.9877] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99433] Std Dev [0] Min [1] Max [3]
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0919128] Std Dev [0.110477] Min [0.000682637] Max [0.5039]
+0.00683343
+linsys times
+Average[169.817] Std Dev [6.2105] Min [164.734] Max [759.682]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 1000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+sqp iters
+Average[0.998366] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.00663] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.01182] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.00163] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.00538] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.00788] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.00653] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.01451] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.0024] Std Dev [0] Min [0] Max [3]
+sqp iters
+Average[1.00653] Std Dev [0] Min [0] Max [3]
+
+RESULTS*************************************
+exit tol: 1e-09
+tracking err
+Average[0.0793335] Std Dev [0.089391] Min [0.000749245] Max [0.449445]
+0.0129109
+linsys times
+Average[700.812] Std Dev [118.854] Min [25.258] Max [1354.06]
+************************************************
+
+sqp iters
+Average[1.15442] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.17604] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.16662] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.17575] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.14135] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.16479] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.15153] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.16816] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.1696] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.15566] Std Dev [0] Min [0] Max [5]
+
+RESULTS*************************************
+exit tol: 1e-08
+tracking err
+Average[0.0837313] Std Dev [0.0989799] Min [0.000743985] Max [0.480683]
+0.0118224
+linsys times
+Average[574.456] Std Dev [245.241] Min [24.489] Max [1156.98]
+************************************************
+
+sqp iters
+Average[1.6388] Std Dev [0] Min [0] Max [7]
+sqp iters
+Average[1.56097] Std Dev [0] Min [0] Max [7]
+sqp iters
+Average[1.46584] Std Dev [0] Min [0] Max [7]
+sqp iters
+Average[1.6389] Std Dev [0] Min [0] Max [7]
+sqp iters
+Average[1.62708] Std Dev [0] Min [0] Max [7]
+sqp iters
+Average[1.44374] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.43096] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.52974] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.42366] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.65197] Std Dev [0] Min [0] Max [7]
+
+RESULTS*************************************
+exit tol: 1e-07
+tracking err
+Average[0.08444] Std Dev [0.0942439] Min [0.000353694] Max [0.428201]
+0.0169934
+linsys times
+Average[413.575] Std Dev [295.451] Min [21.512] Max [1058.28]
+************************************************
+
+sqp iters
+Average[0.998751] Std Dev [0] Min [0] Max [7]
+BIG ERROR 
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[1.20944] Std Dev [0.559148] Min [0.000750646] Max [2.58141]
+0.156288
+linsys times
+Average[733.43] Std Dev [55.4251] Min [24.811] Max [975.38]
+************************************************
+
+sqp iters
+Average[3.46305] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.65197] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.87854] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.08619] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[3.65225] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[1.00365] Std Dev [0] Min [0] Max [7]
+BIG ERROR 
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.39893] Std Dev [0.584209] Min [0.000753775] Max [2.47989]
+0.168246
+linsys times
+Average[137.322] Std Dev [230.406] Min [21.665] Max [975.771]
+************************************************
+
+sqp iters
+Average[5.43759] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.26511] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[5.66369] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.7444] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.61824] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.48688] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.74661] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.72653] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.56635] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.48237] Std Dev [1] Min [0] Max [7]
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.1699] Std Dev [0.33377] Min [0.00075385] Max [2.71515]
+0.0255642
+linsys times
+Average[57.6937] Std Dev [119.573] Min [21.435] Max [1232.87]
+************************************************
+
+sqp iters
+Average[1.01364] Std Dev [0] Min [0] Max [7]
+BIG ERROR 
+
+RESULTS*************************************
+exit tol: 0.001
+tracking err
+Average[1.1425] Std Dev [0.644008] Min [0.00075388] Max [2.75082]
+0.119413
+linsys times
+Average[708.564] Std Dev [111.625] Min [24.876] Max [984.113]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 1000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+sqp iters
+Average[2.99289] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99318] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99356] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99577] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99193] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.9926] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99289] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99279] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99808] Std Dev [0] Min [1] Max [3]
+sqp iters
+Average[2.99279] Std Dev [0] Min [1] Max [3]
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+Average[0.0998579] Std Dev [0.113918] Min [0.000683218] Max [0.520568]
+0.00445251
+linsys times
+Average[169.271] Std Dev [4.65301] Min [164.805] Max [406.254]
+************************************************
+
+-----------------------------------------------------------
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+max sqp time: 1000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+sqp iters
+Average[1.08023] Std Dev [0] Min [0] Max [4]
+sqp iters
+Average[1.08196] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.08437] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.0934] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.09311] Std Dev [0] Min [0] Max [4]
+sqp iters
+Average[1.0859] Std Dev [0] Min [0] Max [4]
+sqp iters
+Average[1.08984] Std Dev [0] Min [0] Max [5]
+sqp iters
+Average[1.08562] Std Dev [0] Min [0] Max [4]
+sqp iters
+Average[1.0959] Std Dev [0] Min [0] Max [4]
+sqp iters
+Average[1.09167] Std Dev [0] Min [0] Max [4]
+
+RESULTS*************************************
+exit tol: 1e-09
+tracking err
+Average[0.0931449] Std Dev [0.102223] Min [0.00074482] Max [0.50817]
+0.00379008
+linsys times
+Average[637.393] Std Dev [174.011] Min [24.66] Max [999.331]
+************************************************
+
+sqp iters
+Average[1.3195] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.31882] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.32219] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.33016] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.33881] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.33698] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.3538] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.32545] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.33968] Std Dev [0] Min [0] Max [6]
+sqp iters
+Average[1.31661] Std Dev [0] Min [0] Max [6]
+
+RESULTS*************************************
+exit tol: 1e-08
+tracking err
+Average[0.093267] Std Dev [0.103427] Min [0.000635418] Max [0.502988]
+0.00290215
+linsys times
+Average[524.119] Std Dev [254.843] Min [24.136] Max [991.445]
+************************************************
+
+sqp iters
+Average[1.88892] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.95388] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.95215] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.87345] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.93985] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.97233] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.90016] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.95186] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.91775] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[1.9606] Std Dev [1] Min [0] Max [7]
+
+RESULTS*************************************
+exit tol: 1e-07
+tracking err
+Average[0.0932481] Std Dev [0.102298] Min [0.000746325] Max [0.50914]
+0.00821275
+linsys times
+Average[357.443] Std Dev [292.127] Min [21.597] Max [991.748]
+************************************************
+
+sqp iters
+Average[3.62958] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.50111] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.53551] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.51417] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.5701] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.59643] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.53868] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.57125] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.4595] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[3.54175] Std Dev [1] Min [0] Max [7]
+
+RESULTS*************************************
+exit tol: 1e-06
+tracking err
+Average[0.0996485] Std Dev [0.108042] Min [0.000748739] Max [0.490611]
+0.0159287
+linsys times
+Average[151.404] Std Dev [214.493] Min [21.504] Max [983.805]
+************************************************
+
+sqp iters
+Average[4.98578] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.9361] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.07072] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.98213] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.97915] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.01691] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.92399] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.28932] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[5.00548] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.07187] Std Dev [1] Min [0] Max [7]
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+Average[0.0977352] Std Dev [0.0999765] Min [0.000753239] Max [0.615547]
+0.00953713
+linsys times
+Average[79.4411] Std Dev [147.278] Min [21.431] Max [903.114]
+************************************************
+
+sqp iters
+Average[5.47458] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.98578] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.84933] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.89382] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[5.00922] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[5.53387] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.97924] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.92822] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[5.75459] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.83703] Std Dev [1] Min [0] Max [7]
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+Average[0.172776] Std Dev [0.251585] Min [0.000753775] Max [1.65381]
+0.0248085
+linsys times
+Average[69.7179] Std Dev [144.295] Min [21.389] Max [911.05]
+************************************************
+
+sqp iters
+Average[5.36668] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.99145] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[6.08927] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.49188] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[5.79725] Std Dev [1] Min [0] Max [7]
+sqp iters
+Average[4.57586] Std Dev [2] Min [0] Max [7]
+sqp iters
+Average[1.01489] Std Dev [0] Min [0] Max [7]
+BIG ERROR 
+
+RESULTS*************************************
+exit tol: 0.001
+tracking err
+Average[0.434451] Std Dev [0.600418] Min [0.00075382] Max [2.83788]
+0.154857
+linsys times
+Average[97.5734] Std Dev [198.708] Min [21.474] Max [967.835]
+************************************************
+
+-----------------------------------------------------------

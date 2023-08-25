@@ -1,0 +1,86 @@
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=0 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=128 -DPCG_EXIT_TOL=-1 -DPCG_MAX_ITER=-1 -DR_COST=.0001 -diag-suppress 68 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 128
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: QDLDL
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: -1
+tracking err
+
+Average[0.0319116] Std Dev [0.0376732] Min [0.000298031] Max [0.16314] Median [0.0186023] Q1 [0.00648363] Q3 [0.0389127]
+Data written to: trackingerr_20230816_123429.txt
+0.00406142
+linsys times
+
+Average[323.371] Std Dev [17.9608] Min [310.485] Max [742.422] Median [318.818] Q1 [316.676] Q3 [323.39]
+Data written to: linsystimes_20230816_123429.txt
+************************************************
+
+-----------------------------------------------------------
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=1 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=10 -DKNOT_POINTS=128 -DPCG_MAX_ITER=167 -DR_COST=.0001 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 128
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 10
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 1e-05
+tracking err
+
+Average[0.0545549] Std Dev [0.0479719] Min [0.000678509] Max [0.255298] Median [0.0418007] Q1 [0.0175929] Q3 [0.0764518]
+Data written to: trackingerr_20230816_123453.txt
+0.00636104
+linsys times
+
+Average[436.42] Std Dev [341.542] Min [22.184] Max [1190.43] Median [435.389] Q1 [41.81] Q3 [795.24]
+Data written to: linsystimes_20230816_123453.txt
+************************************************
+
+
+RESULTS*************************************
+exit tol: 5e-05
+tracking err
+
+Average[0.0846937] Std Dev [0.146582] Min [0.000757456] Max [0.640295] Median [0.0296609] Q1 [0.0100596] Q3 [0.0783455]
+Data written to: trackingerr_20230816_123506.txt
+0.00461772
+linsys times
+
+Average[211.8] Std Dev [301.538] Min [24.203] Max [1140.61] Median [25.903] Q1 [25.431] Q3 [320.164]
+Data written to: linsystimes_20230816_123506.txt
+************************************************
+
+
+RESULTS*************************************
+exit tol: 0.0001
+tracking err
+
+Average[0.0807917] Std Dev [0.105578] Min [0.000707835] Max [0.480117] Median [0.0362387] Q1 [0.0152521] Q3 [0.0988632]
+Data written to: trackingerr_20230816_123519.txt
+0.00189134
+linsys times
+
+Average[169.38] Std Dev [265.292] Min [24.032] Max [1075.71] Median [25.82] Q1 [25.392] Q3 [148.394]
+Data written to: linsystimes_20230816_123519.txt
+************************************************
+
+-----------------------------------------------------------

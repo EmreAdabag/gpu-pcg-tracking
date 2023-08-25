@@ -1,0 +1,26 @@
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl
+nvcc --compiler-options -Wall -arch=sm_89 -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=1 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=1.2 -DRHO_MAX=5 -DKNOT_POINTS=64 -DPCG_MAX_ITER=167 -DR_COST=.001 -DTIME_LINSYS=1 -o runme.exe runme.cu
+knot points: 64
+datatype: FLOAT
+noise: OFF
+sqp exits condition: CONSTANT TIME
+rho factor: 1.2
+rho max: 5
+max sqp time: 2000
+solver: PCG
+max pcg iter: 167
+save data: OFF
+jitters: ON
+
+
+
+RESULTS*************************************
+exit tol: 5e-06
+tracking err
+Average[0.0837799] Std Dev [0.0852839] Min [0.000753984] Max [0.468244]
+0.0117195
+linsys times
+Average[101.792] Std Dev [171.871] Min [21.06] Max [967.188]
+************************************************
+
+-----------------------------------------------------------

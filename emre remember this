@@ -1,0 +1,5 @@
+emre remember this
+
+possibly not getting full iter at 64, consider printing sqp iters, doing just a couple test iters and trying pcg caps
+
+if this doesn't work, try varying Q, R, but this really shouldnt have to happen

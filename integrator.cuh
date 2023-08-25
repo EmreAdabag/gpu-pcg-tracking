@@ -7,7 +7,7 @@
 #endif
 
 namespace cgrps = cooperative_groups;
-#include "iiwa_plant.cuh"
+#include "rbd_plant.cuh"
 
 #include "glass.cuh"
 
@@ -168,7 +168,7 @@ void integratorAndGradient(uint32_t state_size, uint32_t control_size, T *s_xux,
     T *s_q = s_xux; 	
     T *s_qd = s_q + state_size/2; 		
     T *s_u = s_qd + state_size/2;
-    gato_plant::forwardDynamicsAndGradient<T>(s_dqdd, s_qdd, s_q, s_qd, s_u, s_extra_temp, d_dynMem_const, block);
+    gato_plant::forwardDynamicsAndGradient<T>(s_dqdd, s_qdd, s_q, s_qd, s_u, s_extra_temp, d_dynMem_const);
     block.sync();
     // first compute xnew or error
     if (COMPUTE_INTEGRATOR_ERROR){
@@ -282,7 +282,7 @@ void integrator_host(uint32_t state_size, uint32_t control_size, T *d_xs, T *d_x
 
 template <typename T>
 void just_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xu){
-    for (int knot = 0; knot < knot_points-1; knot++){
+    for (uint32_t knot = 0; knot < knot_points-1; knot++){
         uint32_t stepsize = (state_size+(knot<knot_points-2)*control_size);
         gpuErrchk(cudaMemcpy(&d_xu[knot*(state_size+control_size)], &d_xu[(knot+1)*(state_size+control_size)], stepsize*sizeof(T), cudaMemcpyDeviceToDevice));
     }
@@ -365,19 +365,30 @@ void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_p
     const T sim_step_time = 2e-4;
     const size_t simple_integrator_kernel_smem_size = sizeof(T)*(2*state_size + control_size + state_size/2 + gato_plant::forwardDynamicsAndGradient_TempMemSize_Shared());
     const uint32_t states_s_controls = state_size + control_size;
-    uint32_t control_offset;
-    T *control;
+    uint32_t control_offset = static_cast<uint32_t>((time_offset) / timestep);
+    T *control = &d_xu[control_offset * states_s_controls + state_size];
 
 
     uint32_t sim_steps_needed = static_cast<uint32_t>(sim_time / sim_step_time);
 
 
-
     for(uint32_t step = 0; step < sim_steps_needed; step++){
+        // float h_temp[21];
+        // std::cout << "sim step: " << step << " sim time " << sim_step_time <<  std::endl;
+
         control_offset = static_cast<uint32_t>((time_offset + step * sim_step_time) / timestep);
         control = &d_xu[control_offset * states_s_controls + state_size];
 
         simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time);
+
+        // std::cout << "result\n";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
+        // exit(12);
+
     }
 
     T half_sim_step_time = fmod(sim_time, sim_step_time);

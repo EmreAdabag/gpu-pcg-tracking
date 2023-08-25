@@ -6,7 +6,7 @@
 #include "file_utils.cuh"
 #include "types.cuh"
 #include "integrator.cuh"
-#include "iiwa_plant.cuh"
+#include "rbd_plant.cuh"
 
 
 int main(){

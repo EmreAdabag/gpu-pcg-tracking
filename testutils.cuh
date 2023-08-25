@@ -41,10 +41,13 @@ T compute_tracking_error(uint32_t state_size, T *d_xu_goal, T *d_xs){
 
 
 template <typename T>
-void dump_tracking_data(std::vector<int> *pcg_iters, std::vector<double> *linsys_times, std::vector<double> *sqp_times, std::vector<uint32_t> *sqp_iters, std::vector<bool> *sqp_exits, std::vector<T> *tracking_errors, std::vector<std::vector<T>> *tracking_path, uint32_t timesteps_taken, uint32_t control_updates_taken, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter){
+void dump_tracking_data(std::vector<int> *pcg_iters, std::vector<bool> *pcg_exits, std::vector<double> *linsys_times, std::vector<double> *sqp_times, std::vector<uint32_t> *sqp_iters, 
+                std::vector<bool> *sqp_exits, std::vector<T> *tracking_errors, std::vector<std::vector<T>> *tracking_path, uint32_t timesteps_taken, 
+                uint32_t control_updates_taken, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter,
+                std::string filename_prefix){
     // Helper function to create file names
     auto createFileName = [&](const std::string& data_type) {
-        std::string filename = DATA_DIRECTORY + std::to_string(start_state_ind) + "_" + std::to_string(goal_state_ind) + "_" + std::to_string(test_iter) + "_" + data_type + ".result";
+        std::string filename = filename_prefix + "_" + std::to_string(test_iter) + "_" + data_type + ".result";
         return filename;
     };
     
@@ -68,6 +71,7 @@ void dump_tracking_data(std::vector<int> *pcg_iters, std::vector<double> *linsys
     dumpVectorData(sqp_iters, "sqp_iters");
     dumpVectorData(sqp_exits, "sqp_exits");
     dumpVectorData(tracking_errors, "tracking_errors");
+    dumpVectorData(pcg_exits, "pcg_exits");
 
 
     // Dump two-dimension vector data (tracking_path)
@@ -102,6 +106,11 @@ void print_test_config(){
     std::cout << "datatype: " << (USE_DOUBLES ? "DOUBLE" : "FLOAT") << "\n";
     std::cout << "noise: " << (ADD_NOISE ? "ON" : "OFF") << "\n";
     std::cout << "sqp exits condition: " << (CONST_UPDATE_FREQ ? "CONSTANT TIME" : "CONSTANT ITERS") << "\n";
+    std::cout << "QD COST: " << QD_COST << "\n";
+    std::cout << "R COST: " << R_COST << "\n";
+    std::cout << "rho factor: " << RHO_FACTOR << "\n";
+    std::cout << "rho max: " << RHO_MAX << "\n";
+    std::cout << "test iters: " << TEST_ITERS << "\n";
 #if CONST_UPDATE_FREQ
     std::cout << "max sqp time: " << SQP_MAX_TIME_US << "\n";
 #else
@@ -110,9 +119,10 @@ void print_test_config(){
     std::cout << "solver: " << (PCG_SOLVE ? "PCG" : "QDLDL") << "\n";
 #if PCG_SOLVE
     std::cout << "max pcg iter: " << PCG_MAX_ITER << "\n";
-    std::cout << "pcg exit tol: " << PCG_EXIT_TOL << "\n";
+    // std::cout << "pcg exit tol: " << PCG_EXIT_TOL << "\n";
 #endif
     std::cout << "save data: " << (SAVE_DATA ? "ON" : "OFF") << "\n";
     std::cout << "jitters: " << (REMOVE_JITTERS ? "ON" : "OFF") << "\n";
+
     std::cout << "\n\n";
 }
