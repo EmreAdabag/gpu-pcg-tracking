@@ -15,34 +15,6 @@
 
 
 
-template <typename T>
-std::vector<std::vector<T>> readCSVToVecVec(const std::string& filename) {
-    std::vector<std::vector<T>> data;
-    std::ifstream infile(filename);
-
-    if (!infile.is_open()) {
-        std::cerr << "File [ " << filename << " ] could not be opened!\n";
-    } else {
-        std::string line;
-
-
-        while (std::getline(infile, line)) {
-            std::vector<T> row;
-            std::stringstream ss(line);
-            std::string val;
-
-            while (std::getline(ss, val, ',')) {
-                row.push_back(std::stof(val));
-            }
-
-            data.push_back(row);
-        }
-    }
-
-    infile.close();
-    return data;
-}
-
 std::string create_test_directory() {
     std::string subdirectoryPath = DATA_DIRECTORY + std::to_string(KNOT_POINTS);
 
@@ -159,6 +131,19 @@ int main(){
                 for (const auto& xu_vec : xu_traj2d) {
                     h_xu_traj.insert(h_xu_traj.end(), xu_vec.begin(), xu_vec.end());
                 }
+
+                // print out the eePos_traj and the xu_traj
+                printf("printing out eePos_traj\n");
+                for (uint32_t i = 0; i < h_eePos_traj.size(); i+=1){
+                    std::cout << h_eePos_traj[i] << std::endl;
+                }
+                printf("printing out xu_traj\n");
+                for (uint32_t i = 0; i < h_xu_traj.size(); i+=1){
+                    std::cout << h_xu_traj[i] << std::endl;
+                }
+
+                // now exit the program
+                exit(0);
 
                 gpuErrchk(cudaMalloc(&d_eePos_traj, h_eePos_traj.size()*sizeof(pcg_t)));
                 gpuErrchk(cudaMemcpy(d_eePos_traj, h_eePos_traj.data(), h_eePos_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
