@@ -236,6 +236,27 @@ namespace gato_plant{
 		return state_size/2 + control_size + 3 + 6 + grid::EE_POS_SHARED_MEM_COUNT;
 	}
 
+	template <typename T>
+	__device__
+	T test_ee_pos(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *s_xu, T *s_eePos_traj, T *s_temp, const grid::robotModel<T> *d_robotModel) {
+		printf("Printing the input q values: ");
+		for (int i = 0; i < state_size/2; i++){
+			printf("%f ", s_xu[i]);
+			
+		}
+		printf("\n");
+		__syncthreads();
+		grid::end_effector_positions_device<T>(s_eePos_traj, s_xu, s_temp, d_robotModel);
+		__syncthreads();
+
+		printf("Printing the ee pos values: ");
+		for (int i = 0; i < 3; i++){
+			printf("%f ", s_eePos_traj[i]);
+		}
+		printf("\n");
+	}
+
+
 	///TODO: get rid of divergence
 		template <typename T>
 	__device__
