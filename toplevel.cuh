@@ -540,7 +540,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 template <typename T, typename return_type>
 std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, 
             float timestep, T *d_eePos_traj, T *d_xu_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter, T pcg_exit_tol,
-            std::string test_output_prefix){
+            std::string test_output_prefix, std::vector<std::vector<pcg_t>> eePos_traj2d, std::vector<std::vector<pcg_t>> xu_traj2d){
 
     const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
 
@@ -570,6 +570,9 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     std::vector<bool> cur_pcg_exits;
     std::vector<double> cur_linsys_times;
     std::tuple<std::vector<int>, std::vector<double>, double, uint32_t, bool, std::vector<bool>> sqp_stats;
+    double ddp_solve_time;
+    std::size_t ddp_solve_iters;
+    std::tuple<double, std::size_t> ddp_stats;
     uint32_t cur_sqp_iters;
     T cur_tracking_error;
     int control_update_step;
@@ -618,14 +621,16 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     boost::shared_ptr<crocoddyl::StateMultibody> state = initialize_crocoddyl_state_multibody(robot_model);
     boost::shared_ptr<crocoddyl::ActuationModelFull> actuation = initialize_crocoddyl_actuation_model_full(state);
 	
-    Eigen::VectorXd Q_vec(NUM_STATES);
+    Eigen::VectorXd Q_vec(state_size);
 	Q_vec.fill(Q_COST);
 	
-	Eigen::VectorXd R_vec(NUM_CONTROLS);
+	Eigen::VectorXd R_vec(control_size);
 	R_vec.fill(R_COST);
 	
 	Eigen::VectorXd EE_penalty_vec(EE_DIM_POS);
 	EE_penalty_vec.fill(EE_COST);
+
+    const int ee_joint_frame_id = robot_model.getFrameId("iiwa_joint_7");
 
 #endif // #if CROCODDYL_SOLVE
 
@@ -668,7 +673,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             // step 1: move what we need from the GPU to the CPU
             // Allocate space for host variables
             const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
-            const uint32_t ee_state_size = 6;
+            uint32_t ee_state_size = 6;
             T *h_xs = new T[state_size];
             T *h_xu = new T[traj_len];
             T *h_eePos_traj = new T[ee_state_size*knot_points];
@@ -679,11 +684,12 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             gpuErrchk(cudaMemcpy(h_eePos_traj, d_eePos_traj, ee_state_size*knot_points*sizeof(T), cudaMemcpyDeviceToHost));
 
             // step 2: solve the problem
-            ddp_stats = crocoddylSolve(state_size, control_size, ee_state_size, knot_points, 
-                timestep, state, actuation, xu_traj2d, eePos_traj2d, Q_vec, R_vec, EE_penalty_vec);
+            ddp_stats = crocoddylSolve<T>(state_size, control_size, ee_state_size, knot_points, 
+                timestep,eePos_traj2d, xu_traj2d,Q_vec, R_vec, EE_penalty_vec, state, actuation, 
+                ee_joint_frame_id);
 
             ddp_solve_time = std::get<0>(ddp_stats);
-            ddp_iters = std::get<1>(ddp_stats);
+            ddp_solve_iters = std::get<1>(ddp_stats);
 
             // step 3: copy what we need back onto the GPU, so we can continue using the same MPC control loop
             

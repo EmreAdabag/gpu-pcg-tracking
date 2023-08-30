@@ -110,8 +110,10 @@ int main(){
             std::vector<float> cur_tracking_errs;
             double tot_final_tracking_err = 0;
 
+            std::string test_output_prefix = "";
+
             #if SAVE_DATA
-                std::string test_output_prefix = output_directory_path + std::to_string(PCG_SOLVE) + "_" + std::to_string(pcg_exit_tol);
+                test_output_prefix = output_directory_path + std::to_string(PCG_SOLVE) + "_" + std::to_string(pcg_exit_tol);
                 printf("Logging test results to files with prefix %s \n", test_output_prefix.c_str()); 
             #endif
 
@@ -146,7 +148,8 @@ int main(){
                 gpuErrchk(cudaMemcpy(d_xs, h_xu_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
 
                 std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> trackingstats = track<pcg_t, toplevel_return_type>(state_size, control_size, knot_points, 
-                    static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol, test_output_prefix);
+                    static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol, test_output_prefix,
+                    eePos_traj2d, xu_traj2d);
                 
                 current_results = std::get<0>(trackingstats);
                 if (TIME_LINSYS == 1) {

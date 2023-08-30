@@ -35,7 +35,7 @@ boost::shared_ptr<crocoddyl::StateMultibody> initialize_crocoddyl_state_multibod
     return state;
 }
 
-boost::shared_ptr<crocoddyl::ActuationModelFull> initialize_crocoddyl_actuation_model_full(crocoddyl::StateMultibody state) {
+boost::shared_ptr<crocoddyl::ActuationModelFull> initialize_crocoddyl_actuation_model_full(boost::shared_ptr<crocoddyl::StateMultibody> state) {
 	boost::shared_ptr<crocoddyl::ActuationModelFull> actuation =
 		boost::make_shared<crocoddyl::ActuationModelFull>(state);
     return actuation;
@@ -45,7 +45,8 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
                             boost::shared_ptr<crocoddyl::StateMultibody> state, 
                             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation,
                             std::vector<std::vector<pcg_t>> xu_traj2d, std::vector<std::vector<pcg_t>> eePos_traj2d,
-							Eigen::VectorXd Q_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec) {
+							Eigen::VectorXd Q_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec,
+							const int ee_joint_frame_id, float timestep) {
 	boost::shared_ptr<crocoddyl::CostModelSum> running_cost_model =
 		boost::make_shared<crocoddyl::CostModelSum>(state);
 	boost::shared_ptr<crocoddyl::CostModelSum> terminal_cost_model =
@@ -88,7 +89,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 			boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(EE_penalty_vec);
 
 		boost::shared_ptr<crocoddyl::ResidualModelFrameTranslation> ee_residual =
-			boost::make_shared<crocoddyl::ResidualModelFrameTranslation>(state, robot_model.getFrameId("iiwa_joint_7"), ee_ref_t);
+			boost::make_shared<crocoddyl::ResidualModelFrameTranslation>(state, ee_joint_frame_id, eePos_ref_t);
 		printf("initialized state_residual\n");
 		boost::shared_ptr<crocoddyl::CostModelResidual> goal_tracking_xyz_cost =
 			boost::make_shared<crocoddyl::CostModelResidual>(state, activation_ee, ee_residual);
@@ -128,17 +129,21 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 	boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> running_model =
 		boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
 			boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, actuation, running_cost_model),
-			DT);
+			timestep);
 	boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> terminal_model =
 		boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
 			boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(state, actuation, terminal_cost_model),
-			DT);
+			timestep);
 
 	printf("initialized the action models\n");
 
 	// Create the problem
 	std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models(
-		KNOT_POINTS, running_model);
+		knot_points, running_model);
+
+	Eigen::VectorXd x0(state_size);
+	std::copy(xu_traj2d[0].begin(), xu_traj2d[0].begin() + 14, x0.data());
+
 	crocoddyl::ShootingProblem problem(x0, running_models, terminal_model);
 	boost::shared_ptr<crocoddyl::ShootingProblem> problem_ptr = boost::make_shared<crocoddyl::ShootingProblem>(x0, running_models, terminal_model);
 
@@ -150,9 +155,10 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 
 template <typename T>
 auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_size,
-            uint32_t knot_points, float timestep, std::vector<std::vector<pcg_t>> h_eePos_traj, 
-            std::vector<std::vector<pcg_t>> h_xu, boost::shared_ptr<crocoddyl::StateMultibody> state,
-            boost::shared_ptr<crocoddyl::ActuationModelFull> actuation){
+            uint32_t knot_points, float timestep, std::vector<std::vector<pcg_t>> h_eePos_traj, std::vector<std::vector<pcg_t>> h_xu, 
+			Eigen::VectorXd Q_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec,
+            boost::shared_ptr<crocoddyl::StateMultibody> state,
+            boost::shared_ptr<crocoddyl::ActuationModelFull> actuation, const int ee_joint_frame_id){
 
 
     // data storage
@@ -170,7 +176,8 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
     // shouldn't need to worry about matching the rho values, we can use the defaults?
 
     crocoddyl::SolverDDP ddp = setupCrocoddylProblem(state_size, control_size, knot_points, 
-                    ee_pos_size, state, actuation, h_xu, h_eePos_traj);
+                    ee_pos_size, state, actuation, h_xu, h_eePos_traj, 
+					Q_vec, R_vec, EE_penalty_vec, ee_joint_frame_id, timestep);
 	
     // Set up callback
 	std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
@@ -182,7 +189,8 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
     clock_gettime(CLOCK_MONOTONIC, &ddp_solve_end);
 
 	//print the initial state x0 for reference
-	std::cout << "Initial state: " << x0 << std::endl;
+	Eigen::VectorXd start_state = ddp.get_xs().front();
+	std::cout << "Initial state: " << start_state << std::endl;
 
 	Eigen::VectorXd final_state = ddp.get_xs().back();
     
