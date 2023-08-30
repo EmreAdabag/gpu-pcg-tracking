@@ -19,6 +19,8 @@
 #include <crocoddyl/core/residuals/control.hpp>
 #include <crocoddyl/multibody/actions/free-fwddyn.hpp>
 
+#include <crocoddyl/multibody/residuals/frame-translation.hpp>
+
 #include <iostream>
 
 #include <experiment_helpers.cuh>
@@ -38,6 +40,7 @@
 
 #define Q_COST 0.1
 #define R_COST 0.0001
+#define EE_COST 0.5
 
 int main(int argc, char **argv)
 {
@@ -110,10 +113,9 @@ int main(int argc, char **argv)
 	
 	Eigen::VectorXd R_vec(NUM_CONTROLS);
 	R_vec.fill(R_COST);
-
-	// Initialize matrices Q and R for state and control tracking cost
-	Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(14, 14) * 0.1; // Assuming 14 as state size
-	Eigen::MatrixXd R = Eigen::MatrixXd::Identity(NUM_CONTROLS, NUM_CONTROLS) * 0.0001;
+	
+	Eigen::VectorXd EE_penalty_vec(EE_DIM_POS);
+	EE_penalty_vec.fill(EE_COST);
 
 	// Create the state and actuation models
 	boost::shared_ptr<pinocchio::ModelTpl<double>> robot_model_ptr = boost::make_shared<pinocchio::ModelTpl<double>>(robot_model);
@@ -134,7 +136,7 @@ int main(int argc, char **argv)
 	{
 		Eigen::VectorXd x_ref_t(NUM_STATES);
 		Eigen::VectorXd u_ref_t(NUM_CONTROLS);
-		Eigen::VectorXd ee_ref_t(EE_DIM_TOTAL);
+		Eigen::VectorXd ee_ref_t(EE_DIM_POS);
 		// read into x_ref_t and u_ref_t from xu_traj2d
 		for (int i = 0; i < NUM_STATES; ++i)
 		{
@@ -142,7 +144,7 @@ int main(int argc, char **argv)
 			if (i < NUM_CONTROLS) {
 				u_ref_t(i) = xu_traj2d[t][i + 14];
 			}
-			if (i < EE_DIM_TOTAL) {
+			if (i < EE_DIM_POS) {
 				ee_ref_t(i) = eePos_traj2d[t][i];
 			}
 		}
@@ -162,15 +164,25 @@ int main(int argc, char **argv)
 		printf("Added state cost for knot point %d\n", t);
 
 
+		boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_ee = 
+			boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(EE_penalty_vec);
+
+		boost::shared_ptr<crocoddyl::ResidualModelFrameTranslation> ee_residual =
+			boost::make_shared<crocoddyl::ResidualModelFrameTranslation>(state, robot_model.getFrameId("iiwa_joint_7"), ee_ref_t);
+		printf("initialized state_residual\n");
+		boost::shared_ptr<crocoddyl::CostModelResidual> goal_tracking_xyz_cost =
+			boost::make_shared<crocoddyl::CostModelResidual>(state, activation_ee, ee_residual);
+		printf("initialized state_cost\n");
+
+		running_cost_model->addCost("goalTrack" + std::to_string(t), goal_tracking_xyz_cost, 1.);
+
+		printf("Added state cost for knot point %d\n", t);
+
+
 
 		if (t == (KNOT_POINTS - 1)) {
-			// Add terminal cost if this is final knot point
-			boost::shared_ptr<crocoddyl::ResidualModelState> terminal_state_residual =
-				boost::make_shared<crocoddyl::ResidualModelState>(state, x_ref_t); // 0: nu
-			boost::shared_ptr<crocoddyl::CostModelResidual> terminal_state_cost =
-				boost::make_shared<crocoddyl::CostModelResidual>(state, terminal_state_residual);
 			
-			terminal_cost_model->addCost("stateTrack" + std::to_string(t), terminal_state_cost, 10000.);
+			terminal_cost_model->addCost("terminalStateCost", state_cost, 10000.);
 
 			printf("Added terminal cost for knot point %d\n", t);
 			// print out the x_ref_t at this point so we know what the goal is
