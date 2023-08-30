@@ -11,9 +11,12 @@
 #include <crocoddyl/core/utils/callbacks.hpp>
 #include <crocoddyl/core/costs/cost-sum.hpp>
 
+#include <crocoddyl/core/activations/weighted-quadratic.hpp>
+
 #include <crocoddyl/multibody/states/multibody.hpp>
 #include <crocoddyl/multibody/actuations/full.hpp>
 #include <crocoddyl/multibody/residuals/state.hpp>
+#include <crocoddyl/core/residuals/control.hpp>
 #include <crocoddyl/multibody/actions/free-fwddyn.hpp>
 
 #include <iostream>
@@ -30,6 +33,11 @@
 #define DT .001
 #define NUM_CONTROLS 7
 #define NUM_STATES 14
+#define EE_DIM_TOTAL 6
+#define EE_DIM_POS 3
+
+#define Q_COST 0.1
+#define R_COST 0.0001
 
 int main(int argc, char **argv)
 {
@@ -90,26 +98,18 @@ int main(int argc, char **argv)
 		h_xu_traj.insert(h_xu_traj.end(), xu_vec.begin(), xu_vec.end());
 	}
 
-	// // print out the eePos_traj and the xu_traj
-	// printf("printing out eePos_traj\n");
-	// for (uint32_t i = 0; i < h_eePos_traj.size(); i += 1)
-	// {
-	// 	std::cout << h_eePos_traj[i] << std::endl;
-	// }
-	// printf("printing out xu_traj\n");
-	// for (uint32_t i = 0; i < h_xu_traj.size(); i += 1)
-	// {
-	// 	std::cout << h_xu_traj[i] << std::endl;
-	// }
-	// std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> trackingstats = track<pcg_t, toplevel_return_type>(state_size,
-	// 																															control_size, knot_points, static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs,
-	// 																															start_state, goal_state, single_traj_test_iter, pcg_exit_tol, test_output_prefix);
 	// Create the x0, assuming x0 is a vector of size 14
 	Eigen::VectorXd x0(NUM_STATES);
 	for (int i = 0; i < NUM_STATES; ++i)
 	{
 		x0(i) = h_xu_traj[i];
 	}
+	
+	Eigen::VectorXd Q_vec(NUM_STATES);
+	Q_vec.fill(Q_COST);
+	
+	Eigen::VectorXd R_vec(NUM_CONTROLS);
+	R_vec.fill(R_COST);
 
 	// Initialize matrices Q and R for state and control tracking cost
 	Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(14, 14) * 0.1; // Assuming 14 as state size
@@ -134,6 +134,7 @@ int main(int argc, char **argv)
 	{
 		Eigen::VectorXd x_ref_t(NUM_STATES);
 		Eigen::VectorXd u_ref_t(NUM_CONTROLS);
+		Eigen::VectorXd ee_ref_t(EE_DIM_TOTAL);
 		// read into x_ref_t and u_ref_t from xu_traj2d
 		for (int i = 0; i < NUM_STATES; ++i)
 		{
@@ -141,18 +142,25 @@ int main(int argc, char **argv)
 			if (i < NUM_CONTROLS) {
 				u_ref_t(i) = xu_traj2d[t][i + 14];
 			}
+			if (i < EE_DIM_TOTAL) {
+				ee_ref_t(i) = eePos_traj2d[t][i];
+			}
 		}
+
+		boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_state = 
+			boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(Q_vec);
 
 		boost::shared_ptr<crocoddyl::ResidualModelState> state_residual =
 			boost::make_shared<crocoddyl::ResidualModelState>(state, x_ref_t);
 		printf("initialized state_residual\n");
 		boost::shared_ptr<crocoddyl::CostModelResidual> state_cost =
-			boost::make_shared<crocoddyl::CostModelResidual>(state, state_residual);
+			boost::make_shared<crocoddyl::CostModelResidual>(state, activation_state, state_residual);
 		printf("initialized state_cost\n");
 
 		running_cost_model->addCost("stateTrack" + std::to_string(t), state_cost, 1.);
 
 		printf("Added state cost for knot point %d\n", t);
+
 
 
 		if (t == (KNOT_POINTS - 1)) {
@@ -167,6 +175,22 @@ int main(int argc, char **argv)
 			printf("Added terminal cost for knot point %d\n", t);
 			// print out the x_ref_t at this point so we know what the goal is
 			std::cout << "x_ref_t: " << x_ref_t << std::endl;
+		} else {
+			// otherwise add the control costs
+			// Question: should we add the control cost for the terminal knot point? This is terminal for this
+			// trajectory, but not necessarily going to be terminal from the MPC standpoint
+			// // Add control cost
+			boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_control = 
+				boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(R_vec);
+			
+			boost::shared_ptr<crocoddyl::ResidualModelControl> control_residual =
+				boost::make_shared<crocoddyl::ResidualModelControl>(state, u_ref_t);
+			boost::shared_ptr<crocoddyl::CostModelResidual> control_cost =
+				boost::make_shared<crocoddyl::CostModelResidual>(state, activation_control, control_residual);
+
+			running_cost_model->addCost("controlTrack" + std::to_string(t), control_cost, 0.001);
+
+			printf("Added control cost for knot point %d\n", t);
 		}
 	}
 
