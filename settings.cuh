@@ -5,7 +5,7 @@
 
 
 #define ADD_NOISE  0
-#define TEST_ITERS 100
+#define TEST_ITERS 1
 // qdldl if 0
 // #define PCG_SOLVE       1
 
@@ -21,6 +21,7 @@ typedef float pcg_t;
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
 // #define Q_COST          (.10)
+// #define QD_COST          (.10)
 // #define R_COST          (0.0001)
 
 #define CONST_UPDATE_FREQ 1
@@ -29,12 +30,15 @@ typedef float pcg_t;
 #define SHIFT_THRESHOLD (1 * timestep)
 
 #if TIME_LINSYS
-    #define SQP_MAX_ITER    20
+    #define SQP_MAX_ITER    1
     typedef double toplevel_return_type;
 #else
-    #define SQP_MAX_ITER    40
+    #define SQP_MAX_ITER    1
     typedef uint32_t toplevel_return_type;
 #endif
+
+#define CROCODDYL_SOLVE 1
+#define DDP_MAX_ITERS 100 // default in croc is 100
 
 
 #define PCG_NUM_THREADS     128

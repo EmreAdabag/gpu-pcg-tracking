@@ -19,6 +19,7 @@
 #include "settings.cuh"
 #include "testutils.cuh"
 #include "experiment_helpers.cuh"
+#include "crocoddyl_helpers.cuh"
 
 
 template <typename T>
@@ -52,7 +53,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
     // line search things
     const float mu = 10.0f;
-    const uint32_t num_alphas = 8;
+    const uint32_t num_alphas = 1;
     T h_merit_news[num_alphas];
     void *ls_merit_kernel = (void *) ls_gato_compute_merit<T>;
     const size_t merit_smem_size = get_merit_smem_size<T>(state_size, control_size);
@@ -352,6 +353,11 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         gpuErrchk(cudaPeekAtLastError());
         if (sqpTimecheck()){ break; }
         
+        // // Allocate space for host variables
+        // const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
+        // T *h_xs = new T[state_size];
+        // T *h_xu = new T[traj_len];
+        // T *h_eePos_traj = new T[6];
 
         // line search
         for(uint32_t p = 0; p < num_alphas; p++){
@@ -370,11 +376,38 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
                 (void *)&d_merit_news,
                 (void *)&d_merit_temp
             };
+                // if(p == 0) {
+                //     // Copy data from device to host
+                //     gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
+                //     gpuErrchk(cudaMemcpy(h_xu, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToHost));
+                //     gpuErrchk(cudaMemcpy(h_eePos_traj, d_eePos_traj, 6*sizeof(T), cudaMemcpyDeviceToHost));
+
+                    // printf("Printing inputs to merit computation from host\n");
+
+                    // // Print the data in human-readable format
+                    // for(int i = 0; i < state_size; ++i) {
+                    //     std::cout << "h_xs[" << i << "] = " << h_xs[i] << std::endl;
+                    // }
+                    
+                    // for(int i = 0; i < traj_len; ++i) {
+                    //     std::cout << "h_xu[" << i << "] = " << h_xu[i] << std::endl;
+                    // }
+                    
+                    // for(int i = 0; i < 6; ++i) {
+                    //     std::cout << "h_eePos_traj[" << i << "] = " << h_eePos_traj[i] << std::endl;
+                    // }
+                // }
             gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, MERIT_THREADS, kernelArgs, get_merit_smem_size<T>(state_size, knot_points), streams[p]));
         }
         if (sqpTimecheck()){ break; }
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
+
+        // //print out message and end the program
+        // printf("Exiting after computing the merit function value, so we can use it for comparison\n");
+        // // exit the program
+        // exit(0);
+
         
         
         cudaMemcpy(h_merit_news, d_merit_news, 8*sizeof(T), cudaMemcpyDeviceToHost);
@@ -578,6 +611,24 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     T rho = 1e-3;
     T rho_reset = 1e-3;
 
+    // Crocoddyl Setup
+#if CROCODDYL_SOLVE
+
+    pinocchio::Model robot_model = initialize_pinocchio_robot();
+    boost::shared_ptr<crocoddyl::StateMultibody> state = initialize_crocoddyl_state_multibody(robot_model);
+    boost::shared_ptr<crocoddyl::ActuationModelFull> actuation = initialize_crocoddyl_actuation_model_full(state);
+	
+    Eigen::VectorXd Q_vec(NUM_STATES);
+	Q_vec.fill(Q_COST);
+	
+	Eigen::VectorXd R_vec(NUM_CONTROLS);
+	R_vec.fill(R_COST);
+	
+	Eigen::VectorXd EE_penalty_vec(EE_DIM_POS);
+	EE_penalty_vec.fill(EE_COST);
+
+#endif // #if CROCODDYL_SOLVE
+
 #if REMOVE_JITTERS
     config.pcg_exit_tol = 1e-11;
     config.pcg_max_iter = 10000;
@@ -612,17 +663,44 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
 #endif // #if LIVE_PRINT_PATH
         
 
+        #if CROCODDYL_SOLVE // Use the Crocoddyl DDP solver, rather than SQP, to solve the trajopt problem
         
+            // step 1: move what we need from the GPU to the CPU
+            // Allocate space for host variables
+            const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
+            const uint32_t ee_state_size = 6;
+            T *h_xs = new T[state_size];
+            T *h_xu = new T[traj_len];
+            T *h_eePos_traj = new T[ee_state_size*knot_points];
 
-        sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, rho_reset);
+            // copy data from device to host, from d_xu into h_xu
+            gpuErrchk(cudaMemcpy(h_xu, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToHost));
+            // copy from d_eePos_traj into h_eePos_traj
+            gpuErrchk(cudaMemcpy(h_eePos_traj, d_eePos_traj, ee_state_size*knot_points*sizeof(T), cudaMemcpyDeviceToHost));
+
+            // step 2: solve the problem
+            ddp_stats = crocoddylSolve(state_size, control_size, ee_state_size, knot_points, 
+                timestep, state, actuation, xu_traj2d, eePos_traj2d, Q_vec, R_vec, EE_penalty_vec);
+
+            ddp_solve_time = std::get<0>(ddp_stats);
+            ddp_iters = std::get<1>(ddp_stats);
+
+            // step 3: copy what we need back onto the GPU, so we can continue using the same MPC control loop
+            
+            // copy h_xu back onto the GPU, into d_xu
+            gpuErrchk(cudaMemcpy(d_xu, h_xu, traj_len*sizeof(T), cudaMemcpyHostToDevice));
+
+        #else // #if CROCODDYL_SOLVE
+            sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, rho_reset);
 
 
-        cur_pcg_iters = std::get<0>(sqp_stats);
-        cur_linsys_times = std::get<1>(sqp_stats);
-        sqp_solve_time_us = std::get<2>(sqp_stats);
-        cur_sqp_iters = std::get<3>(sqp_stats);
-        sqp_exits.push_back(std::get<4>(sqp_stats));
-        cur_pcg_exits = std::get<5>(sqp_stats);
+            cur_pcg_iters = std::get<0>(sqp_stats);
+            cur_linsys_times = std::get<1>(sqp_stats);
+            sqp_solve_time_us = std::get<2>(sqp_stats);
+            cur_sqp_iters = std::get<3>(sqp_stats);
+            sqp_exits.push_back(std::get<4>(sqp_stats));
+            cur_pcg_exits = std::get<5>(sqp_stats);
+        #endif
 
 
 #if CONST_UPDATE_FREQ
