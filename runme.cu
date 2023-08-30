@@ -43,7 +43,9 @@ int main(){
     if(!std::is_same<QDLDL_float, pcg_t>::value){ std::cout << "GPU-PCG QDLDL type mismatch" << std::endl; exit(1); }
 
     print_test_config();
-    std::string output_directory_path = create_test_directory();
+    #if SAVE_DATA
+        std::string output_directory_path = create_test_directory();
+    #endif
 
     const uint32_t recorded_states = 5;
     const uint32_t start_goal_combinations = recorded_states*recorded_states;
@@ -108,8 +110,10 @@ int main(){
             std::vector<float> cur_tracking_errs;
             double tot_final_tracking_err = 0;
 
-            std::string test_output_prefix = output_directory_path + std::to_string(PCG_SOLVE) + "_" + std::to_string(pcg_exit_tol);
-            printf("Logging test results to files with prefix %s \n", test_output_prefix.c_str()); 
+            #if SAVE_DATA
+                std::string test_output_prefix = output_directory_path + std::to_string(PCG_SOLVE) + "_" + std::to_string(pcg_exit_tol);
+                printf("Logging test results to files with prefix %s \n", test_output_prefix.c_str()); 
+            #endif
 
             for (uint32_t single_traj_test_iter = 0; single_traj_test_iter < traj_test_iters; single_traj_test_iter++){
 
@@ -131,19 +135,6 @@ int main(){
                 for (const auto& xu_vec : xu_traj2d) {
                     h_xu_traj.insert(h_xu_traj.end(), xu_vec.begin(), xu_vec.end());
                 }
-
-                // print out the eePos_traj and the xu_traj
-                printf("printing out eePos_traj\n");
-                for (uint32_t i = 0; i < h_eePos_traj.size(); i+=1){
-                    std::cout << h_eePos_traj[i] << std::endl;
-                }
-                printf("printing out xu_traj\n");
-                for (uint32_t i = 0; i < h_xu_traj.size(); i+=1){
-                    std::cout << h_xu_traj[i] << std::endl;
-                }
-
-                // now exit the program
-                exit(0);
 
                 gpuErrchk(cudaMalloc(&d_eePos_traj, h_eePos_traj.size()*sizeof(pcg_t)));
                 gpuErrchk(cudaMemcpy(d_eePos_traj, h_eePos_traj.data(), h_eePos_traj.size()*sizeof(pcg_t), cudaMemcpyHostToDevice));
@@ -197,25 +188,27 @@ int main(){
             }
             std::cout << "************************************************\n\n";
 
-            // Specify the CSV file path
-            const std::string csvFilePath = test_output_prefix + "_" + "overall_stats.csv";
+            #if SAVE_DATA
+                // Specify the CSV file path
+                const std::string csvFilePath = test_output_prefix + "_" + "overall_stats.csv";
 
-            // Open the CSV file for writing
-            std::ofstream csvFile(csvFilePath);
-            if (!csvFile.is_open()) {
-                std::cerr << "Error opening CSV file for writing." << std::endl;
-                return 1;
-            }
+                // Open the CSV file for writing
+                std::ofstream csvFile(csvFilePath);
+                if (!csvFile.is_open()) {
+                    std::cerr << "Error opening CSV file for writing." << std::endl;
+                    return 1;
+                }
 
-            // Write the header row
-            csvFile << "Average,Std Dev, Min, Max, Median, Q1, Q3\n";
+                // Write the header row
+                csvFile << "Average,Std Dev, Min, Max, Median, Q1, Q3\n";
 
-            // Write the data rows
-            csvFile << getStatsString(trackingStats) << "\n";
-            csvFile << getStatsString(linsysOrSqpStats) << "\n";
+                // Write the data rows
+                csvFile << getStatsString(trackingStats) << "\n";
+                csvFile << getStatsString(linsysOrSqpStats) << "\n";
 
-            // Close the CSV file
-            csvFile.close();
+                // Close the CSV file
+                csvFile.close();
+            #endif
         }
         break;
     }
