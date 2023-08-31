@@ -44,7 +44,7 @@ boost::shared_ptr<crocoddyl::ActuationModelFull> initialize_crocoddyl_actuation_
 crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control_size, uint32_t knot_points, uint32_t ee_pos_size,
                             boost::shared_ptr<crocoddyl::StateMultibody> state, 
                             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation,
-                            std::vector<std::vector<pcg_t>> xu_traj2d, std::vector<std::vector<pcg_t>> eePos_traj2d,
+                            pcg_t * h_xu, std::vector<std::vector<pcg_t>> eePos_traj2d,
 							Eigen::VectorXd Q_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec,
 							const int ee_joint_frame_id, float timestep) {
 	boost::shared_ptr<crocoddyl::CostModelSum> running_cost_model =
@@ -62,9 +62,9 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 		// read into x_ref_t and u_ref_t from xu_traj2d
 		for (int i = 0; i < state_size; ++i)
 		{
-			x_ref_t(i) = xu_traj2d[t][i];
+			x_ref_t(i) = h_xu[t * (state_size + control_size) + i];
 			if (i < control_size) {
-				u_ref_t(i) = xu_traj2d[t][i + state_size];
+				u_ref_t(i) = h_xu[t * (state_size + control_size) + i + state_size];
 			}
             if (i < ee_pos_size) {
                 eePos_ref_t(i) = eePos_traj2d[t][i];
@@ -76,36 +76,36 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 
 		boost::shared_ptr<crocoddyl::ResidualModelState> state_residual =
 			boost::make_shared<crocoddyl::ResidualModelState>(state, x_ref_t);
-		printf("initialized state_residual\n");
+		// printf("initialized state_residual\n");
 		boost::shared_ptr<crocoddyl::CostModelResidual> state_cost =
 			boost::make_shared<crocoddyl::CostModelResidual>(state, activation_state, state_residual);
-		printf("initialized state_cost\n");
+		// printf("initialized state_cost\n");
 
 		running_cost_model->addCost("stateTrack" + std::to_string(t), state_cost, 1.);
 
-		printf("Added state cost for knot point %d\n", t);
+		// printf("Added state cost for knot point %d\n", t);
 		
         boost::shared_ptr<crocoddyl::ActivationModelWeightedQuad> activation_ee = 
 			boost::make_shared<crocoddyl::ActivationModelWeightedQuad>(EE_penalty_vec);
 
 		boost::shared_ptr<crocoddyl::ResidualModelFrameTranslation> ee_residual =
 			boost::make_shared<crocoddyl::ResidualModelFrameTranslation>(state, ee_joint_frame_id, eePos_ref_t);
-		printf("initialized state_residual\n");
+		// printf("initialized state_residual\n");
 		boost::shared_ptr<crocoddyl::CostModelResidual> goal_tracking_xyz_cost =
 			boost::make_shared<crocoddyl::CostModelResidual>(state, activation_ee, ee_residual);
-		printf("initialized state_cost\n");
+		// printf("initialized state_cost\n");
 
 		running_cost_model->addCost("goalTrack" + std::to_string(t), goal_tracking_xyz_cost, 1.);
 
-		printf("Added state cost for knot point %d\n", t);
+		// printf("Added state cost for knot point %d\n", t);
 
 		if (t == (KNOT_POINTS - 1)) {
 			
 			terminal_cost_model->addCost("terminalStateCost", state_cost, 10000.);
 
-			printf("Added terminal cost for knot point %d\n", t);
+			// printf("Added terminal cost for knot point %d\n", t);
 			// print out the x_ref_t at this point so we know what the goal is
-			std::cout << "x_ref_t: " << x_ref_t << std::endl;
+			// std::cout << "x_ref_t: " << x_ref_t << std::endl;
 		} else {
 			// otherwise add the control costs
 			// Question: should we add the control cost for the terminal knot point? This is terminal for this
@@ -121,7 +121,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 
 			running_cost_model->addCost("controlTrack" + std::to_string(t), control_cost, 0.001);
 
-			printf("Added control cost for knot point %d\n", t);
+			// printf("Added control cost for knot point %d\n", t);
 		}
 	}
 
@@ -142,7 +142,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 		knot_points, running_model);
 
 	Eigen::VectorXd x0(state_size);
-	std::copy(xu_traj2d[0].begin(), xu_traj2d[0].begin() + 14, x0.data());
+	std::copy(h_xu, h_xu + 14, x0.data());
 
 	crocoddyl::ShootingProblem problem(x0, running_models, terminal_model);
 	boost::shared_ptr<crocoddyl::ShootingProblem> problem_ptr = boost::make_shared<crocoddyl::ShootingProblem>(x0, running_models, terminal_model);
@@ -155,10 +155,12 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 
 template <typename T>
 auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_size,
-            uint32_t knot_points, float timestep, std::vector<std::vector<pcg_t>> h_eePos_traj, std::vector<std::vector<pcg_t>> h_xu, 
+            uint32_t knot_points, float timestep, std::vector<std::vector<pcg_t>> h_eePos_traj, 
+			std::vector<std::vector<pcg_t>> xu_traj2d, 
 			Eigen::VectorXd Q_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec,
             boost::shared_ptr<crocoddyl::StateMultibody> state,
-            boost::shared_ptr<crocoddyl::ActuationModelFull> actuation, const int ee_joint_frame_id){
+            boost::shared_ptr<crocoddyl::ActuationModelFull> actuation, const int ee_joint_frame_id,
+			T * h_xu){
 
 
     // data storage
@@ -180,9 +182,9 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 					Q_vec, R_vec, EE_penalty_vec, ee_joint_frame_id, timestep);
 	
     // Set up callback
-	std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
-	cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
-	ddp.setCallbacks(cbs);
+	// std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
+	// cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+	// ddp.setCallbacks(cbs);
 
 	// Solve the problem
 	ddp.solve();
@@ -197,7 +199,36 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
     // Print it
     std::cout << "Final state: " << final_state << std::endl;
 
+	// print the control trajectory in a human readable format
+	// std::cout << "Control trajectory: " << std::endl;
+	// for (int i = 0; i < knot_points-1; ++i)
+	// {
+	// 	std::cout << "knot point " << i << ": ";
+	// 	for (int j = 0; j < control_size; ++j)
+	// 	{
+	// 		std::cout << ddp.get_us()[i][j] << " ";
+	// 	}
+	// 	std::cout << std::endl;
+	// }
+
+	// Copy the final trajectory into the output array h_xu
+	// the first 14 elements are the state, the next 7 are the control
+	// the state is in ddp.xs, the control is in ddp.us
+	for (int i = 0; i < knot_points; ++i)
+	{
+		for (int j = 0; j < state_size; ++j) {
+			h_xu[i*(state_size+control_size) + j] = ddp.get_xs()[i][j];
+		}
+		if (i < knot_points - 1) {
+			for (int j = 0; j < control_size; ++j) {
+				h_xu[i*(state_size+control_size) + j + state_size] = ddp.get_us()[i][j];
+			}
+		}
+	}
+
     double ddp_solve_time = time_delta_us_timespec(ddp_solve_start, ddp_solve_end);
 
-    return std::make_tuple(ddp_solve_time, ddp.get_iter());
+	double total_cost = ddp.get_cost();
+
+    return std::make_tuple(ddp_solve_time, ddp.get_iter(), total_cost);
 }
