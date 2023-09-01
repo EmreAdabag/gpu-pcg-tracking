@@ -600,7 +600,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));    
     gpuErrchk(cudaPeekAtLastError());
     T h_eePos[6];
-    T h_eePos_goal[6];
+    T h_eePos_goal[6 * knot_points];
 
 
     // temp device memory
@@ -636,7 +636,6 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     // Allocate space for host variables
     uint32_t ee_state_size = 6;
     T *h_xu = new T[traj_len];
-    T *h_eePos_traj = new T[ee_state_size*knot_points];
 
 #endif // #if CROCODDYL_SOLVE
 
@@ -693,7 +692,6 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
                 std::cout << h_xu[i] << " ";
             }
             std::cout << std::endl;
-            gpuErrchk(cudaMemcpy(h_eePos_traj, d_eePos_traj, ee_state_size*knot_points*sizeof(T), cudaMemcpyDeviceToHost));
             
             // TODO: fix the way I am dealing with end effector for DDP
             // current I'm passing in the eePos_traj, but I should be passing in the eePos_goal I think instead,
@@ -701,11 +699,11 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             // Also need to make sure I am initializing the problem correctly. I was previously passing in the same initial
             // state to the ddp solver each time. I have now fixed that, but I am likely making the same mistake with 
             // end effector.
-            gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, 6*sizeof(T), cudaMemcpyDeviceToHost));
+            gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, ee_state_size*knot_points*sizeof(T), cudaMemcpyDeviceToHost));
 
             // step 2: solve the problem
             ddp_stats = crocoddylSolve<T>(state_size, control_size, ee_state_size, knot_points, 
-                timestep,eePos_traj2d, xu_traj2d,Q_vec, R_vec, EE_penalty_vec, state, actuation, 
+                timestep,h_eePos_goal, Q_vec, R_vec, EE_penalty_vec, state, actuation, 
                 ee_joint_frame_id, h_xu);
 
             // print the h_xu start and end again, to see if they changed
@@ -738,6 +736,9 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             
             // copy h_xu back onto the GPU, into d_xu
             gpuErrchk(cudaMemcpy(d_xu, h_xu, traj_len*sizeof(T), cudaMemcpyHostToDevice));
+
+            // I dont think I need to copy ee positions back, these aren't updated by sqp are they?
+            // gpuErrchk(cudaMemcpy(d_eePos_goal, h_eePos_goal, ee_state_size*knot_points*sizeof(T), cudaMemcpyHostToDevice));
 
         #else // #if CROCODDYL_SOLVE
             sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, rho_reset);

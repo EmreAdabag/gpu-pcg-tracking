@@ -44,7 +44,7 @@ boost::shared_ptr<crocoddyl::ActuationModelFull> initialize_crocoddyl_actuation_
 crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control_size, uint32_t knot_points, uint32_t ee_pos_size,
                             boost::shared_ptr<crocoddyl::StateMultibody> state, 
                             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation,
-                            pcg_t * h_xu, std::vector<std::vector<pcg_t>> eePos_traj2d,
+                            pcg_t * h_xu, pcg_t * ee_goal_traj,
 							Eigen::VectorXd Q_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec,
 							const int ee_joint_frame_id, float timestep) {
 	boost::shared_ptr<crocoddyl::CostModelSum> running_cost_model =
@@ -67,7 +67,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 				u_ref_t(i) = h_xu[t * (state_size + control_size) + i + state_size];
 			}
             if (i < ee_pos_size) {
-                eePos_ref_t(i) = eePos_traj2d[t][i];
+                eePos_ref_t(i) = ee_goal_traj[t * 6 + i];
             }
 		}
 
@@ -139,7 +139,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 
 	// Create the problem
 	std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> running_models(
-		knot_points, running_model);
+		knot_points - 1, running_model);
 
 	Eigen::VectorXd x0(state_size);
 	std::copy(h_xu, h_xu + 14, x0.data());
@@ -155,8 +155,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 
 template <typename T>
 auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_size,
-            uint32_t knot_points, float timestep, std::vector<std::vector<pcg_t>> h_eePos_traj, 
-			std::vector<std::vector<pcg_t>> xu_traj2d, 
+            uint32_t knot_points, float timestep, T * h_ee_goal_traj, 
 			Eigen::VectorXd Q_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec,
             boost::shared_ptr<crocoddyl::StateMultibody> state,
             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation, const int ee_joint_frame_id,
@@ -171,14 +170,14 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 
     // ddp timing
     struct timespec ddp_solve_start, ddp_solve_end;
-    clock_gettime(CLOCK_MONOTONIC, &ddp_solve_start);
-    uint32_t ddp_iter = 0;
 
     // Question : the regularization techniques are going to be different aren't they? So we 
     // shouldn't need to worry about matching the rho values, we can use the defaults?
 
+	// TODO: for sqp we give it an initial position, but we don't give it a full initial trajectory
+
     crocoddyl::SolverDDP ddp = setupCrocoddylProblem(state_size, control_size, knot_points, 
-                    ee_pos_size, state, actuation, h_xu, h_eePos_traj, 
+                    ee_pos_size, state, actuation, h_xu, h_ee_goal_traj, 
 					Q_vec, R_vec, EE_penalty_vec, ee_joint_frame_id, timestep);
 	
     // Set up callback
@@ -186,8 +185,32 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 	// cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
 	// ddp.setCallbacks(cbs);
 
+	// initialize xs and us from h_xu
+	// each 21 elements is a knot point, the first 14 are the state, the next 7 are the control
+	std::vector<Eigen::VectorXd> x_init;
+	std::vector<Eigen::VectorXd> u_init;
+	for (int i = 0; i < knot_points; ++i)
+	{
+		Eigen::VectorXd x_init_i(state_size);
+		Eigen::VectorXd u_init_i(control_size);
+		for (int j = 0; j < state_size; ++j)
+		{
+			x_init_i(j) = h_xu[i * (state_size + control_size) + j];
+			if (j < control_size && i < knot_points - 1) {
+				u_init_i(j) = h_xu[i * (state_size + control_size) + j + state_size];
+			}
+		}
+		
+		x_init.push_back(x_init_i);
+		
+		if (i < knot_points - 1) {
+			u_init.push_back(u_init_i);
+		}
+	}
+
 	// Solve the problem
-	ddp.solve();
+    clock_gettime(CLOCK_MONOTONIC, &ddp_solve_start);
+	ddp.solve(x_init, u_init);
     clock_gettime(CLOCK_MONOTONIC, &ddp_solve_end);
 
 	//print the initial state x0 for reference
