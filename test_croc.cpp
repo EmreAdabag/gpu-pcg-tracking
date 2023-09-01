@@ -1,3 +1,5 @@
+#include <pinocchio/fwd.hpp>
+
 #include "pinocchio/parsers/urdf.hpp"
 
 #include "pinocchio/algorithm/joint-configuration.hpp"
@@ -191,8 +193,8 @@ int main(int argc, char **argv)
 		else {
 			// Add terminal cost if this is final knot point
 			// printf("Added state cost for knot point %d\n", t);
-			boost::shared_ptr<crocoddyl::ResidualModelStateTpl<float>> terminal_state_residual =
-				boost::make_shared<crocoddyl::ResidualModelStateTpl<float>>(state, x_ref_t);
+			// boost::shared_ptr<crocoddyl::ResidualModelStateTpl<float>> terminal_state_residual =
+			// 	boost::make_shared<crocoddyl::ResidualModelStateTpl<float>>(state, x_ref_t);
 
 			// boost::shared_ptr<crocoddyl::ResidualModelStateTpl<float>> terminal_state_residual =
 			// 	boost::make_shared<crocoddyl::ResidualModelStateTpl<float>>(state, x_ref_t);
