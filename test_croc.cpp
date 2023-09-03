@@ -193,59 +193,56 @@ int main(int argc, char **argv)
 		else {
 			// Add terminal cost if this is final knot point
 			// printf("Added state cost for knot point %d\n", t);
-			// boost::shared_ptr<crocoddyl::ResidualModelStateTpl<float>> terminal_state_residual =
-			// 	boost::make_shared<crocoddyl::ResidualModelStateTpl<float>>(state, x_ref_t);
-
-			// boost::shared_ptr<crocoddyl::ResidualModelStateTpl<float>> terminal_state_residual =
-			// 	boost::make_shared<crocoddyl::ResidualModelStateTpl<float>>(state, x_ref_t);
-			// boost::shared_ptr<crocoddyl::CostModelResidualTpl<float>> terminal_state_cost =
-			// 	boost::make_shared<crocoddyl::CostModelResidualTpl<float>>(state, activation_model_state, terminal_state_residual);
+			boost::shared_ptr<crocoddyl::ResidualModelStateTpl<float>> terminal_state_residual =
+				boost::make_shared<crocoddyl::ResidualModelStateTpl<float>>(state, x_ref_t);
+			boost::shared_ptr<crocoddyl::CostModelResidualTpl<float>> terminal_state_cost =
+				boost::make_shared<crocoddyl::CostModelResidualTpl<float>>(state, activation_model_state, terminal_state_residual);
 			
-			// terminal_cost_model->addCost("stateTrack" + std::to_string(t), terminal_state_cost, 10000.);
+			terminal_cost_model->addCost("stateTrack" + std::to_string(t), terminal_state_cost, 10000.);
 
-			// printf("Added terminal cost for knot point %d\n", t);
-			// // print out the x_ref_t at this point so we know what the goal is
-			// std::cout << "x_ref_t: " << x_ref_t << std::endl;
+			printf("Added terminal cost for knot point %d\n", t);
+			// print out the x_ref_t at this point so we know what the goal is
+			std::cout << "x_ref_t: " << x_ref_t << std::endl;
 		}
 	}
 
 	// Create the action models
-	// boost::shared_ptr<crocoddyl::IntegratedActionModelEulerTpl<float>> running_model =
-	// 	boost::make_shared<crocoddyl::IntegratedActionModelEulerTpl<float>>(
-	// 		boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>>(state, actuation, running_cost_model),
-	// 		DT);
-	// boost::shared_ptr<crocoddyl::IntegratedActionModelEulerTpl<float>> terminal_model =
-	// 	boost::make_shared<crocoddyl::IntegratedActionModelEulerTpl<float>>(
-	// 		boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>>(state, actuation, terminal_cost_model),
-	// 		DT);
+	boost::shared_ptr<crocoddyl::IntegratedActionModelEulerTpl<float>> running_model =
+		boost::make_shared<crocoddyl::IntegratedActionModelEulerTpl<float>>(
+			boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>>(state, actuation, running_cost_model),
+			DT);
+	boost::shared_ptr<crocoddyl::IntegratedActionModelEulerTpl<float>> terminal_model =
+		boost::make_shared<crocoddyl::IntegratedActionModelEulerTpl<float>>(
+			boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>>(state, actuation, terminal_cost_model),
+			DT);
 
-	// printf("initialized the action models\n");
+	printf("initialized the action models\n");
 
 	// // Create the problem
-	// std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstractTpl<float>>> running_models(
-	// 	KNOT_POINTS, running_model);
-	// crocoddyl::ShootingProblemTpl<float> problem(x0, running_models, terminal_model);
-	// boost::shared_ptr<crocoddyl::ShootingProblem> problem_ptr = boost::make_shared<crocoddyl::ShootingProblem>(x0, running_models, terminal_model);
+	std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstractTpl<float>>> running_models(
+		KNOT_POINTS, running_model);
+	crocoddyl::ShootingProblemTpl<float> problem(x0, running_models, terminal_model);
+	boost::shared_ptr<crocoddyl::ShootingProblemTpl<float>> problem_ptr = boost::make_shared<crocoddyl::ShootingProblemTpl<float>>(x0, running_models, terminal_model);
 
 
 	// // Create the DDP solver
-	// crocoddyl::SolverDDP ddp(problem_ptr);
+	crocoddyl::SolverDDPTpl<float> ddp(problem_ptr);
 
 	// // Set up callback
-	// std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
-	// cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
-	// ddp.setCallbacks(cbs);
+	std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
+	cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+	ddp.setCallbacks(cbs);
 
 	// // Solve the problem
-	// ddp.solve();
+	ddp.solve();
 
-	// //print the initial state x0 for reference
-	// std::cout << "Initial state: " << x0 << std::endl;
+	//print the initial state x0 for reference
+	std::cout << "Initial state: " << x0 << std::endl;
 
-	// Eigen::VectorXf final_state = ddp.get_xs().back();
+	Eigen::VectorXf final_state = ddp.get_xs().back();
     
-    // // Print it
-    // std::cout << "Final state: " << final_state << std::endl;
+    // Print it
+    std::cout << "Final state: " << final_state << std::endl;
 
-	// return 0;
+	return 0;
 }
