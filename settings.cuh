@@ -21,8 +21,9 @@ typedef float pcg_t;
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
 #define Q_COST          (.10)
-#define QD_COST          (.10)
-#define R_COST          (0.0001)
+#define QD_COST          (1.0)
+#define QF_COST          (10000.0)
+#define R_COST          (0.1)
 #define EE_COST         (0.5)
 
 #define EE_DIM_POS 3
@@ -59,7 +60,6 @@ typedef float pcg_t;
 
 // prints state while tracking
 #define LIVE_PRINT_PATH 0
-#define LIVE_PRINT_STATS 0
 #define LIVE_PRINT_STATS 0
 
 // runs sqp a bunch of times before starting to track

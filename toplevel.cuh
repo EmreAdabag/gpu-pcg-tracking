@@ -561,6 +561,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     std::vector<std::vector<T>> tracking_path;      // list of traversed traj
     std::vector<int> pcg_iters;
     std::vector<double> linsys_times;
+    std::vector<double> ddp_solve_times;
     std::vector<double> sqp_times;
     std::vector<uint32_t> sqp_iters;
     std::vector<bool> sqp_exits;
@@ -622,8 +623,12 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     boost::shared_ptr<crocoddyl::StateMultibody> state = initialize_crocoddyl_state_multibody(robot_model);
     boost::shared_ptr<crocoddyl::ActuationModelFull> actuation = initialize_crocoddyl_actuation_model_full(state);
 	
-    Eigen::VectorXd Q_vec(state_size);
-	Q_vec.fill(Q_COST);
+    Eigen::VectorXd Q_vec(14);  
+    Q_vec.segment(0, 7).fill(Q_COST);
+    Q_vec.segment(7, 7).fill(QD_COST);
+
+    Eigen::VectorXd QF_vec(state_size);
+	Q_vec.fill(QF_COST);
 	
 	Eigen::VectorXd R_vec(control_size);
 	R_vec.fill(R_COST);
@@ -682,16 +687,17 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             // copy data from device to host, from d_xu into h_xu
             gpuErrchk(cudaMemcpy(h_xu, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToHost));
             // print the first and last 21 elements of h_xu
-            std::cout << "h_xu start: ";
-            for(int i = 0; i < 21; i++){     
-                std::cout << h_xu[i] << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "h_xu end: ";
-            for(int i = traj_len-21; i < traj_len; i++){     
-                std::cout << h_xu[i] << " ";
-            }
-            std::cout << std::endl;
+            // std::cout << "h_xu start: ";
+            // for(int i = 0; i < 21; i++){     
+            //     std::cout << h_xu[i] << " ";
+            // }
+            // std::cout << std::endl;
+            // std::cout << "h_xu end: ";
+            // // this is the indexing because the final step in the trajectory only has a control, no state
+            // for(int i = traj_len-14; i < traj_len; i++){     
+            //     std::cout << h_xu[i] << " ";
+            // }
+            // std::cout << std::endl;
             
             // TODO: fix the way I am dealing with end effector for DDP
             // current I'm passing in the eePos_traj, but I should be passing in the eePos_goal I think instead,
@@ -703,30 +709,30 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
 
             // step 2: solve the problem
             ddp_stats = crocoddylSolve<T>(state_size, control_size, ee_state_size, knot_points, 
-                timestep,h_eePos_goal, Q_vec, R_vec, EE_penalty_vec, state, actuation, 
+                timestep,h_eePos_goal, Q_vec, QF_vec, R_vec, EE_penalty_vec, state, actuation, 
                 ee_joint_frame_id, h_xu);
 
             // print the h_xu start and end again, to see if they changed
-            std::cout << "h_xu start: ";
-            for(int i = 0; i < 21; i++){     
-                std::cout << h_xu[i] << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "h_xu end: ";
-            for(int i = traj_len-21; i < traj_len; i++){     
-                std::cout << h_xu[i] << " ";
-            }
-            std::cout << std::endl;
+            // std::cout << "h_xu start: ";
+            // for(int i = 0; i < 21; i++){     
+            //     std::cout << h_xu[i] << " ";
+            // }
+            // std::cout << std::endl;
+            // std::cout << "h_xu end: ";
+            // for(int i = traj_len-14; i < traj_len; i++){     
+            //     std::cout << h_xu[i] << " ";
+            // }
+            // std::cout << std::endl;
 
             ddp_solve_time = std::get<0>(ddp_stats);
             ddp_solve_iters = std::get<1>(ddp_stats);
             ddp_cost = std::get<2>(ddp_stats);
             // print the solve time
-            std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
-            // also print number of ddp iters
-            std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
-            // also print cost
-            std::cout << "DDP cost: " << ddp_cost << std::endl;
+            // std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
+            // // also print number of ddp iters
+            // std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
+            // // also print cost
+            // std::cout << "DDP cost: " << ddp_cost << std::endl;
 
             // // add small sleep for readability
             // usleep(1000000);
@@ -752,7 +758,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             cur_pcg_exits = std::get<5>(sqp_stats);
         #endif
 
-        std::cout << "done solve, starting simulation " << std::endl;
+        // std::cout << "done solve, starting simulation " << std::endl;
 
 
 #if CONST_UPDATE_FREQ
@@ -761,18 +767,18 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
         simulation_time = ddp_solve_time;
 #endif
 
-        std::cout << "simulating for " << simulation_time << " us\nxu:";
-        float h_temp[21];
-        gpuErrchk(cudaMemcpy(h_temp, d_xu_old, 21*sizeof(float), cudaMemcpyDeviceToHost));
-        for(int i = 0; i < 21; i++){
-            std::cout << h_temp[i] << " ";
-        }
-        std::cout << std::endl << "xs:";
-        gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
-        for(int i = 0; i < 14; i++){
-            std::cout << h_temp[i] << " ";
-        }
-        std::cout << std::endl;
+        // std::cout << "simulating for " << simulation_time << " us\nxu:";
+        // float h_temp[21];
+        // gpuErrchk(cudaMemcpy(h_temp, d_xu_old, 21*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 21; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl << "xs:";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
         
 
 
@@ -782,12 +788,12 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
         simple_simulate<T>(state_size, control_size, knot_points, d_xs, d_xu_old, d_dynmem, timestep, prev_simulation_time, simulation_time);
 
         
-        std::cout << "result\n";
-        gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
-        for(int i = 0; i < 14; i++){
-            std::cout << h_temp[i] << " ";
-        }
-        std::cout << std::endl;
+        // std::cout << "result\n";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
         // exit(12);
 
 
@@ -808,7 +814,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             for(uint32_t i=0; i < 3; i++){
                 cur_tracking_error += abs(h_eePos[i] - h_eePos_goal[i]);
             }
-            std ::cout << "tracking error: " << cur_tracking_error << std::endl;
+            // std ::cout << "tracking error: " << cur_tracking_error << std::endl;
             tracking_errors.push_back(cur_tracking_error);                                            
             
             traj_offset++;
@@ -826,7 +832,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
                 gpuErrchk(cudaMemset(&d_xu[traj_len - (state_size+control_size)], 0, control_size * sizeof(T)));
             }
 
-            std::cout << "shifted to offset: " << traj_offset << std::endl;
+            // std::cout << "shifted to offset: " << traj_offset << std::endl;
             
             // shift goal
             just_shift(6, 0, knot_points, d_eePos_goal);
@@ -839,7 +845,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
                 // gpuErrchk(cudaMemset(&d_eePos_goal[(knot_points-1)*(6) + state_size / 2], 0, (state_size/2) * sizeof(T)));
             }
 
-            std::cout << "shifted goal to offset: " << 6 * (traj_offset + knot_points - 1) << std::endl;
+            // std::cout << "shifted goal to offset: " << 6 * (traj_offset + knot_points - 1) << std::endl;
             
             // shift lambda
             just_shift(state_size, 0, knot_points, d_lambda);
@@ -874,6 +880,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
         tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));                                   // next state
         sqp_times.push_back(sqp_solve_time_us);
         sqp_iters.push_back(cur_sqp_iters);
+        ddp_solve_times.push_back(ddp_solve_time);          // linsys times
 
 
 #if LIVE_PRINT_STATS
@@ -949,11 +956,14 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     // auto tvecAvg = [](const std::vector<T>& v){
     //     return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     // };
-
-    #if TIME_LINSYS 
-        return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error);
-    #else
-        return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error);
+    #if CROCODDYL_SOLVE
+        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error);
+    #else 
+        #if TIME_LINSYS 
+            return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error);
+        #else
+            return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error);
+        #endif
     #endif
 }
 

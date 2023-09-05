@@ -34,7 +34,7 @@ int main(){
     const uint32_t state_size = grid::NUM_JOINTS*2;
     const uint32_t control_size = grid::NUM_JOINTS;
     const uint32_t knot_points = KNOT_POINTS;
-    const pcg_t timestep = .015625;
+    const pcg_t timestep = .03;
 
     const uint32_t traj_test_iters = TEST_ITERS;
 
@@ -104,6 +104,7 @@ int main(){
 
             float pcg_exit_tol = pcg_exit_vals[pcg_exit_ind];
             std::vector<double> linsys_times;
+            std::vector<double> ddp_times;
             std::vector<uint32_t> sqp_iters;
             std::vector<toplevel_return_type> current_results;
             std::vector<float> tracking_errs;
@@ -152,10 +153,14 @@ int main(){
                     eePos_traj2d, xu_traj2d);
                 
                 current_results = std::get<0>(trackingstats);
-                if (TIME_LINSYS == 1) {
-                    linsys_times.insert(linsys_times.end(), current_results.begin(), current_results.end());
+                if (CROCODDYL_SOLVE == 1) {
+                    ddp_times.insert(ddp_times.end(), current_results.begin(), current_results.end());
                 } else {
-                    sqp_iters.insert(sqp_iters.end(), current_results.begin(), current_results.end());
+                    if (TIME_LINSYS == 1) {
+                        linsys_times.insert(linsys_times.end(), current_results.begin(), current_results.end());
+                    } else {
+                        sqp_iters.insert(sqp_iters.end(), current_results.begin(), current_results.end());
+                    }
                 }
 
                 cur_tracking_errs = std::get<1>(trackingstats);
@@ -179,15 +184,22 @@ int main(){
             std::string trackingStats = printStats<float>(&tracking_errs, "trackingerr");
             std::cout << tot_final_tracking_err / traj_test_iters << std::endl;
             std::string linsysOrSqpStats;
-            if (TIME_LINSYS == 1)
-            {
-                std::cout << "linsys times\n";
-                linsysOrSqpStats = printStats<double>(&linsys_times, "linsystimes");
-            }
-            else
-            {
-                std::cout << "sqp iters\n";
-                linsysOrSqpStats = printStats<uint32_t>(&sqp_iters, "sqpiters");
+            if (CROCODDYL_SOLVE == 1) {
+                std::cout << "ddp times\n";
+                linsysOrSqpStats = printStats<double>(&ddp_times, "ddptimes");
+
+            } else {
+                if (TIME_LINSYS == 1)
+                {
+                    std::cout << "linsys times\n";
+                    linsysOrSqpStats = printStats<double>(&linsys_times, "linsystimes");
+                }
+                else
+                {
+                    std::cout << "sqp iters\n";
+                    linsysOrSqpStats = printStats<uint32_t>(&sqp_iters, "sqpiters");
+                }
+
             }
             std::cout << "************************************************\n\n";
 
