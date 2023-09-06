@@ -162,6 +162,7 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 
 	crocoddyl::ShootingProblem problem(x0, running_models, terminal_model);
 	boost::shared_ptr<crocoddyl::ShootingProblem> problem_ptr = boost::make_shared<crocoddyl::ShootingProblem>(x0, running_models, terminal_model);
+	problem_ptr->set_nthreads(CROCODDYL_WITH_NTHREADS);
 
 	// Create the DDP solver
 	crocoddyl::SolverFDDP ddp(problem_ptr);
