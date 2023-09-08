@@ -34,7 +34,7 @@ int main(){
     const uint32_t state_size = grid::NUM_JOINTS*2;
     const uint32_t control_size = grid::NUM_JOINTS;
     const uint32_t knot_points = KNOT_POINTS;
-    const pcg_t timestep = .03;
+    const pcg_t timestep = .015625;
 
     const uint32_t traj_test_iters = TEST_ITERS;
 

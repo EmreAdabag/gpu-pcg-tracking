@@ -814,7 +814,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             for(uint32_t i=0; i < 3; i++){
                 cur_tracking_error += abs(h_eePos[i] - h_eePos_goal[i]);
             }
-            // std ::cout << "tracking error: " << cur_tracking_error << std::endl;
+            std ::cout << "tracking error: " << cur_tracking_error << "at offset " << traj_offset << std::endl;
             tracking_errors.push_back(cur_tracking_error);                                            
             
             traj_offset++;

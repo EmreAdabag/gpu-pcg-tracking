@@ -21,9 +21,10 @@ typedef float pcg_t;
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
 #define Q_COST          (.10)
-#define QD_COST          (1.0)
+#define QD_COST          (0.1)
 #define QF_COST          (10000.0)
-#define R_COST          (0.1)
+// Note: not every R value is accepted by pinocchio, 0.001 throws an error for example
+#define R_COST          (0.0001)
 #define EE_COST         (0.5)
 
 #define EE_DIM_POS 3

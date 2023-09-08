@@ -70,6 +70,7 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 			}
             if (i < ee_pos_size) {
                 eePos_ref_t(i) = ee_goal_traj[(knot_points-1) * 6 + i];
+                // eePos_ref_t(i) = ee_goal_traj[t * 6 + i];
             }
 		}
 
@@ -83,7 +84,7 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 			boost::make_shared<crocoddyl::CostModelResidual>(state, activation_state, state_residual);
 		// printf("initialized state_cost\n");
 
-		running_cost_model->addCost("stateTrack" + std::to_string(t), state_cost, 1.);
+		running_cost_model->addCost("stateTrack" + std::to_string(t), state_cost, 0.001);
 
 		// printf("Added state cost for knot point %d\n", t);
 		
@@ -114,7 +115,7 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 			boost::shared_ptr<crocoddyl::CostModelResidual> state_cost_final =
 				boost::make_shared<crocoddyl::CostModelResidual>(state, activation_state_final, state_residual_final);
 			
-			terminal_cost_model->addCost("terminalStateCost", state_cost, 10.);
+			terminal_cost_model->addCost("terminalStateCost", state_cost_final, 10000.);
 
 			// printf("Added terminal cost for knot point %d\n", t);
 			// print out the x_ref_t at this point so we know what the goal is
@@ -135,7 +136,7 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 			boost::shared_ptr<crocoddyl::CostModelResidual> control_cost =
 				boost::make_shared<crocoddyl::CostModelResidual>(state, activation_control, control_residual);
 
-			running_cost_model->addCost("controlTrack" + std::to_string(t), control_cost, 1.);
+			running_cost_model->addCost("controlTrack" + std::to_string(t), control_cost, 0.001);
 
 			// printf("Added control cost for knot point %d\n", t);
 		}
@@ -162,6 +163,7 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 
 	crocoddyl::ShootingProblem problem(x0, running_models, terminal_model);
 	boost::shared_ptr<crocoddyl::ShootingProblem> problem_ptr = boost::make_shared<crocoddyl::ShootingProblem>(x0, running_models, terminal_model);
+	// note: I actually think setting the CROCODDYL_WITH_NTHREADS option during compilation is sufficient, verify
 	problem_ptr->set_nthreads(CROCODDYL_WITH_NTHREADS);
 
 	// Create the DDP solver
