@@ -7,3 +7,6 @@
 [submodule "qdldl"]
 	path = qdldl
 	url = https://github.com/osqp/qdldl.git
+[submodule "crocoddyl"]
+	path = crocoddyl
+	url = https://github.com/loco-3d/crocoddyl.git 

@@ -64,7 +64,7 @@ int main(){
         std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
 
 #if PCG_SOLVE
-        uint32_t num_exit_vals = 5;
+        uint32_t num_exit_vals = 1;
         float pcg_exit_vals[num_exit_vals];
         if(knot_points==32){
             pcg_exit_vals[0] = 5e-6;

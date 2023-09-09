@@ -19,7 +19,10 @@
 #include "settings.cuh"
 #include "testutils.cuh"
 #include "experiment_helpers.cuh"
+
+#if CROCODDYL_SOLVE
 #include "crocoddyl_helpers.cuh"
+#endif
 
 
 template <typename T>
@@ -53,7 +56,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
     // line search things
     const float mu = 10.0f;
-    const uint32_t num_alphas = 1;
+    const uint32_t num_alphas = 8;
     T h_merit_news[num_alphas];
     void *ls_merit_kernel = (void *) ls_gato_compute_merit<T>;
     const size_t merit_smem_size = get_merit_smem_size<T>(state_size, control_size);
@@ -353,12 +356,6 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
         gpuErrchk(cudaPeekAtLastError());
         if (sqpTimecheck()){ break; }
         
-        // // Allocate space for host variables
-        // const uint32_t traj_len = (state_size+control_size)*knot_points-control_size;
-        // T *h_xs = new T[state_size];
-        // T *h_xu = new T[traj_len];
-        // T *h_eePos_traj = new T[6];
-
         // line search
         for(uint32_t p = 0; p < num_alphas; p++){
             void *kernelArgs[] = {
@@ -376,40 +373,12 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
                 (void *)&d_merit_news,
                 (void *)&d_merit_temp
             };
-                // if(p == 0) {
-                //     // Copy data from device to host
-                //     gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
-                //     gpuErrchk(cudaMemcpy(h_xu, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToHost));
-                //     gpuErrchk(cudaMemcpy(h_eePos_traj, d_eePos_traj, 6*sizeof(T), cudaMemcpyDeviceToHost));
-
-                    // printf("Printing inputs to merit computation from host\n");
-
-                    // // Print the data in human-readable format
-                    // for(int i = 0; i < state_size; ++i) {
-                    //     std::cout << "h_xs[" << i << "] = " << h_xs[i] << std::endl;
-                    // }
-                    
-                    // for(int i = 0; i < traj_len; ++i) {
-                    //     std::cout << "h_xu[" << i << "] = " << h_xu[i] << std::endl;
-                    // }
-                    
-                    // for(int i = 0; i < 6; ++i) {
-                    //     std::cout << "h_eePos_traj[" << i << "] = " << h_eePos_traj[i] << std::endl;
-                    // }
-                // }
             gpuErrchk(cudaLaunchCooperativeKernel(ls_merit_kernel, knot_points, MERIT_THREADS, kernelArgs, get_merit_smem_size<T>(state_size, knot_points), streams[p]));
         }
         if (sqpTimecheck()){ break; }
         gpuErrchk(cudaPeekAtLastError());
         gpuErrchk(cudaDeviceSynchronize());
 
-        // //print out message and end the program
-        // printf("Exiting after computing the merit function value, so we can use it for comparison\n");
-        // // exit the program
-        // exit(0);
-
-        
-        
         cudaMemcpy(h_merit_news, d_merit_news, 8*sizeof(T), cudaMemcpyDeviceToHost);
         if (sqpTimecheck()){ break; }
 
@@ -683,8 +652,6 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
         #if CROCODDYL_SOLVE // Use the Crocoddyl DDP solver, rather than SQP, to solve the trajopt problem
         
             // step 1: move what we need from the GPU to the CPU
-
-            // copy data from device to host, from d_xu into h_xu
             gpuErrchk(cudaMemcpy(h_xu, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToHost));
             // print the first and last 21 elements of h_xu
             // std::cout << "h_xu start: ";
@@ -699,12 +666,6 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             // }
             // std::cout << std::endl;
             
-            // TODO: fix the way I am dealing with end effector for DDP
-            // current I'm passing in the eePos_traj, but I should be passing in the eePos_goal I think instead,
-            // and using the same goal when computing the residual for each knot point. Need to confirm this though.
-            // Also need to make sure I am initializing the problem correctly. I was previously passing in the same initial
-            // state to the ddp solver each time. I have now fixed that, but I am likely making the same mistake with 
-            // end effector.
             gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, ee_state_size*knot_points*sizeof(T), cudaMemcpyDeviceToHost));
 
             // step 2: solve the problem
@@ -727,6 +688,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             ddp_solve_time = std::get<0>(ddp_stats);
             ddp_solve_iters = std::get<1>(ddp_stats);
             ddp_cost = std::get<2>(ddp_stats);
+
             // print the solve time
             // std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
             // // also print number of ddp iters
@@ -742,10 +704,6 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             
             // copy h_xu back onto the GPU, into d_xu
             gpuErrchk(cudaMemcpy(d_xu, h_xu, traj_len*sizeof(T), cudaMemcpyHostToDevice));
-
-            // I dont think I need to copy ee positions back, these aren't updated by sqp are they?
-            // gpuErrchk(cudaMemcpy(d_eePos_goal, h_eePos_goal, ee_state_size*knot_points*sizeof(T), cudaMemcpyHostToDevice));
-
         #else // #if CROCODDYL_SOLVE
             sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, rho_reset);
 
@@ -763,8 +721,13 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
 
 #if CONST_UPDATE_FREQ
         simulation_time = SIMULATION_PERIOD;
+        // print simulation time
 #else
+    #if CROCODDYL_SOLVE
         simulation_time = ddp_solve_time;
+    #else // CROCODDYL_SOLVE
+        simulation_time = sqp_solve_time_us; 
+    #endif // CROCODDYL_SOLVE
 #endif
 
         // std::cout << "simulating for " << simulation_time << " us\nxu:";
@@ -814,7 +777,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             for(uint32_t i=0; i < 3; i++){
                 cur_tracking_error += abs(h_eePos[i] - h_eePos_goal[i]);
             }
-            std ::cout << "tracking error: " << cur_tracking_error << "at offset " << traj_offset << std::endl;
+            // std ::cout << "tracking error: " << cur_tracking_error << "at offset " << traj_offset << std::endl;
             tracking_errors.push_back(cur_tracking_error);                                            
             
             traj_offset++;
@@ -880,7 +843,9 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
         tracking_path.push_back(std::vector<T>(h_xs, &h_xs[state_size]));                                   // next state
         sqp_times.push_back(sqp_solve_time_us);
         sqp_iters.push_back(cur_sqp_iters);
-        ddp_solve_times.push_back(ddp_solve_time);          // linsys times
+        #if CROCODDYL_SOLVE
+        ddp_solve_times.push_back(ddp_solve_time);
+        #endif // #if CROCODDYL_SOLVE
 
 
 #if LIVE_PRINT_STATS
