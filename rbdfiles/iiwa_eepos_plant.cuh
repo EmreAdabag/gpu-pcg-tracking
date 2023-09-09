@@ -273,6 +273,7 @@ namespace gato_plant{
 		const T R_cost = COST_R<T>();
         
         T err;
+        T err_squared;
         T val = 0;
 		
         // QD and R penalty
@@ -286,16 +287,16 @@ namespace gato_plant{
 
 
         for(int i = threadIdx.x; i < threadsNeeded; i += blockDim.x){
-            err = s_xu[i];
+            err_squared = s_xu[i]*s_xu[i];
 			if(i < state_size/2){
-                val = Q_cost * err * err;
+                val = Q_cost;
 			} else if (i < state_size) {
-                val = QD_cost * err * err;
+                val = QD_cost;
 			}
 			else{
-				val = R_cost * err * err;
+				val = R_cost;
 			}
-			s_cost_vec[i] = static_cast<T>(0.5) * val;
+			s_cost_vec[i] = static_cast<T>(0.5) * val * err_squared;
 		}
 
         __syncthreads();

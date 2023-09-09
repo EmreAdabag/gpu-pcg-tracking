@@ -40,7 +40,7 @@ for knot in "${knot_points[@]}"; do
             for rf in "${rho_factors[@]}"; do
                 # test qdl
                 compile_command=$base_compile_command
-                compile_command+="-DPCG_SOLVE=1 "
+                compile_command+="-DPCG_SOLVE=0 "
                 compile_command+="-DQ_COST=.0001 "
                 compile_command+="-DQD_COST=.0001 "
                 compile_command+="-DQF_COST=0.01 "
