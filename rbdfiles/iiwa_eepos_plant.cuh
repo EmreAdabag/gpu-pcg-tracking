@@ -277,7 +277,7 @@ namespace gato_plant{
         T val = 0;
 		
         // QD and R penalty
-		const uint32_t threadsNeeded = state_size + control_size * final_block;
+		const uint32_t threadsNeeded = state_size + control_size * !final_block;
         
 		T *s_cost_vec = s_temp;
 		T *s_eePos_cost = s_cost_vec + threadsNeeded + 3;
