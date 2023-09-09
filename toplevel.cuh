@@ -772,6 +772,12 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             // record tracking error
             grid::end_effector_positions_kernel<T><<<1,128>>>(d_eePos, d_xs, grid::NUM_JOINTS, (grid::robotModel<T> *) d_dynmem, 1);
             gpuErrchk(cudaMemcpy(h_eePos, d_eePos, 6*sizeof(T), cudaMemcpyDeviceToHost));
+            // print h_eePos
+            // std::cout << "h_eePos: ";
+            // for(int i = 0; i < 6; i++){
+            //     std::cout << h_eePos[i] << " ";
+            // }
+            // std::cout << std::endl;
             gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, 6*sizeof(T), cudaMemcpyDeviceToHost));
             cur_tracking_error = 0.0;
             for(uint32_t i=0; i < 3; i++){

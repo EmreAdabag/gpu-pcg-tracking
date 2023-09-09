@@ -51,14 +51,18 @@ namespace gato_plant{
 	constexpr T GRAVITY() {return static_cast<T>(0.0);}
 
 
-	// template<class T>
-	// __host__ __device__
-	// constexpr T COST_Q1() {return static_cast<T>(Q_COST);}
+	template<class T>
+	__host__ __device__
+	constexpr T COST_Q1() {return static_cast<T>(Q_COST);}
 	
 	template<class T>
 	__host__ __device__
 	constexpr T COST_QD() {return static_cast<T>(QD_COST);}
 
+	template<class T>
+	__host__ __device__
+	constexpr T COST_QF() {return static_cast<T>(QF_COST);}
+	
 	template<class T>
 	__host__ __device__
 	constexpr T COST_R() {return static_cast<T>(R_COST);}
@@ -262,15 +266,17 @@ namespace gato_plant{
 	__device__
 	T trackingcost(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *s_xu, T *s_eePos_traj, T *s_temp, const grid::robotModel<T> *d_robotModel){
 		
-        // const T Q_cost = COST_Q1<T>();
-		const T QD_cost = COST_QD<T>();
+		const bool final_block = (blockIdx.x == knot_points - 1);
+
+        const T Q_cost = final_block ? COST_QF<T>() : COST_Q1<T>();
+		const T QD_cost = final_block ? COST_QF<T>() : COST_QD<T>();
 		const T R_cost = COST_R<T>();
         
         T err;
         T val = 0;
 		
         // QD and R penalty
-		const uint32_t threadsNeeded = state_size/2 + control_size * (blockIdx.x < knot_points - 1);
+		const uint32_t threadsNeeded = state_size + control_size * final_block;
         
 		T *s_cost_vec = s_temp;
 		T *s_eePos_cost = s_cost_vec + threadsNeeded + 3;
@@ -280,12 +286,13 @@ namespace gato_plant{
 
 
         for(int i = threadIdx.x; i < threadsNeeded; i += blockDim.x){
+            err = s_xu[i];
 			if(i < state_size/2){
-                err = s_xu[i + state_size/2];
+                val = Q_cost * err * err;
+			} else if (i < state_size) {
                 val = QD_cost * err * err;
 			}
 			else{
-				err = s_xu[i+state_size/2];
 				val = R_cost * err * err;
 			}
 			s_cost_vec[i] = static_cast<T>(0.5) * val;
@@ -324,10 +331,12 @@ namespace gato_plant{
 										T *s_Rk, 
 										T *s_rk,
 										T *s_temp,
-										void *d_robotModel)
+										void *d_robotModel,
+										bool use_qf_penalty = false)
 	{	
-		// const T Q_cost = COST_Q1<T>();
-		const T QD_cost = COST_QD<T>();
+		const T Q_cost = (use_qf_penalty == true) ? COST_QF<T>() : COST_Q1<T>();
+		const T QD_cost = (use_qf_penalty == true) ? COST_QF<T>() : COST_QD<T>();
+
 		const T R_cost = COST_R<T>();
 
 		T *s_eePos = s_temp;
@@ -348,6 +357,7 @@ namespace gato_plant{
 		// }
 
 		for (int i = threadIdx.x; i < threads_needed; i += blockDim.x){
+			err = s_xu[i];
 			
 			if(i < state_size){
 				//gradient
@@ -358,15 +368,15 @@ namespace gato_plant{
 					z_err = (s_eePos[2] - s_eePos_traj[2]);
 
 					s_qk[i] = s_eePos_grad[6 * i + 0] * x_err + s_eePos_grad[6 * i + 1] * y_err + s_eePos_grad[6 * i + 2] * z_err;
+
+					s_qk[i] += Q_cost * err;
 				}
 				else{
-					err = s_xu[i];
 					s_qk[i] = QD_cost * err;
 				}
 				
 			}
 			else{
-				err = s_xu[i];
 				offset = i - state_size;
 				
 				//gradient
@@ -381,7 +391,7 @@ namespace gato_plant{
 				//hessian
 				for(int j = 0; j < state_size; j++){
 					if(j < state_size / 2 && i < state_size / 2){
-						s_Qk[i*state_size + j] = s_qk[i] * s_qk[j];
+						s_Qk[i*state_size + j] = s_qk[i] * s_qk[j] + (i == j) * Q_cost;
 					}
 					else{
 						s_Qk[i*state_size + j] = (i == j) ? QD_cost : static_cast<T>(0);
@@ -417,7 +427,7 @@ namespace gato_plant{
 	{
 		trackingCostGradientAndHessian<T>(state_size, control_size, s_xux, s_eePos_traj, s_Qk, s_qk, s_Rk, s_rk, s_temp, d_dynMem_const);
 		__syncthreads();
-		trackingCostGradientAndHessian<T, false>(state_size, control_size, s_xux, &s_eePos_traj[6], s_Qkp1, s_qkp1, nullptr, nullptr, s_temp, d_dynMem_const);
+		trackingCostGradientAndHessian<T, false>(state_size, control_size, s_xux, &s_eePos_traj[6], s_Qkp1, s_qkp1, nullptr, nullptr, s_temp, d_dynMem_const, true /* use_qf_penalty */);
 		__syncthreads();
 	}
 
