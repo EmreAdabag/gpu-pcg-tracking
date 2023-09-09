@@ -730,18 +730,18 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
     #endif // CROCODDYL_SOLVE
 #endif
 
-        std::cout << "simulating for " << simulation_time << " us\nxu:";
-        float h_temp[21];
-        gpuErrchk(cudaMemcpy(h_temp, d_xu_old, 21*sizeof(float), cudaMemcpyDeviceToHost));
-        for(int i = 0; i < 21; i++){
-            std::cout << h_temp[i] << " ";
-        }
-        std::cout << std::endl << "xs:";
-        gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
-        for(int i = 0; i < 14; i++){
-            std::cout << h_temp[i] << " ";
-        }
-        std::cout << std::endl;
+        // std::cout << "simulating for " << simulation_time << " us\nxu:";
+        // float h_temp[21];
+        // gpuErrchk(cudaMemcpy(h_temp, d_xu_old, 21*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 21; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl << "xs:";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
         
 
 
@@ -751,12 +751,12 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
         simple_simulate<T>(state_size, control_size, knot_points, d_xs, d_xu_old, d_dynmem, timestep, prev_simulation_time, simulation_time);
 
         
-        std::cout << "result\n";
-        gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
-        for(int i = 0; i < 14; i++){
-            std::cout << h_temp[i] << " ";
-        }
-        std::cout << std::endl;
+        // std::cout << "result\n";
+        // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
+        // for(int i = 0; i < 14; i++){
+        //     std::cout << h_temp[i] << " ";
+        // }
+        // std::cout << std::endl;
         // exit(12);
 
 
@@ -771,11 +771,11 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             
             gpuErrchk(cudaMemcpy(h_xs, d_xs, state_size*sizeof(T), cudaMemcpyDeviceToHost));
             //print h_xs
-            std::cout << "h_xs before ee kernel: ";
-            for(int i = 0; i < state_size; i++){
-                std::cout << h_xs[i] << " ";
-            }
-            std::cout << std::endl;
+            // std::cout << "h_xs before ee kernel: ";
+            // for(int i = 0; i < state_size; i++){
+            //     std::cout << h_xs[i] << " ";
+            // }
+            // std::cout << std::endl;
             // record tracking error
             grid::end_effector_positions_kernel<T><<<1,128>>>(d_eePos, d_xs, grid::NUM_JOINTS, (grid::robotModel<T> *) d_dynmem, 1);
             gpuErrchk(cudaMemcpy(h_eePos, d_eePos, 6*sizeof(T), cudaMemcpyDeviceToHost));
