@@ -37,6 +37,13 @@ typedef float pcg_t;
 // this constant controls when xu and goal will be shifted, should be a fraction of a timestep
 #define SHIFT_THRESHOLD (1 * timestep)
 
+
+#define CROCODDYL_SOLVE 1
+
+#if CROCODDYL_SOLVE
+    #define SQP_MAX_ITER    20
+    typedef double toplevel_return_type;
+#else
 #if TIME_LINSYS
     #define SQP_MAX_ITER    20
     typedef double toplevel_return_type;
@@ -44,8 +51,8 @@ typedef float pcg_t;
     #define SQP_MAX_ITER    5
     typedef uint32_t toplevel_return_type;
 #endif
+#endif
 
-#define CROCODDYL_SOLVE 1
 #define DDP_MAX_ITERS 100 // default in croc is 100
 
 
