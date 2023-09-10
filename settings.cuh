@@ -18,6 +18,8 @@ typedef double pcg_t;
 typedef float pcg_t;
 #endif
 
+#define L2_NORM 1 // 1 for l2 norm, 0 for l1 norm
+
 // when enabled ABSOLUTE_QD_PENALTY penalizes qd like controls, rather than penalizing relative distance to precomputed traj
 #define ABSOLUTE_QD_PENALTY 0
 // #define Q_COST          (.10)

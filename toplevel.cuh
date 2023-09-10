@@ -781,9 +781,17 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> track(u
             gpuErrchk(cudaMemcpy(h_eePos, d_eePos, 6*sizeof(T), cudaMemcpyDeviceToHost));
             gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, 6*sizeof(T), cudaMemcpyDeviceToHost));
             cur_tracking_error = 0.0;
+            #if L2_NORM
+            for(uint32_t i=0; i < 3; i++){
+                double diff = h_eePos[i] - h_eePos_goal[i];
+                cur_tracking_error += diff * diff;
+            }
+            cur_tracking_error = sqrt(cur_tracking_error); 
+            #else // #if L2_NORM
             for(uint32_t i=0; i < 3; i++){
                 cur_tracking_error += abs(h_eePos[i] - h_eePos_goal[i]);
             }
+            #endif // #if L2_NORM
             // std ::cout << "tracking error: " << cur_tracking_error << "at offset " << traj_offset << std::endl;
             tracking_errors.push_back(cur_tracking_error);                                            
             
