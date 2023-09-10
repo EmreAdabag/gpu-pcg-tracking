@@ -23,7 +23,7 @@
 #include <crocoddyl/multibody/residuals/frame-translation.hpp>
 
 pinocchio::Model initialize_pinocchio_robot() {
-	const std::string urdf_filename = std::string("/home/a2rlab/.cache/robot_descriptions/drake/manipulation/models/iiwa_description/urdf/iiwa14_primitive_collision.urdf");
+	const std::string urdf_filename = std::string(IIWA_URDF_PATH);
 	pinocchio::Model robot_model;
 	pinocchio::urdf::buildModel(urdf_filename, robot_model);
 

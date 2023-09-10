@@ -37,6 +37,7 @@ typedef float pcg_t;
 // this constant controls when xu and goal will be shifted, should be a fraction of a timestep
 #define SHIFT_THRESHOLD (1 * timestep)
 
+#define iiwa_urdf_path "/home/a1rlab/.cache/robot_descriptions/drake/manipulation/models/iiwa_description/urdf/iiwa14_primitive_collision.urdf"
 
 #define CROCODDYL_SOLVE 1
 
