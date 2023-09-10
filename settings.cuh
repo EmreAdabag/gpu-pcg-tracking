@@ -45,7 +45,7 @@ typedef float pcg_t;
     typedef uint32_t toplevel_return_type;
 #endif
 
-#define CROCODDYL_SOLVE 0
+#define CROCODDYL_SOLVE 1
 #define DDP_MAX_ITERS 100 // default in croc is 100
 
 

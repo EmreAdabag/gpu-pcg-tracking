@@ -1,0 +1,246 @@
+In file included from /usr/include/eigen3/Eigen/Core:276,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/Product.h: In instantiation of 'struct Eigen::internal::traits<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >':
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, 7>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:118:31:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/Product.h:29:127: error: no type named 'ReturnType' in 'struct Eigen::ScalarBinaryOpTraits<float, double, Eigen::internal::scalar_product_op<float, double> >'
+   29 |   typedef typename ScalarBinaryOpTraits<typename traits<LhsCleaned>::Scalar, typename traits<RhsCleaned>::Scalar>::ReturnType Scalar;
+      |                                                                                                                               ^~~~~~
+In file included from /usr/include/eigen3/Eigen/Core:272,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h: In instantiation of 'class Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >':
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:48:34:   required from 'class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >'
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, 7>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:118:31:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:83:17: error: 'coeff' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   83 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:84:17: error: 'coeffByOuterInner' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   84 |     using Base::coeffByOuterInner;
+      |                 ^~~~~~~~~~~~~~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:85:26: error: 'operator()' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   85 |     using Base::operator();
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:86:26: error: 'operator[]' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   86 |     using Base::operator[];
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:87:17: error: 'x' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   87 |     using Base::x;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:88:17: error: 'y' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   88 |     using Base::y;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:89:17: error: 'z' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   89 |     using Base::z;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:90:17: error: 'w' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   90 |     using Base::w;
+      |                 ^
+In file included from /usr/include/eigen3/Eigen/Core:273,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h: In instantiation of 'class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >':
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, 7>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:118:31:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:75:17: error: 'coeff' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   75 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:78:17: error: 'eval' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   78 |     using Base::eval;
+      |                 ^~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:79:25: error: 'operator-' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   79 |     using Base::operator-;
+      |                         ^
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:82:25: error: 'operator*=' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   82 |     using Base::operator*=;
+      |                         ^~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:83:25: error: 'operator/=' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false>, 0> >'
+   83 |     using Base::operator/=;
+      |                         ^~
+In file included from /usr/include/eigen3/Eigen/Core:276,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/Product.h: In instantiation of 'struct Eigen::internal::traits<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >':
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, 8>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:123:44:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/Product.h:29:127: error: no type named 'ReturnType' in 'struct Eigen::ScalarBinaryOpTraits<float, double, Eigen::internal::scalar_product_op<float, double> >'
+   29 |   typedef typename ScalarBinaryOpTraits<typename traits<LhsCleaned>::Scalar, typename traits<RhsCleaned>::Scalar>::ReturnType Scalar;
+      |                                                                                                                               ^~~~~~
+In file included from /usr/include/eigen3/Eigen/Core:272,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h: In instantiation of 'class Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >':
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:48:34:   required from 'class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >'
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, 8>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:123:44:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:83:17: error: 'coeff' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   83 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:84:17: error: 'coeffByOuterInner' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   84 |     using Base::coeffByOuterInner;
+      |                 ^~~~~~~~~~~~~~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:85:26: error: 'operator()' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   85 |     using Base::operator();
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:86:26: error: 'operator[]' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   86 |     using Base::operator[];
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:87:17: error: 'x' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   87 |     using Base::x;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:88:17: error: 'y' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   88 |     using Base::y;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:89:17: error: 'z' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   89 |     using Base::z;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:90:17: error: 'w' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   90 |     using Base::w;
+      |                 ^
+In file included from /usr/include/eigen3/Eigen/Core:273,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h: In instantiation of 'class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >':
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, 8>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:123:44:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:75:17: error: 'coeff' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   75 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:78:17: error: 'eval' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   78 |     using Base::eval;
+      |                 ^~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:79:25: error: 'operator-' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   79 |     using Base::operator-;
+      |                         ^
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:82:25: error: 'operator*=' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   82 |     using Base::operator*=;
+      |                         ^~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:83:25: error: 'operator/=' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1> >'
+   83 |     using Base::operator/=;
+      |                         ^~
+In file included from /usr/include/eigen3/Eigen/Core:272,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h: In instantiation of 'class Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >':
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:48:34:   required from 'class Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >'
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, 8>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:126:42:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:83:17: error: 'coeff' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   83 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:84:17: error: 'coeffByOuterInner' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   84 |     using Base::coeffByOuterInner;
+      |                 ^~~~~~~~~~~~~~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:85:26: error: 'operator()' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   85 |     using Base::operator();
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:86:26: error: 'operator[]' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   86 |     using Base::operator[];
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:87:17: error: 'x' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   87 |     using Base::x;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:88:17: error: 'y' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   88 |     using Base::y;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:89:17: error: 'z' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   89 |     using Base::z;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:90:17: error: 'w' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   90 |     using Base::w;
+      |                 ^
+In file included from /usr/include/eigen3/Eigen/Core:273,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /usr/local/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from test_croc.cpp:1:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h: In instantiation of 'class Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >':
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from 'class Eigen::internal::dense_product_base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, 8>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from 'class Eigen::ProductImpl<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, Eigen::Dense>'
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from 'class Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0>'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:126:42:   required from 'void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:75:17: error: 'coeff' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   75 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:78:17: error: 'eval' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   78 |     using Base::eval;
+      |                 ^~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:79:25: error: 'operator-' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   79 |     using Base::operator-;
+      |                         ^
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:82:25: error: 'operator*=' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   82 |     using Base::operator*=;
+      |                         ^~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:83:25: error: 'operator/=' has not been declared in 'Eigen::Base<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1, 0, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, false>, 0> >'
+   83 |     using Base::operator/=;
+      |                         ^~
+In file included from /usr/local/lib/pkgconfig/../../include/crocoddyl/core/costs/residual.hpp:12,
+                 from test_croc.cpp:10:
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp: In instantiation of 'crocoddyl::CostDataAbstractTpl<Scalar>::CostDataAbstractTpl(Model<_Scalar>*, crocoddyl::CostDataAbstractTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::CostModelAbstractTpl; _Scalar = float; crocoddyl::CostDataAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]':
+/home/a2rlab/anaconda3/envs/pinocchio/x86_64-conda-linux-gnu/include/c++/10.4.0/ext/new_allocator.h:156:4:   required from 'void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::CostDataAbstractTpl<float>; _Args = {crocoddyl::CostModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Tp = crocoddyl::CostDataAbstractTpl<float>]'
+/home/a2rlab/anaconda3/envs/pinocchio/x86_64-conda-linux-gnu/include/c++/10.4.0/bits/alloc_traits.h:247:17:   required from 'static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::CostDataAbstractTpl<float>; _Args = {crocoddyl::CostModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::CostDataAbstractTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]'
+/home/a2rlab/anaconda3/envs/pinocchio/x86_64-conda-linux-gnu/include/c++/10.4.0/bits/alloc_traits.h:360:16:   required from 'static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::CostDataAbstractTpl<float>; _Args = {crocoddyl::CostModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::CostDataAbstractTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]'
+/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from 'typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::CostDataAbstractTpl<float>; A = Eigen::aligned_allocator<crocoddyl::CostDataAbstractTpl<float> >; Args = {crocoddyl::CostModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::CostDataAbstractTpl<float> >]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hxx:100:50:   required from 'boost::shared_ptr<crocoddyl::CostDataAbstractTpl<_Scalar> > crocoddyl::CostModelAbstractTpl<Scalar>::createData(crocoddyl::CostModelAbstractTpl<Scalar>::DataCollectorAbstract*) [with _Scalar = float; crocoddyl::CostModelAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hxx:99:1:   required from here
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:300:45: warning: 'crocoddyl::CostDataAbstractTpl<float>::shared' is deprecated: Use residual.Ru [-Wdeprecated-declarations]
+  300 |         Luu(model->get_nu(), model->get_nu()) {
+      |                                             ^
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:326:26: note: declared here
+  326 |   DataCollectorAbstract* shared;
+      |                          ^~~~~~
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:300:45: warning: 'crocoddyl::CostDataAbstractTpl<float>::shared' is deprecated: Use residual.Ru [-Wdeprecated-declarations]
+  300 |         Luu(model->get_nu(), model->get_nu()) {
+      |                                             ^
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:326:26: note: declared here
+  326 |   DataCollectorAbstract* shared;
+      |                          ^~~~~~
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp: In instantiation of 'crocoddyl::CostDataAbstractTpl<Scalar>::CostDataAbstractTpl(Model<_Scalar>*, crocoddyl::CostDataAbstractTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::CostModelResidualTpl; _Scalar = float; crocoddyl::CostDataAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]':
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/costs/residual.hpp:158:25:   required from 'crocoddyl::CostDataResidualTpl<Scalar>::CostDataResidualTpl(Model<_Scalar>*, crocoddyl::CostDataResidualTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::CostModelResidualTpl; _Scalar = float; crocoddyl::CostDataResidualTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]'
+/home/a2rlab/anaconda3/envs/pinocchio/x86_64-conda-linux-gnu/include/c++/10.4.0/ext/new_allocator.h:156:4:   required from 'void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::CostDataResidualTpl<float>; _Args = {crocoddyl::CostModelResidualTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Tp = crocoddyl::CostDataResidualTpl<float>]'
+/home/a2rlab/anaconda3/envs/pinocchio/x86_64-conda-linux-gnu/include/c++/10.4.0/bits/alloc_traits.h:247:17:   required from 'static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::CostDataResidualTpl<float>; _Args = {crocoddyl::CostModelResidualTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::CostDataResidualTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]'
+/home/a2rlab/anaconda3/envs/pinocchio/x86_64-conda-linux-gnu/include/c++/10.4.0/bits/alloc_traits.h:360:16:   required from 'static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::CostDataResidualTpl<float>; _Args = {crocoddyl::CostModelResidualTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::CostDataResidualTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]'
+/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from 'typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::CostDataResidualTpl<float>; A = Eigen::aligned_allocator<crocoddyl::CostDataResidualTpl<float> >; Args = {crocoddyl::CostModelResidualTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::CostDataResidualTpl<float> >]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/costs/residual.hxx:99:38:   required from 'boost::shared_ptr<crocoddyl::CostDataAbstractTpl<_Scalar> > crocoddyl::CostModelResidualTpl<Scalar>::createData(crocoddyl::CostModelResidualTpl<Scalar>::DataCollectorAbstract*) [with _Scalar = float; crocoddyl::CostModelResidualTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]'
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/costs/residual.hxx:98:1:   required from here
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:300:45: warning: 'crocoddyl::CostDataAbstractTpl<float>::shared' is deprecated: Use residual.Ru [-Wdeprecated-declarations]
+  300 |         Luu(model->get_nu(), model->get_nu()) {
+      |                                             ^
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:326:26: note: declared here
+  326 |   DataCollectorAbstract* shared;
+      |                          ^~~~~~
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:300:45: warning: 'crocoddyl::CostDataAbstractTpl<float>::shared' is deprecated: Use residual.Ru [-Wdeprecated-declarations]
+  300 |         Luu(model->get_nu(), model->get_nu()) {
+      |                                             ^
+/usr/local/lib/pkgconfig/../../include/crocoddyl/core/cost-base.hpp:326:26: note: declared here
+  326 |   DataCollectorAbstract* shared;

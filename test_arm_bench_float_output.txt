@@ -1,0 +1,722 @@
+g++ -std=c++11 -I. test_arm_benchmark.cpp -o overview-urdf $(pkg-config --cflags --libs pinocchio crocoddyl) > test_arm_bench_float_output.txt
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/example-robot-data/path.hpp:4,
+                 from crocoddyl/benchmark/factory/arm.hpp:12,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/example-robot-data/warning.hh:23:57: note: ‘#pragma message: WARNING: Header `example-robot-data/path.hpp` is deprecated and useless!’
+   23 | #   define EXAMPLE_ROBOT_DATA_WARN(exp) ("WARNING: " exp)
+      |                                                         ^
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/example-robot-data/path.hpp:6:17: note: in expansion of macro ‘EXAMPLE_ROBOT_DATA_WARN’
+    6 | #pragma message EXAMPLE_ROBOT_DATA_WARN( \
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/eigen3/Eigen/Core:276,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/Product.h: In instantiation of ‘struct Eigen::internal::traits<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >’:
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, 7>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:118:31:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/Product.h:29:127: error: no type named ‘ReturnType’ in ‘struct Eigen::ScalarBinaryOpTraits<float, double, Eigen::internal::scalar_product_op<float, double> >’
+   29 | typedef typename ScalarBinaryOpTraits<typename traits<LhsCleaned>::Scalar, typename traits<RhsCleaned>::Scalar>::ReturnType Scalar;
+      |                                                                                                                             ^~~~~~
+
+In file included from /usr/include/eigen3/Eigen/Core:272,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h: In instantiation of ‘class Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >’:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:48:34:   required from ‘class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >’
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, 7>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:118:31:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:83:17: error: ‘coeff’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   83 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:84:17: error: ‘coeffByOuterInner’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   84 |     using Base::coeffByOuterInner;
+      |                 ^~~~~~~~~~~~~~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:85:26: error: ‘operator()’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   85 |     using Base::operator();
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:86:26: error: ‘operator[]’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   86 |     using Base::operator[];
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:87:17: error: ‘x’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   87 |     using Base::x;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:88:17: error: ‘y’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   88 |     using Base::y;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:89:17: error: ‘z’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   89 |     using Base::z;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:90:17: error: ‘w’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   90 |     using Base::w;
+      |                 ^
+In file included from /usr/include/eigen3/Eigen/Core:273,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h: In instantiation of ‘class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >’:
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, 7>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:118:31:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:75:17: error: ‘coeff’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   75 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:78:17: error: ‘eval’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   78 |     using Base::eval;
+      |                 ^~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:79:25: error: ‘operator-’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   79 |     using Base::operator-;
+      |                         ^
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:82:25: error: ‘operator*=’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   82 |     using Base::operator*=;
+      |                         ^~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:83:25: error: ‘operator/=’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false>, 0> >::Base’
+   83 |     using Base::operator/=;
+      |                         ^~
+In file included from /usr/include/eigen3/Eigen/Core:276,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/Product.h: In instantiation of ‘struct Eigen::internal::traits<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >’:
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, 8>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:123:44:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/Product.h:29:127: error: no type named ‘ReturnType’ in ‘struct Eigen::ScalarBinaryOpTraits<float, double, Eigen::internal::scalar_product_op<float, double> >’
+   29 | typedef typename ScalarBinaryOpTraits<typename traits<LhsCleaned>::Scalar, typename traits<RhsCleaned>::Scalar>::ReturnType Scalar;
+      |                                                                                                                             ^~~~~~
+
+In file included from /usr/include/eigen3/Eigen/Core:272,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h: In instantiation of ‘class Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >’:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:48:34:   required from ‘class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >’
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, 8>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:123:44:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:83:17: error: ‘coeff’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   83 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:84:17: error: ‘coeffByOuterInner’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   84 |     using Base::coeffByOuterInner;
+      |                 ^~~~~~~~~~~~~~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:85:26: error: ‘operator()’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   85 |     using Base::operator();
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:86:26: error: ‘operator[]’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   86 |     using Base::operator[];
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:87:17: error: ‘x’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   87 |     using Base::x;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:88:17: error: ‘y’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   88 |     using Base::y;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:89:17: error: ‘z’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   89 |     using Base::z;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:90:17: error: ‘w’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   90 |     using Base::w;
+      |                 ^
+In file included from /usr/include/eigen3/Eigen/Core:273,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h: In instantiation of ‘class Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >’:
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, 8>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:123:44:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:75:17: error: ‘coeff’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   75 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:78:17: error: ‘eval’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   78 |     using Base::eval;
+      |                 ^~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:79:25: error: ‘operator-’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   79 |     using Base::operator-;
+      |                         ^
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:82:25: error: ‘operator*=’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   82 |     using Base::operator*=;
+      |                         ^~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:83:25: error: ‘operator/=’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1> >::Base’
+   83 |     using Base::operator/=;
+      |                         ^~
+In file included from /usr/include/eigen3/Eigen/Core:272,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h: In instantiation of ‘class Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >’:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:48:34:   required from ‘class Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >’
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, 8>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:126:42:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:83:17: error: ‘coeff’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   83 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:84:17: error: ‘coeffByOuterInner’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   84 |     using Base::coeffByOuterInner;
+      |                 ^~~~~~~~~~~~~~~~~
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:85:26: error: ‘operator()’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   85 |     using Base::operator();
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:86:26: error: ‘operator[]’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   86 |     using Base::operator[];
+      |                          ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:87:17: error: ‘x’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   87 |     using Base::x;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:88:17: error: ‘y’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   88 |     using Base::y;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:89:17: error: ‘z’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   89 |     using Base::z;
+      |                 ^
+/usr/include/eigen3/Eigen/src/Core/DenseBase.h:90:17: error: ‘w’ has not been declared in ‘Eigen::DenseBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   90 |     using Base::w;
+      |                 ^
+In file included from /usr/include/eigen3/Eigen/Core:273,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/cast.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/fwd.hpp:23,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/fwd.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h: In instantiation of ‘class Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >’:
+/usr/include/eigen3/Eigen/src/Core/Product.h:120:7:   required from ‘class Eigen::internal::dense_product_base<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, 8>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:152:7:   required from ‘class Eigen::ProductImpl<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0, Eigen::Dense>’
+/usr/include/eigen3/Eigen/src/Core/Product.h:71:7:   required from ‘class Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:126:42:   required from ‘void crocoddyl::ResidualModelStateTpl<Scalar>::calcCostDiff(const boost::shared_ptr<crocoddyl::CostDataAbstractTpl<double> >&, const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<_Scalar> >&, const boost::shared_ptr<crocoddyl::ActivationDataAbstractTpl<double> >&, bool) [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/residuals/state.hxx:105:6:   required from here
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:75:17: error: ‘coeff’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   75 |     using Base::coeff;
+      |                 ^~~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:78:17: error: ‘eval’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   78 |     using Base::eval;
+      |                 ^~~~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:79:25: error: ‘operator-’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   79 |     using Base::operator-;
+      |                         ^
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:82:25: error: ‘operator*=’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   82 |     using Base::operator*=;
+      |                         ^~
+/usr/include/eigen3/Eigen/src/Core/MatrixBase.h:83:25: error: ‘operator/=’ has not been declared in ‘Eigen::MatrixBase<Eigen::Product<Eigen::Product<Eigen::Transpose<const Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false> >, Eigen::DiagonalWrapper<const Eigen::Block<Eigen::Matrix<double, -1, 1>, -1, 1, false> >, 1>, Eigen::Block<Eigen::Matrix<float, -1, -1>, -1, -1, false>, 0> >::Base’
+   83 |     using Base::operator/=;
+      |                         ^~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp: In instantiation of ‘crocoddyl::ConstraintDataAbstractTpl<Scalar>::ConstraintDataAbstractTpl(Model<_Scalar>*, crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::ConstraintModelAbstractTpl; _Scalar = float; crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’:
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Tp = crocoddyl::ConstraintDataAbstractTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::ConstraintDataAbstractTpl<float>; A = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hxx:103:56:   required from ‘boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<_Scalar> > crocoddyl::ConstraintModelAbstractTpl<Scalar>::createData(crocoddyl::ConstraintModelAbstractTpl<Scalar>::DataCollectorAbstract*) [with _Scalar = float; crocoddyl::ConstraintModelAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:310:66:   [ skipping 7 instantiation contexts, use -ftemplate-backtrace-limit=0 to disable ]
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; A = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:195:38:   required from ‘boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<_Scalar> > crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::createData() [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:194:1:   required from here
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: error: no matching function for call to ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<double> >::shared_ptr(boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >)’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:709:5: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(boost::shared_ptr<Y>&&, boost::shared_ptr<T>::element_type*) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  709 |     shared_ptr( shared_ptr<Y> && r, element_type * p ) BOOST_SP_NOEXCEPT : px( p ), pn()
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:709:5: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   candidate expects 2 arguments, 1 provided
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:679:5: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(boost::shared_ptr<Y>&&, typename boost::detail::sp_enable_if_convertible<Y, T>::type) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  679 |     shared_ptr( shared_ptr<Y> && r, typename boost::detail::sp_enable_if_convertible<Y,T>::type = boost::detail::sp_empty() )
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:679:5: note:   template argument deduction/substitution failed:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp: In substitution of ‘template<class Y> boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<double> >::shared_ptr(boost::shared_ptr<X>&&, typename boost::detail::sp_enable_if_convertible<Y, crocoddyl::ResidualDataAbstractTpl<double> >::type) [with Y = crocoddyl::ResidualDataAbstractTpl<float>]’:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9:   required from ‘crocoddyl::ConstraintDataAbstractTpl<Scalar>::ConstraintDataAbstractTpl(Model<_Scalar>*, crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::ConstraintModelAbstractTpl; _Scalar = float; crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Tp = crocoddyl::ConstraintDataAbstractTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::ConstraintDataAbstractTpl<float>; A = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hxx:103:56:   [ skipping 8 instantiation contexts, use -ftemplate-backtrace-limit=0 to disable ]
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; A = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:195:38:   required from ‘boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<_Scalar> > crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::createData() [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:194:1:   required from here
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:679:5: error: no type named ‘type’ in ‘struct boost::detail::sp_enable_if_convertible<crocoddyl::ResidualDataAbstractTpl<float>, crocoddyl::ResidualDataAbstractTpl<double> >’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp: In instantiation of ‘crocoddyl::ConstraintDataAbstractTpl<Scalar>::ConstraintDataAbstractTpl(Model<_Scalar>*, crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::ConstraintModelAbstractTpl; _Scalar = float; crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’:
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Tp = crocoddyl::ConstraintDataAbstractTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::ConstraintDataAbstractTpl<float>; A = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hxx:103:56:   required from ‘boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<_Scalar> > crocoddyl::ConstraintModelAbstractTpl<Scalar>::createData(crocoddyl::ConstraintModelAbstractTpl<Scalar>::DataCollectorAbstract*) [with _Scalar = float; crocoddyl::ConstraintModelAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:310:66:   [ skipping 7 instantiation contexts, use -ftemplate-backtrace-limit=0 to disable ]
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; A = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:195:38:   required from ‘boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<_Scalar> > crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::createData() [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:194:1:   required from here
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:568:5: note: candidate: ‘template<class Y, class D> boost::shared_ptr<T>::shared_ptr(boost::movelib::unique_ptr<Y, D>) [with Y = Y; D = D; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  568 |     shared_ptr( boost::movelib::unique_ptr< Y, D > r ): px( r.get() ), pn()
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:568:5: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ is not derived from ‘boost::movelib::unique_ptr<Y, D>’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:552:5: note: candidate: ‘template<class Y, class D> boost::shared_ptr<T>::shared_ptr(std::unique_ptr<_Up, _Ep>&&) [with Y = Y; D = D; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  552 |     shared_ptr( std::unique_ptr< Y, D > && r ): px( r.get() ), pn()
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:552:5: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ is not derived from ‘std::unique_ptr<_Tp, _Dp>’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:520:5: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(std::auto_ptr<_Up>&&) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  520 |     shared_ptr( std::auto_ptr<Y> && r ): px(r.get()), pn()
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:520:5: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ is not derived from ‘std::auto_ptr<T>’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:507:14: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(std::auto_ptr<_Up>&) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  507 |     explicit shared_ptr( std::auto_ptr<Y> & r ): px(r.get()), pn()
+      |              ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:507:14: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ is not derived from ‘std::auto_ptr<T>’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:500:5: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(const boost::shared_ptr<Y>&, boost::shared_ptr<T>::element_type*) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  500 |     shared_ptr( shared_ptr<Y> const & r, element_type * p ) BOOST_SP_NOEXCEPT : px( p ), pn( r.pn )
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:500:5: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   candidate expects 2 arguments, 1 provided
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:486:5: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(const boost::shared_ptr<Y>&, typename boost::detail::sp_enable_if_convertible<Y, T>::type) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  486 |     shared_ptr( shared_ptr<Y> const & r, typename boost::detail::sp_enable_if_convertible<Y,T>::type = boost::detail::sp_empty() )
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:486:5: note:   template argument deduction/substitution failed:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp: In substitution of ‘template<class Y> boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<double> >::shared_ptr(const boost::shared_ptr<X>&, typename boost::detail::sp_enable_if_convertible<Y, crocoddyl::ResidualDataAbstractTpl<double> >::type) [with Y = crocoddyl::ResidualDataAbstractTpl<float>]’:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9:   required from ‘crocoddyl::ConstraintDataAbstractTpl<Scalar>::ConstraintDataAbstractTpl(Model<_Scalar>*, crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::ConstraintModelAbstractTpl; _Scalar = float; crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Tp = crocoddyl::ConstraintDataAbstractTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::ConstraintDataAbstractTpl<float>; A = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hxx:103:56:   [ skipping 8 instantiation contexts, use -ftemplate-backtrace-limit=0 to disable ]
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; A = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:195:38:   required from ‘boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<_Scalar> > crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::createData() [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:194:1:   required from here
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:486:5: error: no type named ‘type’ in ‘struct boost::detail::sp_enable_if_convertible<crocoddyl::ResidualDataAbstractTpl<float>, crocoddyl::ResidualDataAbstractTpl<double> >’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp: In instantiation of ‘crocoddyl::ConstraintDataAbstractTpl<Scalar>::ConstraintDataAbstractTpl(Model<_Scalar>*, crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract*) [with Model = crocoddyl::ConstraintModelAbstractTpl; _Scalar = float; crocoddyl::ConstraintDataAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’:
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Tp = crocoddyl::ConstraintDataAbstractTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::ConstraintDataAbstractTpl<float>; _Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; _Alloc = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::ConstraintDataAbstractTpl<float>; A = Eigen::aligned_allocator<crocoddyl::ConstraintDataAbstractTpl<float> >; Args = {crocoddyl::ConstraintModelAbstractTpl<float>*, crocoddyl::DataCollectorAbstractTpl<float>* const&}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hxx:103:56:   required from ‘boost::shared_ptr<crocoddyl::ConstraintDataAbstractTpl<_Scalar> > crocoddyl::ConstraintModelAbstractTpl<Scalar>::createData(crocoddyl::ConstraintModelAbstractTpl<Scalar>::DataCollectorAbstract*) [with _Scalar = float; crocoddyl::ConstraintModelAbstractTpl<Scalar>::DataCollectorAbstract = crocoddyl::DataCollectorAbstractTpl<float>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:310:66:   [ skipping 7 instantiation contexts, use -ftemplate-backtrace-limit=0 to disable ]
+/usr/include/c++/11/ext/new_allocator.h:162:4:   required from ‘void __gnu_cxx::new_allocator<_Tp>::construct(_Up*, _Args&& ...) [with _Up = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>]’
+/usr/include/c++/11/bits/alloc_traits.h:251:17:   required from ‘static std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> std::allocator_traits< <template-parameter-1-1> >::_S_construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; std::_Require<typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type> = void; typename std::allocator_traits< <template-parameter-1-1> >::__construct_helper<_Tp, _Args>::type = std::integral_constant<bool, true>]’
+/usr/include/c++/11/bits/alloc_traits.h:364:16:   required from ‘static decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) std::allocator_traits< <template-parameter-1-1> >::construct(_Alloc&, _Tp*, _Args&& ...) [with _Tp = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; _Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; _Alloc = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; decltype (std::allocator_traits< <template-parameter-1-1> >::_S_construct(__a, __p, (forward<_Args>)(std::allocator_traits< <template-parameter-1-1> >::construct::__args)...)) = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/make_shared_object.hpp:289:41:   required from ‘typename boost::detail::sp_if_not_array<T>::type boost::allocate_shared(const A&, Args&& ...) [with T = crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float>; A = Eigen::aligned_allocator<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >; Args = {crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<float>*}; typename boost::detail::sp_if_not_array<T>::type = boost::shared_ptr<crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<float> >]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:195:38:   required from ‘boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<_Scalar> > crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<Scalar>::createData() [with _Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hxx:194:1:   required from here
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:474:5: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(const boost::weak_ptr<Y>&, boost::detail::sp_nothrow_tag) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  474 |     shared_ptr( weak_ptr<Y> const & r, boost::detail::sp_nothrow_tag )
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:474:5: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ is not derived from ‘const boost::weak_ptr<Y>’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:465:14: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(const boost::weak_ptr<Y>&) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  465 |     explicit shared_ptr( weak_ptr<Y> const & r ): pn( r.pn ) // may throw
+      |              ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:465:14: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ is not derived from ‘const boost::weak_ptr<Y>’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:438:32: note: candidate: ‘template<class D, class A> boost::shared_ptr<T>::shared_ptr(boost::detail::sp_nullptr_t, D, A) [with D = D; A = A; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  438 |     template<class D, class A> shared_ptr( boost::detail::sp_nullptr_t p, D d, A a ): px( p ), pn( p, static_cast< D&& >( d ), a )
+      |                                ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:438:32: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   candidate expects 3 arguments, 1 provided
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:420:41: note: candidate: ‘template<class Y, class D, class A> boost::shared_ptr<T>::shared_ptr(Y*, D, A) [with Y = Y; D = D; A = A; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  420 |     template<class Y, class D, class A> shared_ptr( Y * p, D d, A a ): px( p ), pn( p, static_cast< D&& >( d ), a )
+      |                                         ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:420:41: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   mismatched types ‘Y*’ and ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:402:23: note: candidate: ‘template<class D> boost::shared_ptr<T>::shared_ptr(boost::detail::sp_nullptr_t, D) [with D = D; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  402 |     template<class D> shared_ptr( boost::detail::sp_nullptr_t p, D d ): px( p ), pn( p, static_cast< D&& >( d ) )
+      |                       ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:402:23: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   candidate expects 2 arguments, 1 provided
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:384:32: note: candidate: ‘template<class Y, class D> boost::shared_ptr<T>::shared_ptr(Y*, D) [with Y = Y; D = D; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  384 |     template<class Y, class D> shared_ptr( Y * p, D d ): px( p ), pn( p, static_cast< D&& >( d ) )
+      |                                ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:384:32: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   mismatched types ‘Y*’ and ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:371:14: note: candidate: ‘template<class Y> boost::shared_ptr<T>::shared_ptr(Y*) [with Y = Y; T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  371 |     explicit shared_ptr( Y * p ): px( p ), pn() // Y must be complete
+      |              ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:371:14: note:   template argument deduction/substitution failed:
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraints/constraint-manager.hpp:17,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/actions/free-fwddyn.hpp:21,
+                 from crocoddyl/benchmark/factory/arm.hpp:22,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/core/constraint-base.hpp:262:9: note:   mismatched types ‘Y*’ and ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’
+  262 |         residual(model->get_residual()->createData(data)),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/helper_collection.hpp:27,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/basic_oarchive.hpp:26,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/detail/common_oarchive.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/basic_text_oarchive.hpp:29,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/archive/text_oarchive.hpp:31,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/archive.hpp:15,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/serialization/serializable.hpp:8,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:21,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:670:5: note: candidate: ‘boost::shared_ptr<T>::shared_ptr(boost::shared_ptr<T>&&) [with T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  670 |     shared_ptr( shared_ptr && r ) BOOST_SP_NOEXCEPT : px( r.px ), pn()
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:670:31: note:   no known conversion for argument 1 from ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ to ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<double> >&&’
+  670 |     shared_ptr( shared_ptr && r ) BOOST_SP_NOEXCEPT : px( r.px ), pn()
+      |                 ~~~~~~~~~~~~~~^
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:458:5: note: candidate: ‘boost::shared_ptr<T>::shared_ptr(const boost::shared_ptr<T>&) [with T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  458 |     shared_ptr( shared_ptr const & r ) BOOST_SP_NOEXCEPT : px( r.px ), pn( r.pn )
+      |     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:458:36: note:   no known conversion for argument 1 from ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ to ‘const boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<double> >&’
+  458 |     shared_ptr( shared_ptr const & r ) BOOST_SP_NOEXCEPT : px( r.px ), pn( r.pn )
+      |                 ~~~~~~~~~~~~~~~~~~~^
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:364:21: note: candidate: ‘constexpr boost::shared_ptr<T>::shared_ptr(boost::detail::sp_internal_constructor_tag, boost::shared_ptr<T>::element_type*, boost::detail::shared_count&&) [with T = crocoddyl::ResidualDataAbstractTpl<double>; boost::shared_ptr<T>::element_type = crocoddyl::ResidualDataAbstractTpl<double>]’
+  364 |     BOOST_CONSTEXPR shared_ptr( boost::detail::sp_internal_constructor_tag, element_type * px_, boost::detail::shared_count && pn_ ) BOOST_SP_NOEXCEPT : px( px_ ), pn( std::move( pn_ ) )
+      |                     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:364:21: note:   candidate expects 3 arguments, 1 provided
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:358:21: note: candidate: ‘constexpr boost::shared_ptr<T>::shared_ptr(boost::detail::sp_internal_constructor_tag, boost::shared_ptr<T>::element_type*, const boost::detail::shared_count&) [with T = crocoddyl::ResidualDataAbstractTpl<double>; boost::shared_ptr<T>::element_type = crocoddyl::ResidualDataAbstractTpl<double>]’
+  358 |     BOOST_CONSTEXPR shared_ptr( boost::detail::sp_internal_constructor_tag, element_type * px_, boost::detail::shared_count const & pn_ ) BOOST_SP_NOEXCEPT : px( px_ ), pn( pn_ )
+      |                     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:358:21: note:   candidate expects 3 arguments, 1 provided
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:352:21: note: candidate: ‘constexpr boost::shared_ptr<T>::shared_ptr(boost::detail::sp_nullptr_t) [with T = crocoddyl::ResidualDataAbstractTpl<double>; boost::detail::sp_nullptr_t = std::nullptr_t]’
+  352 |     BOOST_CONSTEXPR shared_ptr( boost::detail::sp_nullptr_t ) BOOST_SP_NOEXCEPT : px( 0 ), pn()
+      |                     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:352:33: note:   no known conversion for argument 1 from ‘boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<float> >’ to ‘boost::detail::sp_nullptr_t’ {aka ‘std::nullptr_t’}
+  352 |     BOOST_CONSTEXPR shared_ptr( boost::detail::sp_nullptr_t ) BOOST_SP_NOEXCEPT : px( 0 ), pn()
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:346:21: note: candidate: ‘constexpr boost::shared_ptr<T>::shared_ptr() [with T = crocoddyl::ResidualDataAbstractTpl<double>]’
+  346 |     BOOST_CONSTEXPR shared_ptr() BOOST_SP_NOEXCEPT : px( 0 ), pn()
+      |                     ^~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/smart_ptr/shared_ptr.hpp:346:21: note:   candidate expects 0 arguments, 1 provided
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup.hpp:10,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup-algo.hpp:9,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hxx:11,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:595,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/special-orthogonal.hpp: In instantiation of ‘static typename Matrix2Like::Scalar pinocchio::SpecialOrthogonalOperationTpl<2, _Scalar, _Options>::log(const Eigen::MatrixBase<OtherDerived>&) [with Matrix2Like = Eigen::Matrix<float, 2, 2>; _Scalar = float; int _Options = 0; typename Matrix2Like::Scalar = float]’:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/special-orthogonal.hpp:142:55:   required from ‘static void pinocchio::SpecialOrthogonalOperationTpl<2, _Scalar, _Options>::difference_impl(const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<ScaleDerived>&) [with ConfigL_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; ConfigR_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; Tangent_t = Eigen::Block<Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 1, 1, false>; _Scalar = float; int _Options = 0]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup-base.hxx:375:30:   required from ‘void pinocchio::LieGroupBase<Derived>::difference(const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<ScaleDerived>&) const [with ConfigL_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; ConfigR_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; Tangent_t = Eigen::Block<Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 1, 1, false>; Derived = pinocchio::SpecialOrthogonalOperationTpl<2, float, 0>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup-algo.hxx:374:21:   required from ‘static void pinocchio::DifferenceStepAlgo<Visitor, JointModel>::run(const pinocchio::JointModelBase<JointModel>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<ScaleDerived>&) [with ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; TangentVectorOut = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; Visitor = pinocchio::DifferenceStep<pinocchio::LieGroupMap, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false> >; JointModel = pinocchio::JointModelRevoluteUnboundedTpl<float, 0, 0>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup-algo.hxx:359:5:   required from ‘static void pinocchio::DifferenceStep<LieGroup_t, ConfigVectorIn1, ConfigVectorIn2, TangentVectorOut>::algo(const pinocchio::JointModelBase<OtherDerived>&, typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 0>::type, typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 1>::type, typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 2>::type) [with JointModel = pinocchio::JointModelRevoluteUnboundedTpl<float, 0, 0>; LieGroup_t = pinocchio::LieGroupMap; ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; TangentVectorOut = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 0>::type = const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&; typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 1>::type = const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&; typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 2>::type = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/visitor/joint-unary-visitor.hpp:183:28:   required from ‘ReturnType pinocchio::fusion::JointUnaryVisitorBase<JointVisitorDerived, ReturnType>::InternalVisitorModel<ArgType, Dummy>::operator()(const pinocchio::JointModelBase<JointModelDerived>&) const [with JointModelDerived = pinocchio::JointModelRevoluteUnboundedTpl<float, 0, 0>; ArgType = boost::fusion::vector<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&>; Dummy = void; JointVisitorDerived = pinocchio::DifferenceStep<pinocchio::LieGroupMap, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false> >; ReturnType = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/variant/variant.hpp:1028:24:   [ skipping 7 instantiation contexts, use -ftemplate-backtrace-limit=0 to disable ]
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/variant/detail/apply_visitor_unary.hpp:48:64:   required from ‘typename Visitor::result_type boost::apply_visitor(Visitor&, Visitable&&) [with Visitor = pinocchio::fusion::JointUnaryVisitorBase<pinocchio::DifferenceStep<pinocchio::LieGroupMap, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false> >, void>::InternalVisitorModel<boost::fusion::vector<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&>, void>; Visitable = const pinocchio::JointModelTpl<float, 0, pinocchio::JointCollectionDefaultTpl>&; typename Visitor::result_type = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/visitor/joint-unary-visitor.hpp:69:36:   required from ‘static ReturnType pinocchio::fusion::JointUnaryVisitorBase<JointVisitorDerived, ReturnType>::run(const pinocchio::JointModelTpl<Scalar, Options, JointCollectionTpl>&, ArgsTmp) [with Scalar = float; int Options = 0; JointCollectionTpl = pinocchio::JointCollectionDefaultTpl; ArgsTmp = boost::fusion::vector<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&>; JointVisitorDerived = pinocchio::DifferenceStep<pinocchio::LieGroupMap, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false> >; ReturnType = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/joint-configuration.hxx:83:16:   required from ‘void pinocchio::difference(const pinocchio::ModelTpl<Scalar, Options, JointCollectionTpl>&, const Eigen::MatrixBase<MatRet>&, const Eigen::MatrixBase<TangentVectorType>&, const Eigen::MatrixBase<ReturnType>&) [with LieGroup_t = pinocchio::LieGroupMap; Scalar = float; int Options = 0; JointCollectionTpl = pinocchio::JointCollectionDefaultTpl; ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ReturnType = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/joint-configuration.hpp:147:105:   required from ‘void pinocchio::difference(const pinocchio::ModelTpl<Scalar, Options, JointCollectionTpl>&, const Eigen::MatrixBase<Matrix3Like>&, const Eigen::MatrixBase<MatRet>&, const Eigen::MatrixBase<TangentVectorType>&) [with Scalar = float; int Options = 0; JointCollectionTpl = pinocchio::JointCollectionDefaultTpl; ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ReturnType = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/states/multibody.hxx:83:24:   required from ‘void crocoddyl::StateMultibodyTpl<Scalar>::diff(const Eigen::Ref<const typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs>&, const Eigen::Ref<const typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs>&, Eigen::Ref<typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs>) const [with _Scalar = float; typename Eigen::internal::conditional<const typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs::IsVectorAtCompileTime, Eigen::InnerStride<1>, Eigen::OuterStride<> >::type = Eigen::InnerStride<1>; typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs = Eigen::Matrix<float, -1, 1>; typename Eigen::internal::conditional<typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs::IsVectorAtCompileTime, Eigen::InnerStride<1>, Eigen::OuterStride<> >::type = Eigen::InnerStride<1>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/states/multibody.hxx:64:6:   required from here
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/special-orthogonal.hpp:74:45: error: no matching function for call to ‘if_then_else(pinocchio::internal::ComparisonOperators, const Scalar&, double, float, pinocchio::internal::if_then_else_impl<float, float, float, float>::ReturnType)’
+   74 |                                 if_then_else(internal::GT, tr, Scalar(2) - 1e-2,
+      |                                 ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   75 |                                              asin((R(1,0) - R(0,1)) / Scalar(2)), // then
+      |                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   76 |                                              if_then_else(internal::GE, R (1, 0), Scalar(0),
+      |                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   77 |                                                           acos(tr/Scalar(2)), // then
+      |                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   78 |                                                           -acos(tr/Scalar(2))
+      |                                                           ~~~~~~~~~~~~~~~~~~~
+   79 |                                                           )
+      |                                                           ~
+   80 |                                              )
+      |                                              ~
+In file included from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/math/quaternion.hpp:16,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/se3-tpl.hpp:12,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/spatial/se3.hpp:44,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/model.hpp:10,
+                 from /home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/model.hpp:8,
+                 from crocoddyl/benchmark/factory/arm.hpp:13,
+                 from test_arm_benchmark.cpp:5:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/static-if.hpp:77:5: note: candidate: ‘template<class LhsType, class RhsType, class ThenType, class ElseType> typename pinocchio::internal::if_then_else_impl<LhsType, RhsType, ThenType, ElseType>::ReturnType pinocchio::internal::if_then_else(pinocchio::internal::ComparisonOperators, const LhsType&, const RhsType&, const ThenType&, const ElseType&)’
+   77 |     if_then_else(const ComparisonOperators op,
+      |     ^~~~~~~~~~~~
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/static-if.hpp:77:5: note:   template argument deduction/substitution failed:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/static-if.hpp: In substitution of ‘template<class LhsType, class RhsType, class ThenType, class ElseType> typename pinocchio::internal::if_then_else_impl<LhsType, RhsType, ThenType, ElseType>::ReturnType pinocchio::internal::if_then_else(pinocchio::internal::ComparisonOperators, const LhsType&, const RhsType&, const ThenType&, const ElseType&) [with LhsType = float; RhsType = double; ThenType = float; ElseType = float]’:
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/special-orthogonal.hpp:74:45:   required from ‘static typename Matrix2Like::Scalar pinocchio::SpecialOrthogonalOperationTpl<2, _Scalar, _Options>::log(const Eigen::MatrixBase<OtherDerived>&) [with Matrix2Like = Eigen::Matrix<float, 2, 2>; _Scalar = float; int _Options = 0; typename Matrix2Like::Scalar = float]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/special-orthogonal.hpp:142:55:   required from ‘static void pinocchio::SpecialOrthogonalOperationTpl<2, _Scalar, _Options>::difference_impl(const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<ScaleDerived>&) [with ConfigL_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; ConfigR_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; Tangent_t = Eigen::Block<Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 1, 1, false>; _Scalar = float; int _Options = 0]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup-base.hxx:375:30:   required from ‘void pinocchio::LieGroupBase<Derived>::difference(const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<ScaleDerived>&) const [with ConfigL_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; ConfigR_t = Eigen::Block<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 2, 1, false>; Tangent_t = Eigen::Block<Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, 1, 1, false>; Derived = pinocchio::SpecialOrthogonalOperationTpl<2, float, 0>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup-algo.hxx:374:21:   required from ‘static void pinocchio::DifferenceStepAlgo<Visitor, JointModel>::run(const pinocchio::JointModelBase<JointModel>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<OtherDerived>&, const Eigen::MatrixBase<ScaleDerived>&) [with ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; TangentVectorOut = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; Visitor = pinocchio::DifferenceStep<pinocchio::LieGroupMap, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false> >; JointModel = pinocchio::JointModelRevoluteUnboundedTpl<float, 0, 0>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/liegroup/liegroup-algo.hxx:359:5:   required from ‘static void pinocchio::DifferenceStep<LieGroup_t, ConfigVectorIn1, ConfigVectorIn2, TangentVectorOut>::algo(const pinocchio::JointModelBase<OtherDerived>&, typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 0>::type, typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 1>::type, typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 2>::type) [with JointModel = pinocchio::JointModelRevoluteUnboundedTpl<float, 0, 0>; LieGroup_t = pinocchio::LieGroupMap; ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; TangentVectorOut = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 0>::type = const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&; typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 1>::type = const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&; typename boost::fusion::result_of::at_c<boost::fusion::vector<const ConfigVectorIn&, const TangentVectorIn&, ConfigVectorOut&>, 2>::type = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/visitor/joint-unary-visitor.hpp:183:28:   [ skipping 8 instantiation contexts, use -ftemplate-backtrace-limit=0 to disable ]
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/boost/variant/detail/apply_visitor_unary.hpp:48:64:   required from ‘typename Visitor::result_type boost::apply_visitor(Visitor&, Visitable&&) [with Visitor = pinocchio::fusion::JointUnaryVisitorBase<pinocchio::DifferenceStep<pinocchio::LieGroupMap, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false> >, void>::InternalVisitorModel<boost::fusion::vector<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&>, void>; Visitable = const pinocchio::JointModelTpl<float, 0, pinocchio::JointCollectionDefaultTpl>&; typename Visitor::result_type = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/multibody/visitor/joint-unary-visitor.hpp:69:36:   required from ‘static ReturnType pinocchio::fusion::JointUnaryVisitorBase<JointVisitorDerived, ReturnType>::run(const pinocchio::JointModelTpl<Scalar, Options, JointCollectionTpl>&, ArgsTmp) [with Scalar = float; int Options = 0; JointCollectionTpl = pinocchio::JointCollectionDefaultTpl; ArgsTmp = boost::fusion::vector<const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, const Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1, 0, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>&>; JointVisitorDerived = pinocchio::DifferenceStep<pinocchio::LieGroupMap, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>, Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false> >; ReturnType = void]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/joint-configuration.hxx:83:16:   required from ‘void pinocchio::difference(const pinocchio::ModelTpl<Scalar, Options, JointCollectionTpl>&, const Eigen::MatrixBase<MatRet>&, const Eigen::MatrixBase<TangentVectorType>&, const Eigen::MatrixBase<ReturnType>&) [with LieGroup_t = pinocchio::LieGroupMap; Scalar = float; int Options = 0; JointCollectionTpl = pinocchio::JointCollectionDefaultTpl; ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ReturnType = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/algorithm/joint-configuration.hpp:147:105:   required from ‘void pinocchio::difference(const pinocchio::ModelTpl<Scalar, Options, JointCollectionTpl>&, const Eigen::MatrixBase<Matrix3Like>&, const Eigen::MatrixBase<MatRet>&, const Eigen::MatrixBase<TangentVectorType>&) [with Scalar = float; int Options = 0; JointCollectionTpl = pinocchio::JointCollectionDefaultTpl; ConfigVectorIn1 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ConfigVectorIn2 = Eigen::Block<const Eigen::Ref<const Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>; ReturnType = Eigen::Block<Eigen::Ref<Eigen::Matrix<float, -1, 1>, 0, Eigen::InnerStride<1> >, -1, 1, false>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/states/multibody.hxx:83:24:   required from ‘void crocoddyl::StateMultibodyTpl<Scalar>::diff(const Eigen::Ref<const typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs>&, const Eigen::Ref<const typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs>&, Eigen::Ref<typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs>) const [with _Scalar = float; typename Eigen::internal::conditional<const typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs::IsVectorAtCompileTime, Eigen::InnerStride<1>, Eigen::OuterStride<> >::type = Eigen::InnerStride<1>; typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs = Eigen::Matrix<float, -1, 1>; typename Eigen::internal::conditional<typename crocoddyl::MathBaseTpl<_Scalar>::VectorXs::IsVectorAtCompileTime, Eigen::InnerStride<1>, Eigen::OuterStride<> >::type = Eigen::InnerStride<1>]’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/crocoddyl/multibody/states/multibody.hxx:64:6:   required from here
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/static-if.hpp:77:5: error: invalid use of incomplete type ‘struct pinocchio::internal::if_then_else_impl<float, double, float, float>’
+/home/a2rlab/anaconda3/envs/crocoddyl/lib/pkgconfig/../../include/pinocchio/utils/static-if.hpp:18:12: note: declaration of ‘struct pinocchio::internal::if_then_else_impl<float, double, float, float>’
+   18 |     struct if_then_else_impl;
+      |            ^~~~~~~~~~~~~~~~~
