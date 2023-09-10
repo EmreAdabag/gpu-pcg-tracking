@@ -31,7 +31,8 @@ typedef float pcg_t;
 
 #define EE_DIM_POS 3
 
-#define CONST_UPDATE_FREQ 1
+#define CONST_UPDATE_FREQ 0
+#define CONST_SIMULATION_TIME 1
 
 // this constant controls when xu and goal will be shifted, should be a fraction of a timestep
 #define SHIFT_THRESHOLD (1 * timestep)
@@ -40,7 +41,7 @@ typedef float pcg_t;
     #define SQP_MAX_ITER    20
     typedef double toplevel_return_type;
 #else
-    #define SQP_MAX_ITER    40
+    #define SQP_MAX_ITER    5
     typedef uint32_t toplevel_return_type;
 #endif
 

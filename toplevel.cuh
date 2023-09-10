@@ -720,7 +720,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
         // std::cout << "done solve, starting simulation " << std::endl;
 
 
-#if CONST_UPDATE_FREQ
+#if CONST_SIMULATION_TIME 
         simulation_time = SIMULATION_PERIOD;
         // print simulation time
 #else
