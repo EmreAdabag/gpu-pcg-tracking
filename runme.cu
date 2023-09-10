@@ -105,8 +105,10 @@ int main(){
             float pcg_exit_tol = pcg_exit_vals[pcg_exit_ind];
             std::vector<double> linsys_times;
             std::vector<double> ddp_times;
+            std::vector<double> sqp_times;
             std::vector<uint32_t> sqp_iters;
             std::vector<toplevel_return_type> current_results;
+            std::vector<double> current_sqp_solve_results;
             std::vector<float> tracking_errs;
             std::vector<float> cur_tracking_errs;
             double tot_final_tracking_err = 0;
@@ -148,7 +150,7 @@ int main(){
                 gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(pcg_t)));
                 gpuErrchk(cudaMemcpy(d_xs, h_xu_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
 
-                std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t> trackingstats = track<pcg_t, toplevel_return_type>(state_size, control_size, knot_points, 
+                std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::vector<double>> trackingstats = track<pcg_t, toplevel_return_type>(state_size, control_size, knot_points, 
                     static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol, test_output_prefix,
                     eePos_traj2d, xu_traj2d);
                 
@@ -160,6 +162,9 @@ int main(){
                         linsys_times.insert(linsys_times.end(), current_results.begin(), current_results.end());
                     } else {
                         sqp_iters.insert(sqp_iters.end(), current_results.begin(), current_results.end());
+                        // now we also want to record the timing of the sqp solves
+                        current_sqp_solve_results = std::get<3>(trackingstats);
+                        sqp_times.insert(sqp_times.end(), current_sqp_solve_results.begin(), current_sqp_solve_results.end());
                     }
                 }
 
@@ -180,10 +185,11 @@ int main(){
             std::cout << "Completed at " << getCurrentTimestamp() << std::endl;
             std::cout << "\nRESULTS*************************************\n";
             std::cout << "exit tol: " << pcg_exit_tol << std::endl;
-            std::cout << "tracking err\n";
+            std::cout << "tracking err: \n";
             std::string trackingStats = printStats<float>(&tracking_errs, "trackingerr");
             std::cout << tot_final_tracking_err / traj_test_iters << std::endl;
             std::string linsysOrSqpStats;
+            std::string sqp_times_stats;
             if (CROCODDYL_SOLVE == 1) {
                 std::cout << "ddp times\n";
                 linsysOrSqpStats = printStats<double>(&ddp_times, "ddptimes");
@@ -198,6 +204,8 @@ int main(){
                 {
                     std::cout << "sqp iters\n";
                     linsysOrSqpStats = printStats<uint32_t>(&sqp_iters, "sqpiters");
+                    std::cout << "sqp times\n";
+                    sqp_times_stats = printStats<double>(&sqp_times, "sqptimes");
                 }
 
             }
@@ -220,6 +228,10 @@ int main(){
                 // Write the data rows
                 csvFile << getStatsString(trackingStats) << "\n";
                 csvFile << getStatsString(linsysOrSqpStats) << "\n";
+
+                if (!CROCODDYL_SOLVE && !TIME_LINSYS) {
+                    csvFile << getStatsString(sqp_times_stats) << "\n";
+                }
 
                 // Close the CSV file
                 csvFile.close();
