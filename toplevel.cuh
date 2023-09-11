@@ -615,18 +615,25 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
 #endif // #if CROCODDYL_SOLVE
 
 #if REMOVE_JITTERS
-    std::cout << "Removing jitters" << std::endl;
     config.pcg_exit_tol = 1e-11;
     config.pcg_max_iter = 10000;
     
     for(int j = 0; j < 100; j++){
+        #if CROCODDYL_SOLVE
+        gpuErrchk(cudaMemcpy(h_xu, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, ee_state_size*knot_points*sizeof(T), cudaMemcpyDeviceToHost));
+        ddp_stats = crocoddylSolve<T>(state_size, control_size, ee_state_size, knot_points, 
+            timestep,h_eePos_goal, Q_vec, QF_vec, R_vec, EE_penalty_vec, state, actuation, 
+            ee_joint_frame_id, h_xu, control_update_step);
+        #else
         sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, 1e-3);
         gpuErrchk(cudaMemcpy(d_xu, d_xu_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+        #endif // #if CROCODDYL_SOLVE
     }
     rho = 1e-3;
     config.pcg_exit_tol = pcg_exit_tol;
     config.pcg_max_iter = PCG_MAX_ITER;
-    std::cout << "Done removing jitters" << std::endl;
+    
 #endif // #if REMOVE_JITTERS
 
 

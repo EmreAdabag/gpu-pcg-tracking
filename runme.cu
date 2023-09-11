@@ -61,8 +61,6 @@ int main(){
         start_state = ind % recorded_states;
         goal_state = ind / recorded_states;
         if(start_state == goal_state && start_state != 0){ continue; }
-        std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
-
 #if PCG_SOLVE
         uint32_t num_exit_vals = 1;
         float pcg_exit_vals[num_exit_vals];
