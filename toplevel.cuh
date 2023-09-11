@@ -507,7 +507,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
 
 template <typename T, typename return_type>
-std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::vector<double>> track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, 
+std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::vector<double>, std::vector<int>> track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, 
             float timestep, T *d_eePos_traj, T *d_xu_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter, T pcg_exit_tol,
             std::string test_output_prefix, std::vector<std::vector<pcg_t>> eePos_traj2d, std::vector<std::vector<pcg_t>> xu_traj2d){
 
@@ -531,6 +531,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
     std::vector<int> pcg_iters;
     std::vector<double> linsys_times;
     std::vector<double> ddp_solve_times;
+    std::vector<int> ddp_solve_iters_vec;
     std::vector<double> sqp_times;
     std::vector<uint32_t> sqp_iters;
     std::vector<bool> sqp_exits;
@@ -862,6 +863,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
         sqp_iters.push_back(cur_sqp_iters);
         #if CROCODDYL_SOLVE
         ddp_solve_times.push_back(ddp_solve_time);
+        ddp_solve_iters_vec.push_back(ddp_solve_iters);
         #endif // #if CROCODDYL_SOLVE
 
 
@@ -942,12 +944,12 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
     // create an empty vector like linsys times to return
     #if CROCODDYL_SOLVE
         delete h_xu;
-        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times);
+        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times, ddp_solve_iters_vec);
     #else 
         #if TIME_LINSYS 
-            return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error, sqp_times);
+            return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error, sqp_times, ddp_solve_iters_vec);
         #else
-            return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error, sqp_times);
+            return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error, sqp_times, ddp_solve_iters_vec);
         #endif
     #endif
 }

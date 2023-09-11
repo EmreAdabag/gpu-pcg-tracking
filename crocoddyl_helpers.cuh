@@ -180,13 +180,6 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation, const int ee_joint_frame_id,
 			T * h_xu, int step){
 
-
-    // data storage
-    std::vector<int> ddp_iter_vec;
-    std::vector<bool> ddp_exit_vec;
-
-    bool ddp_time_exit = 1;     // for data recording, not a flag
-
     // ddp timing
     struct timespec ddp_solve_start, ddp_solve_end;
 	// if (step == 0) {
