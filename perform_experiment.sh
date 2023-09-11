@@ -24,7 +24,7 @@ pcg_max_iters["512"]="67"
 # sample test configuration 1 - test linear system solve times for different numbers of knot points on a 3080 GPU
 time_linsys="0"
 # NOTE: make sure to set -arch value appropiately based on GPU we are using (use 86 for 3080, 89 for 4090)
-base_compile_command="nvcc --compiler-options -Wall -arch=sm_89  -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPINOCCHIO_WITH_URDFDOM -I/home/a2rlab/anaconda3/envs/pinocchio/include/python3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/python3.8/site-packages/numpy/core/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/home/a2rlab/anaconda3/envs/pinocchio/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/usr/local/lib/pkgconfig/../../include -I/usr/include/eigen3 -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -lcrocoddyl -lboost_filesystem -lboost_serialization -lboost_system -leigenpy -lpinocchio -lboost_filesystem -lboost_serialization -lboost_system -lurdfdom_sensor -lurdfdom_model_state -lurdfdom_model -lurdfdom_world -lconsole_bridge -lpython3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -DPCG_SOLVE=1 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=6 -DRHO_MAX=10 -DKNOT_POINTS=32 -DPCG_MAX_ITER=173 -DR_COST=.0001 -DTIME_LINSYS=1 -DCROCODDYL_WITH_NTHREADS=16 -DCROCODDYL_WITH_MULTITHREADING=1 "
+base_compile_command="nvcc --compiler-options -Wall -arch=sm_86  -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPINOCCHIO_WITH_URDFDOM -I/home/a2rlab/anaconda3/envs/pinocchio/include/python3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/python3.8/site-packages/numpy/core/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/home/a2rlab/anaconda3/envs/pinocchio/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/usr/local/lib/pkgconfig/../../include -I/usr/include/eigen3 -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -lcrocoddyl -lboost_filesystem -lboost_serialization -lboost_system -leigenpy -lpinocchio -lboost_filesystem -lboost_serialization -lboost_system -lurdfdom_sensor -lurdfdom_model_state -lurdfdom_model -lurdfdom_world -lconsole_bridge -lpython3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -DTIME_LINSYS=1 -DCROCODDYL_WITH_NTHREADS=16 -DCROCODDYL_WITH_MULTITHREADING=1"
 echo $base_compile_command
 knot_points=("32")
 periods=("2000")
@@ -69,9 +69,9 @@ for knot in "${knot_points[@]}"; do
                 
                 compile_command=$base_compile_command
                 compile_command+="-DPCG_SOLVE=1 "
-                compile_command+="-DQ_COST=.0001 "
-                compile_command+="-DQD_COST=.0001 "
-                compile_command+="-DQF_COST=.0001 "
+                compile_command+="-DQ_COST=.1 "
+                compile_command+="-DQD_COST=1.0 "
+                compile_command+="-DQF_COST=0.01 "
                 compile_command+="-DSQP_MAX_TIME_US=$per "
                 compile_command+="-DSIMULATION_PERIOD=$per "
                 compile_command+="-DRHO_FACTOR=$rf "
@@ -80,9 +80,9 @@ for knot in "${knot_points[@]}"; do
                 compile_command+="-DPCG_MAX_ITER=${pcg_max_iters[$knot]} "
                 if [ $knot = "64" ]
                 then
-                    compile_command+="-DR_COST=.001 "
+                    compile_command+="-DR_COST=0.1 "
                 else
-                    compile_command+="-DR_COST=.0001 "
+                    compile_command+="-DR_COST=0.1 "
                 fi
                 compile_command+="-DTIME_LINSYS=$time_linsys "
                 compile_command+=$end_compile_command

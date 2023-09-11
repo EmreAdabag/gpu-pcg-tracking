@@ -597,7 +597,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
     Q_vec.segment(7, 7).fill(QD_COST);
 
     Eigen::VectorXd QF_vec(state_size);
-	Q_vec.fill(QF_COST);
+	QF_vec.fill(QF_COST);
 	
 	Eigen::VectorXd R_vec(control_size);
 	R_vec.fill(R_COST);
@@ -689,14 +689,14 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
             ddp_solve_iters = std::get<1>(ddp_stats);
             ddp_cost = std::get<2>(ddp_stats);
 
-            if (control_update_step < 5) {
-                // print the solve time
-                std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
-                // also print number of ddp iters
-                std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
-                // also print cost
-                std::cout << "DDP cost: " << ddp_cost << std::endl;
-            }
+            // if (control_update_step < 5) {
+            //     // print the solve time
+            //     std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
+            //     // also print number of ddp iters
+            //     std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
+            //     // also print cost
+            //     std::cout << "DDP cost: " << ddp_cost << std::endl;
+            // }
 
 
             // // add small sleep for readability
@@ -941,6 +941,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
 
     // create an empty vector like linsys times to return
     #if CROCODDYL_SOLVE
+        delete h_xu;
         return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times);
     #else 
         #if TIME_LINSYS 
