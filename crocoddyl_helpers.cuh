@@ -42,7 +42,7 @@ boost::shared_ptr<crocoddyl::ActuationModelFull> initialize_crocoddyl_actuation_
     return actuation;
 }
 
-crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control_size, uint32_t knot_points, uint32_t ee_pos_size,
+crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control_size, uint32_t knot_points, uint32_t ee_pos_size,
                             boost::shared_ptr<crocoddyl::StateMultibody> state, 
                             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation,
                             pcg_t * h_xu, pcg_t * ee_goal_traj,
@@ -69,8 +69,8 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 				u_ref_t(i) = h_xu[t * (state_size + control_size) + i + state_size];
 			}
             if (i < ee_pos_size) {
-                eePos_ref_t(i) = ee_goal_traj[(knot_points-1) * 6 + i];
-                // eePos_ref_t(i) = ee_goal_traj[t * 6 + i];
+                // eePos_ref_t(i) = ee_goal_traj[(knot_points-1) * 6 + i];
+                eePos_ref_t(i) = ee_goal_traj[t * 6 + i];
             }
 		}
 
@@ -167,7 +167,7 @@ crocoddyl::SolverFDDP setupCrocoddylProblem(uint32_t state_size, uint32_t contro
 	problem_ptr->set_nthreads(CROCODDYL_WITH_NTHREADS);
 
 	// Create the DDP solver
-	crocoddyl::SolverFDDP ddp(problem_ptr);
+	crocoddyl::SolverDDP ddp(problem_ptr);
 
     return ddp;
 }
@@ -178,7 +178,7 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 			Eigen::VectorXd Q_vec, Eigen::VectorXd QF_vec, Eigen::VectorXd R_vec, Eigen::VectorXd EE_penalty_vec,
             boost::shared_ptr<crocoddyl::StateMultibody> state,
             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation, const int ee_joint_frame_id,
-			T * h_xu){
+			T * h_xu, int step){
 
 
     // data storage
@@ -195,7 +195,7 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 
 	// TODO: for sqp we give it an initial position, but we don't give it a full initial trajectory
 
-    crocoddyl::SolverFDDP ddp = setupCrocoddylProblem(state_size, control_size, knot_points, 
+    crocoddyl::SolverDDP ddp = setupCrocoddylProblem(state_size, control_size, knot_points, 
                     ee_pos_size, state, actuation, h_xu, h_ee_goal_traj, 
 					Q_vec, QF_vec, R_vec, EE_penalty_vec, ee_joint_frame_id, timestep);
 	
@@ -227,19 +227,57 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 		}
 	}
 
+	if (step == 0) {
+		// print x init vector, knot points rows and state_size columns
+		std::cout << "x_init: " << std::endl;
+		for (int i = 0; i < knot_points; ++i)
+		{
+			for (int j = 0; j < state_size; ++j)
+			{
+				std::cout << x_init[i](j) << " ";
+			}
+			std::cout << std::endl;
+		}
+
+		// print u init vector, knot points rows and control_size columns
+		std::cout << "u_init: " << std::endl;
+		for (int i = 0; i < knot_points - 1; ++i)
+		{
+			for (int j = 0; j < control_size; ++j)
+			{
+				std::cout << u_init[i](j) << " ";
+			}
+			std::cout << std::endl;
+		}
+
+		// print the goal trajectory, knot points rows and ee_pos_size columns
+		std::cout << "ee_goal_traj: " << std::endl;
+		for (int i = 0; i < knot_points; ++i)
+		{
+			for (int j = 0; j < ee_pos_size; ++j)
+			{
+				std::cout << h_ee_goal_traj[i * 6 + j] << " ";
+			}
+			std::cout << std::endl;
+		}
+
+	}
+
+	// printf("starting ddp solve, looping over same problem 100000 times\n");
+	// for (int counter = 0 ; counter < 100000; counter++) {
 	// Solve the problem
-    clock_gettime(CLOCK_MONOTONIC, &ddp_solve_start);
+	clock_gettime(CLOCK_MONOTONIC, &ddp_solve_start);
 	ddp.solve(x_init, u_init, 100, false);
-    clock_gettime(CLOCK_MONOTONIC, &ddp_solve_end);
+	clock_gettime(CLOCK_MONOTONIC, &ddp_solve_end);
 
 	//print the initial state x0 for reference
 	Eigen::VectorXd start_state = ddp.get_xs().front();
 	// std::cout << "Initial state: " << start_state << std::endl;
 
 	Eigen::VectorXd final_state = ddp.get_xs().back();
-    
-    // Print it
-    // std::cout << "Final state: " << final_state << std::endl;
+	
+	// Print it
+	// std::cout << "Final state: " << final_state << std::endl;
 
 	// print the control trajectory in a human readable format
 	// std::cout << "Control trajectory: " << std::endl;
@@ -268,9 +306,28 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 		}
 	}
 
-    double ddp_solve_time = time_delta_us_timespec(ddp_solve_start, ddp_solve_end);
+	if (step == 0) {
+		// print the h_xu we are returning from the solve
+		std::cout << "h_xu: " << std::endl;
+		for (int i = 0; i < knot_points; ++i) {
+			for (int j = 0; j < state_size; ++j) {
+				std::cout << h_xu[i*(state_size+control_size) + j] << " ";
+			}
+			if (i < knot_points - 1) {
+				for (int j = 0; j < control_size; ++j) {
+					std::cout << h_xu[i*(state_size+control_size) + j + state_size] << " ";
+				}
+			}
+			std::cout << std::endl;
+		}
+	}
+
+	double ddp_solve_time = time_delta_us_timespec(ddp_solve_start, ddp_solve_end);
 
 	double total_cost = ddp.get_cost();
+	// print ddp cost
+	// std::cout << "DDP cost: " << total_cost << std::endl;
+	// }
 
-    return std::make_tuple(ddp_solve_time, ddp.get_iter(), total_cost);
+    return std::make_tuple(time_delta_us_timespec(ddp_solve_start, ddp_solve_end), ddp.get_iter(), ddp.get_cost());
 }

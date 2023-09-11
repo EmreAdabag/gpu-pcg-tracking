@@ -671,7 +671,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
             // step 2: solve the problem
             ddp_stats = crocoddylSolve<T>(state_size, control_size, ee_state_size, knot_points, 
                 timestep,h_eePos_goal, Q_vec, QF_vec, R_vec, EE_penalty_vec, state, actuation, 
-                ee_joint_frame_id, h_xu);
+                ee_joint_frame_id, h_xu, control_update_step);
 
             // print the h_xu start and end again, to see if they changed
             // std::cout << "h_xu start: ";
@@ -689,12 +689,15 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
             ddp_solve_iters = std::get<1>(ddp_stats);
             ddp_cost = std::get<2>(ddp_stats);
 
-            // print the solve time
-            // std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
-            // // also print number of ddp iters
-            // std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
-            // // also print cost
-            // std::cout << "DDP cost: " << ddp_cost << std::endl;
+            if (control_update_step < 5) {
+                // print the solve time
+                std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
+                // also print number of ddp iters
+                std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
+                // also print cost
+                std::cout << "DDP cost: " << ddp_cost << std::endl;
+            }
+
 
             // // add small sleep for readability
             // usleep(1000000);

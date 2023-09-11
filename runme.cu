@@ -170,6 +170,8 @@ int main(){
 
                 cur_tracking_errs = std::get<1>(trackingstats);
                 tracking_errs.insert(tracking_errs.end(), cur_tracking_errs.begin(), cur_tracking_errs.end());
+                printf("Tracking errors after iteration %d\n", single_traj_test_iter);
+                std::string trackingStats = printStats<float>(&tracking_errs, "trackingerr");
 
                 tot_final_tracking_err += std::get<2>(trackingstats);
                 
