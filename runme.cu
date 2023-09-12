@@ -61,8 +61,6 @@ int main(){
         start_state = ind % recorded_states;
         goal_state = ind / recorded_states;
         if(start_state == goal_state && start_state != 0){ continue; }
-        std::cout << "start: " << start_state << " goal: " << goal_state << std::endl;
-
 #if PCG_SOLVE
         uint32_t num_exit_vals = 1;
         float pcg_exit_vals[num_exit_vals];
@@ -113,6 +111,9 @@ int main(){
             std::vector<float> cur_tracking_errs;
             double tot_final_tracking_err = 0;
 
+            std::vector<int> ddp_solve_iters;
+            std::vector<int> ddp_solve_iters_vec;
+
             std::string test_output_prefix = "";
 
             #if SAVE_DATA
@@ -150,7 +151,7 @@ int main(){
                 gpuErrchk(cudaMalloc(&d_xs, state_size*sizeof(pcg_t)));
                 gpuErrchk(cudaMemcpy(d_xs, h_xu_traj.data(), state_size*sizeof(pcg_t), cudaMemcpyHostToDevice));
 
-                std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::vector<double>> trackingstats = track<pcg_t, toplevel_return_type>(state_size, control_size, knot_points, 
+                std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::vector<double>, std::vector<int>> trackingstats = track<pcg_t, toplevel_return_type>(state_size, control_size, knot_points, 
                     static_cast<uint32_t>(eePos_traj2d.size()), timestep, d_eePos_traj, d_xu_traj, d_xs, start_state, goal_state, single_traj_test_iter, pcg_exit_tol, test_output_prefix,
                     eePos_traj2d, xu_traj2d);
                 
@@ -170,12 +171,21 @@ int main(){
 
                 cur_tracking_errs = std::get<1>(trackingstats);
                 tracking_errs.insert(tracking_errs.end(), cur_tracking_errs.begin(), cur_tracking_errs.end());
-                printf("Tracking errors after iteration %d\n", single_traj_test_iter);
-                std::string trackingStats = printStats<float>(&tracking_errs, "trackingerr");
 
-                tot_final_tracking_err += std::get<2>(trackingstats);
                 
 
+                tot_final_tracking_err += std::get<2>(trackingstats);
+
+                ddp_solve_iters = std::get<4>(trackingstats);
+                ddp_solve_iters_vec.insert(ddp_solve_iters_vec.end(), ddp_solve_iters.begin(), ddp_solve_iters.end());
+                
+                printf("Iteration %d results:\n", single_traj_test_iter);
+                printf("Tracking errors: \n");
+                std::string trackingStats = printStats<float>(&tracking_errs, "trackingerr");
+                #if CROCODDYL_SOLVE
+                printf("DDP Solve Times: \n");
+                std::string solveTimes = printStats<double>(&current_results, "ddptimes");
+                #endif 
 
                 gpuErrchk(cudaFree(d_xu_traj));
                 gpuErrchk(cudaFree(d_eePos_traj));
@@ -195,6 +205,8 @@ int main(){
             if (CROCODDYL_SOLVE == 1) {
                 std::cout << "ddp times\n";
                 linsysOrSqpStats = printStats<double>(&ddp_times, "ddptimes");
+                std::cout << "ddp iters\n";
+                linsysOrSqpStats = printStats<int>(&ddp_solve_iters_vec, "ddpiters");
 
             } else {
                 if (TIME_LINSYS == 1)

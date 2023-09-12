@@ -101,7 +101,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 			boost::make_shared<crocoddyl::CostModelResidual>(state, ee_residual);
 		// printf("initialized state_cost\n");
 
-		running_cost_model->addCost("goalTrack" + std::to_string(t), goal_tracking_xyz_cost, 1.);
+		running_cost_model->addCost("goalTrack" + std::to_string(t), goal_tracking_xyz_cost, 10.);
 
 		// printf("Added state cost for knot point %d\n", t);
 
@@ -115,7 +115,7 @@ crocoddyl::SolverDDP setupCrocoddylProblem(uint32_t state_size, uint32_t control
 			boost::shared_ptr<crocoddyl::CostModelResidual> state_cost_final =
 				boost::make_shared<crocoddyl::CostModelResidual>(state, activation_state_final, state_residual_final);
 			
-			terminal_cost_model->addCost("terminalStateCost", state_cost_final, 10000.);
+			terminal_cost_model->addCost("terminalStateCost", state_cost_final, 1.);
 
 			// printf("Added terminal cost for knot point %d\n", t);
 			// print out the x_ref_t at this point so we know what the goal is
@@ -180,21 +180,57 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
             boost::shared_ptr<crocoddyl::ActuationModelFull> actuation, const int ee_joint_frame_id,
 			T * h_xu, int step){
 
-
-    // data storage
-    std::vector<int> ddp_iter_vec;
-    std::vector<bool> ddp_exit_vec;
-
-    bool ddp_time_exit = 1;     // for data recording, not a flag
-
     // ddp timing
     struct timespec ddp_solve_start, ddp_solve_end;
-
+	// if (step == 0) {
+	// 	// print the h_xu at the beginning of the solve
+	// 	std::cout << "h_xu before: " << std::endl;
+	// 	for (int i = 0; i < knot_points; ++i) {
+	// 		for (int j = 0; j < state_size; ++j) {
+	// 			std::cout << h_xu[i*(state_size+control_size) + j] << " ";
+	// 		}
+	// 		if (i < knot_points - 1) {
+	// 			for (int j = 0; j < control_size; ++j) {
+	// 				std::cout << h_xu[i*(state_size+control_size) + j + state_size] << " ";
+	// 			}
+	// 		}
+	// 		std::cout << std::endl;
+	// 	}
+	// }
     // Question : the regularization techniques are going to be different aren't they? So we 
     // shouldn't need to worry about matching the rho values, we can use the defaults?
+    // if(step==0) {
+	// 	std::cout << "R_vec: " << std::endl;
+	// 	for (int i=0; i < control_size; i++){
+	// 		std::cout << R_vec[i] << " ";
+	// 	}
+	//    std::cout << std::endl;
+	
+	// 	std::cout << "Q_vec: " << std::endl;
+	// 	for( int i=0; i< state_size; i++){
+	// 		std::cout << Q_vec[i] << " ";
+	// 	}
 
+	// 	std::cout << std::endl;
+
+	// 	std::cout << "QF_vec: " << std::endl;
+
+	// 	for( int i=0; i< state_size; i++){
+	// 		std::cout << QF_vec[i] << " ";
+	// 	}
+
+	// 	std::cout << std::endl;
+
+	// 	std::cout << "EE_penalty_vec: " << std::endl;
+
+	// 	for( int i=0; i< ee_pos_size; i++){
+	// 		std::cout << EE_penalty_vec[i] << " ";
+	// 	}
+
+	// 	std::cout << std::endl;
+	   
+	// }
 	// TODO: for sqp we give it an initial position, but we don't give it a full initial trajectory
-
     crocoddyl::SolverDDP ddp = setupCrocoddylProblem(state_size, control_size, knot_points, 
                     ee_pos_size, state, actuation, h_xu, h_ee_goal_traj, 
 					Q_vec, QF_vec, R_vec, EE_penalty_vec, ee_joint_frame_id, timestep);
@@ -206,6 +242,40 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 
 	// initialize xs and us from h_xu
 	// each 21 elements is a knot point, the first 14 are the state, the next 7 are the control
+
+	// if(step == 0) {
+
+	// 	std::cout<<"State after setup"<<std::endl;
+	// 	std::cout << "R_vec: " << std::endl;
+	// 	for (int i=0; i < control_size; i++){
+	// 		std::cout << R_vec[i] << " ";
+	// 	}
+	//    std::cout << std::endl;
+	
+	// 	std::cout << "Q_vec: " << std::endl;
+	// 	for( int i=0; i< state_size; i++){
+	// 		std::cout << Q_vec[i] << " ";
+	// 	}
+
+	// 	std::cout << std::endl;
+
+	// 	std::cout << "QF_vec: " << std::endl;
+
+	// 	for( int i=0; i< state_size; i++){
+	// 		std::cout << QF_vec[i] << " ";
+	// 	}
+
+	// 	std::cout << std::endl;
+
+	// 	std::cout << "EE_penalty_vec: " << std::endl;
+
+	// 	for( int i=0; i< EE_DIM_POS; i++){
+	// 		std::cout << EE_penalty_vec[i] << " ";
+	// 	}
+
+	// 	std::cout << std::endl;
+	   
+	// }
 	std::vector<Eigen::VectorXd> x_init;
 	std::vector<Eigen::VectorXd> u_init;
 	for (int i = 0; i < knot_points; ++i)
@@ -227,42 +297,43 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 		}
 	}
 
-	if (step == 0) {
-		// print x init vector, knot points rows and state_size columns
-		std::cout << "x_init: " << std::endl;
-		for (int i = 0; i < knot_points; ++i)
-		{
-			for (int j = 0; j < state_size; ++j)
-			{
-				std::cout << x_init[i](j) << " ";
-			}
-			std::cout << std::endl;
-		}
+	// if (step == 0) {
+	// 	// print x init vector, knot points rows and state_size columns
+		
+	// 	std::cout << "x_init: " << std::endl;
+	// 	for (int i = 0; i < knot_points; ++i)
+	// 	{
+	// 		for (int j = 0; j < state_size; ++j)
+	// 		{
+	// 			std::cout << x_init[i](j) << " ";
+	// 		}
+	// 		std::cout << std::endl;
+	// 	}
 
-		// print u init vector, knot points rows and control_size columns
-		std::cout << "u_init: " << std::endl;
-		for (int i = 0; i < knot_points - 1; ++i)
-		{
-			for (int j = 0; j < control_size; ++j)
-			{
-				std::cout << u_init[i](j) << " ";
-			}
-			std::cout << std::endl;
-		}
+	// 	// print u init vector, knot points rows and control_size columns
+	// 	std::cout << "u_init: " << std::endl;
+	// 	for (int i = 0; i < knot_points - 1; ++i)
+	// 	{
+	// 		for (int j = 0; j < control_size; ++j)
+	// 		{
+	// 			std::cout << u_init[i](j) << " ";
+	// 		}
+	// 		std::cout << std::endl;
+	// 	}
 
-		// print the goal trajectory, knot points rows and ee_pos_size columns
-		std::cout << "ee_goal_traj: " << std::endl;
-		for (int i = 0; i < knot_points; ++i)
-		{
-			for (int j = 0; j < ee_pos_size; ++j)
-			{
-				std::cout << h_ee_goal_traj[i * 6 + j] << " ";
-			}
-			std::cout << std::endl;
-		}
+	// 	// print the goal trajectory, knot points rows and ee_pos_size columns
+	// 	std::cout << "ee_goal_traj: " << std::endl;
+	// 	for (int i = 0; i < knot_points; ++i)
+	// 	{
+	// 		for (int j = 0; j < ee_pos_size; ++j)
+	// 		{
+	// 			std::cout << h_ee_goal_traj[i * 6 + j] << " ";
+	// 		}
+	// 		std::cout << std::endl;
+	// 	}
 
-	}
-
+	// }
+	
 	// printf("starting ddp solve, looping over same problem 100000 times\n");
 	// for (int counter = 0 ; counter < 100000; counter++) {
 	// Solve the problem
@@ -306,21 +377,21 @@ auto crocoddylSolve(uint32_t state_size, uint32_t control_size, uint32_t ee_pos_
 		}
 	}
 
-	if (step == 0) {
-		// print the h_xu we are returning from the solve
-		std::cout << "h_xu: " << std::endl;
-		for (int i = 0; i < knot_points; ++i) {
-			for (int j = 0; j < state_size; ++j) {
-				std::cout << h_xu[i*(state_size+control_size) + j] << " ";
-			}
-			if (i < knot_points - 1) {
-				for (int j = 0; j < control_size; ++j) {
-					std::cout << h_xu[i*(state_size+control_size) + j + state_size] << " ";
-				}
-			}
-			std::cout << std::endl;
-		}
-	}
+	// if (step == 0) {
+	// 	// print the h_xu we are returning from the solve
+	// 	std::cout << "h_xu: " << std::endl;
+	// 	for (int i = 0; i < knot_points; ++i) {
+	// 		for (int j = 0; j < state_size; ++j) {
+	// 			std::cout << h_xu[i*(state_size+control_size) + j] << " ";
+	// 		}
+	// 		if (i < knot_points - 1) {
+	// 			for (int j = 0; j < control_size; ++j) {
+	// 				std::cout << h_xu[i*(state_size+control_size) + j + state_size] << " ";
+	// 			}
+	// 		}
+	// 		std::cout << std::endl;
+	// 	}
+	// }
 
 	double ddp_solve_time = time_delta_us_timespec(ddp_solve_start, ddp_solve_end);
 

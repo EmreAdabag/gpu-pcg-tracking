@@ -24,13 +24,20 @@ pcg_max_iters["512"]="67"
 # sample test configuration 1 - test linear system solve times for different numbers of knot points on a 3080 GPU
 time_linsys="0"
 # NOTE: make sure to set -arch value appropiately based on GPU we are using (use 86 for 3080, 89 for 4090)
-base_compile_command="nvcc -std=c++17 --compiler-options -Wall -arch=sm_86  -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=1 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=6 -DRHO_MAX=10 -DKNOT_POINTS=32 -DPCG_MAX_ITER=173 -DR_COST=.0001 -DTIME_LINSYS=1"
-# base_compile_command="nvcc -std=c++17 --compiler-options -Wall -arch=sm_86  -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPINOCCHIO_WITH_URDFDOM -I/home/a2rlab/anaconda3/envs/pinocchio/include/python3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/python3.8/site-packages/numpy/core/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/home/a2rlab/anaconda3/envs/pinocchio/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/usr/local/lib/pkgconfig/../../include -I/usr/include/eigen3 -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -lcrocoddyl -lboost_filesystem -lboost_serialization -lboost_system -leigenpy -lpinocchio -lboost_filesystem -lboost_serialization -lboost_system -lurdfdom_sensor -lurdfdom_model_state -lurdfdom_model -lurdfdom_world -lconsole_bridge -lpython3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -DPCG_SOLVE=1 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=6 -DRHO_MAX=10 -DKNOT_POINTS=32 -DPCG_MAX_ITER=173 -DR_COST=.0001 -DTIME_LINSYS=1 -DCROCODDYL_WITH_NTHREADS=16 -DCROCODDYL_WITH_MULTITHREADING=1 "
+
+# compile command for Brian's home computer
+base_compile_command="nvcc -std=c++17 --compiler-options -Wall -arch=sm_86  -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPCG_SOLVE=1 -DQD_COST=.0001 -DSQP_MAX_TIME_US=2000 -DSIMULATION_PERIOD=2000 -DRHO_FACTOR=6 -DRHO_MAX=10 -DKNOT_POINTS=32 -DPCG_MAX_ITER=173 -DR_COST=.0001 -DTIME_LINSYS=0"
+# compile command for office 3080 computer
+#base_compile_command="nvcc -arch=sm_86  -O3 -I. -IGPU-PCG/include -IGLASS -IGPU-PCG -I. -Irbdfiles -I./qdldl/include -lcublas -Lqdldl/build/out -lqdldl -DPINOCCHIO_WITH_URDFDOM -I/home/a2rlab/anaconda3/envs/pinocchio/include/python3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/python3.8/site-packages/numpy/core/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/home/a2rlab/anaconda3/envs/pinocchio/include -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -I/usr/local/lib/pkgconfig/../../include -I/usr/include/eigen3 -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -L/usr/local/lib/pkgconfig/../../lib -L/home/a2rlab/anaconda3/envs/pinocchio/lib -lcrocoddyl -lboost_filesystem -lboost_serialization -lboost_system -leigenpy -lpinocchio -lboost_filesystem -lboost_serialization -lboost_system -lurdfdom_sensor -lurdfdom_model_state -lurdfdom_model -lurdfdom_world -lconsole_bridge -lpython3.8 -I/home/a2rlab/anaconda3/envs/pinocchio/lib/pkgconfig/../../include -DTIME_LINSYS=1 -DCROCODDYL_WITH_NTHREADS=16 -DCROCODDYL_WITH_MULTITHREADING=1 "
+
 echo $base_compile_command
-knot_points=("32")
+knot_points=("32" "64" "128")
 periods=("2000")
 rho_maxs=("10")
 rho_factors=("6")
+q_values=("0.0001" "0.01" "1.0" "10")
+qf_values=("0.0001" "0.01" "1.0" "10" "100")
+r_values=("0.0001" "0.001")
 
 # END test configuration - shouldn't have to modify anything below this line
 
@@ -39,6 +46,9 @@ for knot in "${knot_points[@]}"; do
     for per in "${periods[@]}"; do
         for rm in "${rho_maxs[@]}"; do
             for rf in "${rho_factors[@]}"; do
+                for q in "${q_values[@]}"; do
+                    for qf in "${qf_values[@]}"; do
+                        for r in "${r_values[@]}"; do
                 # test qdl
                 # compile_command=$base_compile_command
                 # compile_command+="-DPCG_SOLVE=0 "
@@ -68,30 +78,33 @@ for knot in "${knot_points[@]}"; do
                 # echo "-----------------------------------------------------------"
                 
                 
-                compile_command=$base_compile_command
-                compile_command+="-DPCG_SOLVE=1 "
-                compile_command+="-DQ_COST=.0001 "
-                compile_command+="-DQD_COST=.0001 "
-                compile_command+="-DQF_COST=.0001 "
-                compile_command+="-DSQP_MAX_TIME_US=$per "
-                compile_command+="-DSIMULATION_PERIOD=$per "
-                compile_command+="-DRHO_FACTOR=$rf "
-                compile_command+="-DRHO_MAX=$rm "
-                compile_command+="-DKNOT_POINTS=$knot "
-                compile_command+="-DPCG_MAX_ITER=${pcg_max_iters[$knot]} "
-                if [ $knot = "64" ]
-                then
-                    compile_command+="-DR_COST=.001 "
-                else
-                    compile_command+="-DR_COST=.0001 "
-                fi
-                compile_command+="-DTIME_LINSYS=$time_linsys "
-                compile_command+=$end_compile_command
+                            compile_command=$base_compile_command
+                            compile_command+="-DPCG_SOLVE=1 "
+                            compile_command+="-DQ_COST=$q "
+                            compile_command+="-DQD_COST=$q "
+                            compile_command+="-DQF_COST=$qf "
+                            compile_command+="-DSQP_MAX_TIME_US=$per "
+                            compile_command+="-DSIMULATION_PERIOD=$per "
+                            compile_command+="-DRHO_FACTOR=$rf "
+                            compile_command+="-DRHO_MAX=$rm "
+                            compile_command+="-DKNOT_POINTS=$knot "
+                            compile_command+="-DPCG_MAX_ITER=${pcg_max_iters[$knot]} "
+                            if [ $knot = "64" ]
+                            then
+                                compile_command+="-DR_COST=$r "
+                            else
+                                compile_command+="-DR_COST=$r "
+                            fi
+                            compile_command+="-DTIME_LINSYS=$time_linsys "
+                            compile_command+=$end_compile_command
 
-                echo $compile_command
-                eval $compile_command
-                ./runme.exe
-                echo "-----------------------------------------------------------"
+                            echo $compile_command
+                            eval $compile_command
+                            ./runme.exe
+                            echo "-----------------------------------------------------------"
+                        done
+                    done
+                done
             done
         done
     done

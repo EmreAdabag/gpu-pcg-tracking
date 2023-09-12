@@ -511,7 +511,7 @@ auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, 
 
 
 template <typename T, typename return_type>
-std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::vector<double>> track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, 
+std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::vector<double>, std::vector<int>> track(uint32_t state_size, uint32_t control_size, uint32_t knot_points, const uint32_t traj_steps, 
             float timestep, T *d_eePos_traj, T *d_xu_traj, T *d_xs, uint32_t start_state_ind, uint32_t goal_state_ind, uint32_t test_iter, T pcg_exit_tol,
             std::string test_output_prefix, std::vector<std::vector<pcg_t>> eePos_traj2d, std::vector<std::vector<pcg_t>> xu_traj2d){
 
@@ -535,6 +535,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
     std::vector<int> pcg_iters;
     std::vector<double> linsys_times;
     std::vector<double> ddp_solve_times;
+    std::vector<int> ddp_solve_iters_vec;
     std::vector<double> sqp_times;
     std::vector<uint32_t> sqp_iters;
     std::vector<bool> sqp_exits;
@@ -601,7 +602,7 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
     Q_vec.segment(7, 7).fill(QD_COST);
 
     Eigen::VectorXd QF_vec(state_size);
-	Q_vec.fill(QF_COST);
+	QF_vec.fill(QF_COST);
 	
 	Eigen::VectorXd R_vec(control_size);
 	R_vec.fill(R_COST);
@@ -628,18 +629,25 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
 #endif
 
 #if REMOVE_JITTERS
-    std::cout << "Removing jitters" << std::endl;
     config.pcg_exit_tol = 1e-11;
     config.pcg_max_iter = 10000;
     
     for(int j = 0; j < 100; j++){
+        #if CROCODDYL_SOLVE
+        gpuErrchk(cudaMemcpy(h_xu, d_xu, traj_len*sizeof(T), cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(h_eePos_goal, d_eePos_goal, ee_state_size*knot_points*sizeof(T), cudaMemcpyDeviceToHost));
+        ddp_stats = crocoddylSolve<T>(state_size, control_size, ee_state_size, knot_points, 
+            timestep,h_eePos_goal, Q_vec, QF_vec, R_vec, EE_penalty_vec, state, actuation, 
+            ee_joint_frame_id, h_xu, control_update_step);
+        #else
         sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, 1e-3);
         gpuErrchk(cudaMemcpy(d_xu, d_xu_traj, traj_len*sizeof(T), cudaMemcpyDeviceToDevice));
+        #endif // #if CROCODDYL_SOLVE
     }
     rho = 1e-3;
     config.pcg_exit_tol = pcg_exit_tol;
     config.pcg_max_iter = PCG_MAX_ITER;
-    std::cout << "Done removing jitters" << std::endl;
+    
 #endif // #if REMOVE_JITTERS
 
 
@@ -703,14 +711,14 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
             ddp_solve_iters = std::get<1>(ddp_stats);
             ddp_cost = std::get<2>(ddp_stats);
 
-            if (control_update_step < 5) {
-                // print the solve time
-                std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
-                // also print number of ddp iters
-                std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
-                // also print cost
-                std::cout << "DDP cost: " << ddp_cost << std::endl;
-            }
+            // if (control_update_step < 5) {
+            //     // print the solve time
+            //     std::cout << "DDP solve time: " << ddp_solve_time << std::endl;
+            //     // also print number of ddp iters
+            //     std::cout << "DDP iters: " << ddp_solve_iters << std::endl;
+            //     // also print cost
+            //     std::cout << "DDP cost: " << ddp_cost << std::endl;
+            // }
 
 
             // // add small sleep for readability
@@ -891,11 +899,12 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
         sqp_times.push_back(sqp_solve_time_us);
         sqp_iters.push_back(cur_sqp_iters);
         #if CROCODDYL_SOLVE
-        ddp_solve_times.push_back(ddp_solve_time);
+            ddp_solve_times.push_back(ddp_solve_time);
+            ddp_solve_iters_vec.push_back(ddp_solve_iters);
         #elif PDDP_SOLVE
-        ddp_solve_times.push_back(ddp_solve_time);
+            ddp_solve_times.push_back(ddp_solve_time);
+            ddp_solve_iters_vec.push_back(ddp_solve_iters);
         #endif
-
 
 #if LIVE_PRINT_STATS
         if (control_update_step % 1000 == 50){
@@ -973,14 +982,15 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
 
     // create an empty vector like linsys times to return
     #if CROCODDYL_SOLVE
-        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times);
+        delete h_xu;
+        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times, ddp_solve_iters_vec);
     #elif PDDP_SOLVE
-        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times);
+        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times, ddp_solve_iters_vec);
     #else 
         #if TIME_LINSYS 
-            return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error, sqp_times);
+            return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error, sqp_times, ddp_solve_iters_vec);
         #else
-            return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error, sqp_times);
+            return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error, sqp_times, ddp_solve_iters_vec);
         #endif
     #endif
 
