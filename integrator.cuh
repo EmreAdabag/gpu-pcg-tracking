@@ -232,8 +232,21 @@ void integrator(uint32_t state_size, T *s_xkp1, T *s_xuk, T *s_temp, void *d_dyn
     exec_integrator<T,INTEGRATOR_TYPE,ANGLE_WRAP>(state_size, s_qkp1, s_qdkp1, s_q, s_qd, s_qdd, dt, block);
 }
 
-
-
+template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
+__device__ 
+void integrator_pin(uint32_t state_size, T *s_xkp1, T *s_xuk, T *s_temp, void *d_dynMem_const, T dt, cgrps::thread_block block,
+        T * d_qdd){
+    // first compute qdd
+    T *s_q = s_xuk; 					T *s_qd = s_q + state_size/2; 				T *s_u = s_qd + state_size/2;
+    T *s_qkp1 = s_xkp1; 				T *s_qdkp1 = s_qkp1 + state_size/2;
+    T *s_qdd = s_temp; 					T *s_extra_temp = s_qdd + state_size/2;
+    // copy into shared from the d_qdd computed by pinocchio, rather than computing it ourselves
+    for (uint32_t i = block.thread_rank(); i < size; i += block.size()) {
+        s_qdd[i] = d_qdd[i];
+    }
+    block.sync();
+    exec_integrator<T,INTEGRATOR_TYPE,ANGLE_WRAP>(state_size, s_qkp1, s_qdkp1, s_q, s_qd, s_qdd, dt, block);
+}
 
 template <typename T, unsigned INTEGRATOR_TYPE = 0, bool ANGLE_WRAP = false>
 __global__
@@ -288,6 +301,30 @@ void just_shift(uint32_t state_size, uint32_t control_size, uint32_t knot_points
     }
 }
 
+template <typename T>
+void simple_integrator_pinocchio(uint32_t state_size, uint32_t control_size, T *d_x, T *d_u, void *d_dynMem_const, T dt, T * d_qdd){
+    T *s_xkp1 = s_mem;
+    T *s_xuk = s_xkp1 + state_size; 
+    T *s_temp = s_xuk + state_size + control_size;
+    cgrps::thread_block block = cgrps::this_thread_block();	  
+    cgrps::grid_group grid = cgrps::this_grid();
+    for (unsigned ind = threadIdx.x; ind < state_size + control_size; ind += blockDim.x){
+        if(ind < state_size){
+            s_xuk[ind] = d_x[ind];
+        }
+        else{
+            s_xuk[ind] = d_u[ind-state_size];
+        }
+    }
+
+    block.sync();
+    integrator_pin<T,0,0>(state_size, s_xkp1, s_xuk, s_temp, d_dynMem_const, dt, block, d_qdd);
+    block.sync();
+
+    for (unsigned ind = threadIdx.x; ind < state_size; ind += blockDim.x){
+        d_x[ind] = s_xkp1[ind];
+    }
+}
 
 template <typename T>
 __global__
@@ -354,7 +391,8 @@ void simple_integrator_kernel(uint32_t state_size, uint32_t control_size, T *d_x
 
 
 template <typename T>
-void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, double timestep, double time_offset_us, double sim_time_us, unsigned long long = 123456){
+void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_points, T *d_xs, T *d_xu, void *d_dynMem_const, double timestep, double time_offset_us, double sim_time_us, 
+            unsigned long long = 123456, pinocchio::Model* model = nullptr, pinocchio::Data* data = nullptr){
 
     // std::cout << "simulating for " << sim_time_us * 1e-6 << " seconds\n";
 
@@ -379,8 +417,38 @@ void simple_simulate(uint32_t state_size, uint32_t control_size, uint32_t knot_p
         control_offset = static_cast<uint32_t>((time_offset + step * sim_step_time) / timestep);
         control = &d_xu[control_offset * states_s_controls + state_size];
 
-        simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time);
+        #if CROCODDYL_SOLVE
+        // first we will compute qdd, this time on the host with pinocchio
+        // Allocating host memory
+        T *h_xs, *h_u;
+        h_xs = (T*) malloc(state_size * sizeof(T));
+        h_u = (T*) malloc(control_size * sizeof(T));
 
+        // Transferring from device to host
+        cudaMemcpy(h_xs, d_xs, state_size * sizeof(T), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_u, d_u, control_size * sizeof(T), cudaMemcpyDeviceToHost);
+
+        Eigen::VectorXd xs = Eigen::Map<Eigen::VectorXd>(h_xs, state_size);
+        Eigen::VectorXd u = Eigen::Map<Eigen::VectorXd>(h_u, control_size);
+
+        Eigen::VectorBlock<const Eigen::VectorXd, Eigen::Dynamic> q = xs.head(state_size/2);
+        Eigen::VectorBlock<const Eigen::VectorXd, Eigen::Dynamic> v = xs.tail(state_size/2);
+
+        Eigen::VectorXd qdd = pinocchio::aba(model, data, q, v, u);
+
+        T *d_qdd;
+        cudaMalloc((void**)&d_qdd, (state_size/2) * sizeof(T));  // nq is the size of qdd
+        cudaMemcpy(d_qdd, qdd.data(), (state_size/2) * sizeof(T), cudaMemcpyHostToDevice);
+
+        // then call an updated version of the integrator kernel, providing the qdd
+        simple_integrator_pinocchio<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time, d_qdd);
+        
+        free(h_xs);
+        free(h_u);
+        gpueErrchk(cudaFree(d_qdd));
+        #else
+        simple_integrator_kernel<T><<<1,32,simple_integrator_kernel_smem_size>>>(state_size, control_size, d_xs, control, d_dynMem_const, sim_step_time);
+        #endif // CROCODDYL_SOLVE
         // std::cout << "result\n";
         // gpuErrchk(cudaMemcpy(h_temp, d_xs, 14*sizeof(float), cudaMemcpyDeviceToHost));
         // for(int i = 0; i < 14; i++){
