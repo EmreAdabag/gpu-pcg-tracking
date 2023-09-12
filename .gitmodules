@@ -10,3 +10,6 @@
 [submodule "crocoddyl"]
 	path = crocoddyl
 	url = https://github.com/loco-3d/crocoddyl.git 
+[submodule "parallel-DDP"]
+	path = parallel-DDP
+	url = git@github.com:plancherb1/parallel-DDP.git

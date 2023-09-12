@@ -24,6 +24,10 @@
 #include "crocoddyl_helpers.cuh"
 #endif
 
+#if PDDP_SOLVE
+#include "pddp_helpers.cuh"
+#endif
+
 
 template <typename T>
 auto sqpSolve(uint32_t state_size, uint32_t control_size, uint32_t knot_points, float timestep, T *d_eePos_traj, T *d_lambda, T *d_xu, void *d_dynMem_const, pcg_config& config, T &rho, T rho_reset){
@@ -613,6 +617,16 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
 
 #endif // #if CROCODDYL_SOLVE
 
+    // PDDP Setup
+#if PDDP_SOLVE
+    //allocate variables
+    trajVars<T> *tvars = new trajVars<T>;   matDimms *dimms = new matDimms;
+    algTrace<T> *atrace = new algTrace<T>;  costParams<T> *cst = new costParams<T>; loadCost(cst);
+    GPUVars<T> *algvars = new GPUVars<T>; allocateMemory_GPU_MPC<T>(algvars, dimms, tvars, knot_points);
+    // load initial traj and goal
+    loadGoalICRA24<T>(algvars, tvars, dimms, d_eePos_goal, knot_points);
+#endif
+
 #if REMOVE_JITTERS
     std::cout << "Removing jitters" << std::endl;
     config.pcg_exit_tol = 1e-11;
@@ -707,7 +721,21 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
             
             // copy h_xu back onto the GPU, into d_xu
             gpuErrchk(cudaMemcpy(d_xu, h_xu, traj_len*sizeof(T), cudaMemcpyHostToDevice));
-        #else // #if CROCODDYL_SOLVE
+
+        #elif PDDP_SOLVE
+            // step 1: reformat the memory so we can run it (annoyingly need to unzip and copy places)
+            loadTrajICRA24<T>(algvars, tvars, dimms, d_xu, knot_points);
+
+            // step 2: solve with timing
+            ddp_stats = runiLQR_MPC_GPU_ICRA24(algvars, tvars, dimms, atrace, cst, knot_points);
+            ddp_solve_time = std::get<0>(ddp_stats);
+            ddp_solve_iters = std::get<1>(ddp_stats);
+            ddp_cost = std::get<2>(ddp_stats);
+
+            // step 3 format the memory back (annoyingly need re-zip and copy places)
+            storeTrajICRA24<T>(algvars, tvars, dimms, d_xu, knot_points);
+
+        #else
             sqp_stats = sqpSolve<T>(state_size, control_size, knot_points, timestep, d_eePos_goal, d_lambda, d_xu, d_dynmem, config, rho, rho_reset);
 
 
@@ -729,9 +757,11 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
 #else
     #if CROCODDYL_SOLVE
         simulation_time = ddp_solve_time;
-    #else // CROCODDYL_SOLVE
+    #elif PDDP_SOLVE
+        simulation_time = ddp_solve_time;
+    #else 
         simulation_time = sqp_solve_time_us; 
-    #endif // CROCODDYL_SOLVE
+    #endif
 #endif
 
         // std::cout << "simulating for " << simulation_time << " us\nxu:";
@@ -862,7 +892,9 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
         sqp_iters.push_back(cur_sqp_iters);
         #if CROCODDYL_SOLVE
         ddp_solve_times.push_back(ddp_solve_time);
-        #endif // #if CROCODDYL_SOLVE
+        #elif PDDP_SOLVE
+        ddp_solve_times.push_back(ddp_solve_time);
+        #endif
 
 
 #if LIVE_PRINT_STATS
@@ -942,12 +974,20 @@ std::tuple<std::vector<toplevel_return_type>, std::vector<pcg_t>, pcg_t, std::ve
     // create an empty vector like linsys times to return
     #if CROCODDYL_SOLVE
         return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times);
+    #elif PDDP_SOLVE
+        return std::make_tuple(ddp_solve_times, tracking_errors, cur_tracking_error, sqp_times);
     #else 
         #if TIME_LINSYS 
             return std::make_tuple(linsys_times, tracking_errors, cur_tracking_error, sqp_times);
         #else
             return std::make_tuple(sqp_iters, tracking_errors, cur_tracking_error, sqp_times);
         #endif
+    #endif
+
+    #if PDDP_SOLVE
+        // free memory and cleanup
+        freeMemory_GPU_MPC<T>(algvars); delete algvars;
+        freeTrajVars<algType>(tvars);   delete atrace;  delete tvars;   delete dimms;   delete cst;
     #endif
 }
 
